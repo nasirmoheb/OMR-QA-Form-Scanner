@@ -27,6 +27,10 @@ class Config:
     # Supported image extensions
     SUPPORTED_EXTENSIONS: tuple[str, ...] = (".jpg", ".jpeg", ".png")
 
+    # UI preferences
+    APPEARANCE_MODE: str = "System"  # Light, Dark, System
+    LANGUAGE: str = "en"             # en, fa (Dari), ps (Pashto)
+
     # Derived paths
     PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
     ASSETS_DIR: Path = PROJECT_ROOT / "assets"
