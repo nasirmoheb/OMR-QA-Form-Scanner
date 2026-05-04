@@ -86,7 +86,8 @@ class AnalyticsEngine:
     # ------------------------------------------------------------------ #
 
     def generate_report(
-        self, df: pd.DataFrame | None = None, output_path: str | None = None
+        self, df: pd.DataFrame | None = None, output_path: str | None = None,
+        question_texts: list[str] | None = None,
     ) -> str:
         """Generate a Plotly HTML dashboard report.
 
@@ -94,6 +95,8 @@ class AnalyticsEngine:
             df: Results DataFrame. Uses DataStore when ``None``.
             output_path: File path to write the HTML report. When ``None`` a
                 temporary path is chosen.
+            question_texts: Optional list of 14 question text strings to use
+                as chart labels instead of Q1..Q14.
 
         Returns:
             Absolute path to the generated HTML file.
@@ -107,7 +110,7 @@ class AnalyticsEngine:
         batch_score = self.calculate_batch_score(df)
         logger.info("Batch score: %.2f", batch_score)
 
-        html = PlotlyGenerator.generate_dashboard_html(df, batch_score)
+        html = PlotlyGenerator.generate_dashboard_html(df, batch_score, question_texts=question_texts)
 
         if output_path is None:
             output_path = str(

@@ -21,8 +21,15 @@ class PlotlyGenerator:
     # ------------------------------------------------------------------ #
 
     @staticmethod
-    def create_stacked_bar_chart(df: pd.DataFrame) -> go.Figure:
-        """Create a stacked bar chart of Yes/Somewhat/No/Invalid per question."""
+    def create_stacked_bar_chart(df: pd.DataFrame, question_texts: list[str] | None = None) -> go.Figure:
+        """Create a stacked bar chart of Yes/Somewhat/No/Invalid per question.
+
+        Args:
+            df: Results DataFrame.
+            question_texts: Optional list of 14 question text strings to use
+                as x-axis labels. Each label is truncated to 40 characters.
+                Falls back to Q1..Q14 when ``None`` or length != 14.
+        """
         question_cols = [f"Q{i}" for i in range(1, Config.ROW_COUNT + 1)]
 
         counts: dict[str, list[int]] = {
@@ -36,13 +43,19 @@ class PlotlyGenerator:
             for key in counts:
                 counts[key].append(int((df[q] == key).sum()))
 
+        # Determine x-axis labels
+        if question_texts is not None and len(question_texts) == 14:
+            x_labels = [t[:40] for t in question_texts]
+        else:
+            x_labels = question_cols
+
         fig = go.Figure()
         colors = {"Yes": "#2ecc71", "Somewhat": "#f1c40f", "No": "#e74c3c", "Invalid": "#95a5a6"}
         for key in ("Yes", "Somewhat", "No", "Invalid"):
             fig.add_trace(
                 go.Bar(
                     name=key,
-                    x=question_cols,
+                    x=x_labels,
                     y=counts[key],
                     marker_color=colors[key],
                 )
@@ -125,18 +138,20 @@ class PlotlyGenerator:
 
     @classmethod
     def generate_dashboard_html(
-        cls, df: pd.DataFrame, batch_score: float
+        cls, df: pd.DataFrame, batch_score: float, question_texts: list[str] | None = None
     ) -> str:
         """Combine all charts into a single HTML dashboard.
 
         Args:
             df: Results DataFrame.
             batch_score: Computed batch satisfaction score.
+            question_texts: Optional list of 14 question text strings to use
+                as chart labels in the stacked bar chart.
 
         Returns:
             Complete HTML string.
         """
-        bar_fig = cls.create_stacked_bar_chart(df)
+        bar_fig = cls.create_stacked_bar_chart(df, question_texts=question_texts)
         pie_fig = cls.create_pie_chart(df)
         score_fig = cls.create_score_display(batch_score)
 

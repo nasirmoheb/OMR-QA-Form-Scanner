@@ -32,6 +32,9 @@ class Config:
     APPEARANCE_MODE: str = "System"  # Light, Dark, System
     LANGUAGE: str = "en"             # en, fa (Dari), ps (Pashto)
 
+    # Survey question texts (14 items; empty list means use defaults from pdf_generator)
+    QUESTION_TEXTS: list = []
+
     # Derived paths
     PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
     ASSETS_DIR: Path = PROJECT_ROOT / "assets"
@@ -65,6 +68,9 @@ class Config:
         cfg.SCORE_NO = _load("SCORE_NO", int, cls.SCORE_NO)
         cfg.APPEARANCE_MODE = _load("APPEARANCE_MODE", str, cls.APPEARANCE_MODE)
         cfg.LANGUAGE = _load("LANGUAGE", str, cls.LANGUAGE)
+        stored_q = settings.get("question_texts")
+        if isinstance(stored_q, list) and len(stored_q) == 14:
+            cfg.QUESTION_TEXTS = stored_q
         return cfg
 
     def save_to_persistence(self, persistence: Any) -> None:
@@ -79,6 +85,8 @@ class Config:
         persistence.set_setting("SCORE_NO", self.SCORE_NO)
         persistence.set_setting("APPEARANCE_MODE", self.APPEARANCE_MODE)
         persistence.set_setting("LANGUAGE", self.LANGUAGE)
+        if self.QUESTION_TEXTS:
+            persistence.set_setting("question_texts", self.QUESTION_TEXTS)
 
 
 def setup_logging(level: int = logging.INFO) -> logging.Logger:

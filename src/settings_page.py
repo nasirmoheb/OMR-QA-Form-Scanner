@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import logging
+from tkinter import filedialog, messagebox
 from typing import Any
 
 import customtkinter as ctk
@@ -16,10 +18,18 @@ logger = logging.getLogger("omr_qa_scanner")
 class SettingsFrame(ctk.CTkFrame):
     """A modern, card-based settings frame for embedding in the main window."""
 
-    def __init__(self, master: Any, config: Config, back_command: Any = None) -> None:
+    def __init__(
+        self,
+        master: Any,
+        config: Config,
+        back_command: Any = None,
+        persistence: Any = None,
+    ) -> None:
         super().__init__(master, fg_color="transparent")
         self._config = config
         self._back_command = back_command
+        self._persistence = persistence
+        self._logo_path: str = ""
 
         # Colours for the modern look (light, dark)
         self.card_colour = ("#F9F9F9", "#2B2B2B")
@@ -102,6 +112,165 @@ class SettingsFrame(ctk.CTkFrame):
         self._numeric_row(score_card, _("score_yes"), "score_yes")
         self._numeric_row(score_card, _("score_somewhat"), "score_somewhat")
         self._numeric_row(score_card, _("score_no"), "score_no")
+
+        # --- University Branding card ------------------------------------- #
+        branding_card = self._card(container, _("university_branding"))
+        branding_card.pack(pady=(0, 16), fill="x")
+
+        # University name row
+        uni_row = ctk.CTkFrame(branding_card, fg_color="transparent")
+        uni_row.pack(padx=16, pady=(8, 4), fill="x")
+        ctk.CTkLabel(
+            uni_row,
+            text=_("university_name"),
+            font=ctk.CTkFont(size=12),
+        ).pack(side="left")
+        uni_default = (
+            self._persistence.get_setting("university_name", "")
+            if self._persistence is not None
+            else ""
+        )
+        self.uni_name_entry = ctk.CTkEntry(uni_row, width=300, font=ctk.CTkFont(size=12))
+        if uni_default:
+            self.uni_name_entry.insert(0, uni_default)
+        self.uni_name_entry.pack(side="right")
+
+        # Logo upload row
+        logo_row = ctk.CTkFrame(branding_card, fg_color="transparent")
+        logo_row.pack(padx=16, pady=(4, 4), fill="x")
+        ctk.CTkLabel(
+            logo_row,
+            text=_("logo_upload"),
+            font=ctk.CTkFont(size=12),
+        ).pack(side="left")
+        ctk.CTkButton(
+            logo_row,
+            text=_("select_logo"),
+            command=self._select_logo,
+            width=160,
+            font=ctk.CTkFont(size=12),
+        ).pack(side="right")
+
+        # Logo preview row
+        preview_row = ctk.CTkFrame(branding_card, fg_color="transparent")
+        preview_row.pack(padx=16, pady=(4, 4), fill="x")
+        ctk.CTkLabel(
+            preview_row,
+            text=_("logo_preview"),
+            font=ctk.CTkFont(size=12),
+        ).pack(side="left")
+        self.logo_preview_label = ctk.CTkLabel(
+            preview_row,
+            text=_("no_logo"),
+            font=ctk.CTkFont(size=11),
+            text_color="gray",
+        )
+        self.logo_preview_label.pack(side="right")
+
+        # Branding save button
+        if self._persistence is not None:
+            branding_save_row = ctk.CTkFrame(branding_card, fg_color="transparent")
+            branding_save_row.pack(padx=16, pady=(4, 12), fill="x")
+            ctk.CTkButton(
+                branding_save_row,
+                text=_("save"),
+                command=self._save_branding,
+                width=100,
+                font=ctk.CTkFont(size=12, weight="bold"),
+            ).pack(side="right")
+
+        # --- PDF Template Coordinates card -------------------------------- #
+        coords_card = self._card(container, _("pdf_coords"))
+        coords_card.pack(pady=(0, 16), fill="x")
+
+        coords_default = ""
+        if self._persistence is not None:
+            stored_coords = self._persistence.get_setting("pdf_coords")
+            if stored_coords is not None:
+                try:
+                    coords_default = json.dumps(stored_coords, ensure_ascii=False, indent=2)
+                except Exception:
+                    coords_default = "{}"
+
+        self.pdf_coords_textbox = ctk.CTkTextbox(
+            coords_card,
+            height=120,
+            font=ctk.CTkFont(size=11, family="Courier"),
+        )
+        self.pdf_coords_textbox.pack(padx=16, pady=(8, 4), fill="x")
+        if coords_default:
+            self.pdf_coords_textbox.insert("1.0", coords_default)
+        else:
+            self.pdf_coords_textbox.insert("1.0", "{}")
+
+        if self._persistence is not None:
+            coords_save_row = ctk.CTkFrame(coords_card, fg_color="transparent")
+            coords_save_row.pack(padx=16, pady=(4, 12), fill="x")
+            ctk.CTkButton(
+                coords_save_row,
+                text=_("save"),
+                command=self._save_pdf_coords,
+                width=100,
+                font=ctk.CTkFont(size=12, weight="bold"),
+            ).pack(side="right")
+
+        # --- Survey Questions card ---------------------------------------- #
+        questions_card = self._card(container, _("survey_questions"))
+        questions_card.pack(pady=(0, 16), fill="x")
+
+        # Load default questions
+        from pdf_generator import _DARI_QUESTIONS
+        default_questions = list(_DARI_QUESTIONS)
+        if self._persistence is not None:
+            stored_q = self._persistence.get_setting("question_texts")
+            if isinstance(stored_q, list) and len(stored_q) == 14:
+                default_questions = stored_q
+
+        # Scrollable frame for 14 question rows
+        q_scroll = ctk.CTkScrollableFrame(questions_card, height=300)
+        q_scroll.pack(padx=16, pady=(8, 4), fill="x")
+
+        # Header row
+        header_row = ctk.CTkFrame(q_scroll, fg_color="transparent")
+        header_row.pack(fill="x", pady=(0, 4))
+        ctk.CTkLabel(
+            header_row,
+            text=_("question_num"),
+            font=ctk.CTkFont(size=11, weight="bold"),
+            width=30,
+        ).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(
+            header_row,
+            text=_("question_text"),
+            font=ctk.CTkFont(size=11, weight="bold"),
+        ).pack(side="left")
+
+        self._question_entries: list[ctk.CTkEntry] = []
+        for i in range(14):
+            row = ctk.CTkFrame(q_scroll, fg_color="transparent")
+            row.pack(fill="x", pady=2)
+            ctk.CTkLabel(
+                row,
+                text=f"Q{i + 1}",
+                font=ctk.CTkFont(size=11),
+                width=30,
+                anchor="w",
+            ).pack(side="left", padx=(0, 8))
+            entry = ctk.CTkEntry(row, width=400, font=ctk.CTkFont(size=11))
+            entry.insert(0, default_questions[i] if i < len(default_questions) else "")
+            entry.pack(side="left")
+            self._question_entries.append(entry)
+
+        if self._persistence is not None:
+            q_save_row = ctk.CTkFrame(questions_card, fg_color="transparent")
+            q_save_row.pack(padx=16, pady=(4, 12), fill="x")
+            ctk.CTkButton(
+                q_save_row,
+                text=_("save_questions"),
+                command=self._save_questions,
+                width=140,
+                font=ctk.CTkFont(size=12, weight="bold"),
+            ).pack(side="right")
 
         # --- Footer buttons ----------------------------------------------- #
         footer = ctk.CTkFrame(self, fg_color="transparent")
@@ -202,3 +371,56 @@ class SettingsFrame(ctk.CTkFrame):
         """Optional: update some labels immediately when user clicks a language."""
         # We keep it minimal; actual switch happens on Save.
         pass
+
+    # ------------------------------------------------------------------ #
+    #  Branding helpers
+    # ------------------------------------------------------------------ #
+
+    def _select_logo(self) -> None:
+        """Open a file dialog to select a logo image."""
+        path = filedialog.askopenfilename(
+            filetypes=[("Image files", "*.png *.jpg *.jpeg")]
+        )
+        if path:
+            self._logo_path = path
+            import os
+            self.logo_preview_label.configure(text=os.path.basename(path))
+
+    def _save_branding(self) -> None:
+        """Save university name and logo path to persistence."""
+        if self._persistence is None:
+            return
+        uni_name = self.uni_name_entry.get()
+        self._persistence.set_setting("university_name", uni_name)
+        if self._logo_path:
+            self._persistence.set_setting("logo_path", self._logo_path)
+        messagebox.showinfo(_("university_branding"), _("branding_saved"))
+
+    # ------------------------------------------------------------------ #
+    #  PDF coords helpers
+    # ------------------------------------------------------------------ #
+
+    def _save_pdf_coords(self) -> None:
+        """Parse and save PDF template coordinates to persistence."""
+        if self._persistence is None:
+            return
+        raw = self.pdf_coords_textbox.get("1.0", "end").strip()
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            messagebox.showerror(_("pdf_coords"), f"Invalid JSON: {exc}")
+            return
+        self._persistence.set_setting("pdf_coords", parsed)
+        messagebox.showinfo(_("pdf_coords"), _("settings_saved"))
+
+    # ------------------------------------------------------------------ #
+    #  Survey questions helpers
+    # ------------------------------------------------------------------ #
+
+    def _save_questions(self) -> None:
+        """Read all 14 question entries and save to persistence."""
+        if self._persistence is None:
+            return
+        texts = [entry.get() for entry in self._question_entries]
+        self._persistence.set_setting("question_texts", texts)
+        messagebox.showinfo(_("survey_questions"), _("questions_saved"))

@@ -889,6 +889,7 @@ class OMRGUI:
                 master or self.content_frame,
                 self.config,
                 back_command=self.close_settings,
+                persistence=self.persistence,
             ),
         )
 
