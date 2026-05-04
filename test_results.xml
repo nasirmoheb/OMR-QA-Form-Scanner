@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="21" failures="2" skipped="0" tests="44" time="1.166" timestamp="2026-05-04T14:39:18.927815+04:30" hostname="pc-1"><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_create_survey" time="0.024"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp7l0305hq.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmp7l0305hq.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp7l0305hq.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_get_survey" time="0.023"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpehxo0_kn.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpehxo0_kn.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpehxo0_kn.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_get_survey_missing" time="0.016"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpz1egzx60.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpz1egzx60.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpz1egzx60.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_update_survey" time="0.031"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmprhojnt6o.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmprhojnt6o.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmprhojnt6o.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_delete_survey" time="0.026"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpkbf_xifh.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpkbf_xifh.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpkbf_xifh.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_list_surveys_empty" time="0.016"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpajybzb87.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpajybzb87.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpajybzb87.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_list_surveys" time="0.028"><failure message="AssertionError: assert 'Math' == 'Physics'&#10;  &#10;  #x1B[0m#x1B[91m- Physics#x1B[39;49;00m#x1B[90m#x1B[39;49;00m&#10;  #x1B[92m+ Math#x1B[39;49;00m#x1B[90m#x1B[39;49;00m">self = &lt;test_persistence.TestSurveyCrud object at 0x000001C44EE43E50&gt;
+manager = &lt;persistence.PersistenceManager object at 0x000001C44EE65A50&gt;
+
+    def test_list_surveys(self, manager):
+        s1 = Survey(university="U1", faculty="F1", department="D1", subject="Math", professor="P1", semester="1", academic_year="2024")
+        s2 = Survey(university="U1", faculty="F1", department="D1", subject="Physics", professor="P2", semester="2", academic_year="2024")
+        manager.create_survey(s1)
+        manager.create_survey(s2)
+        results = manager.list_surveys()
+        assert len(results) == 2
+        # Default order is updated_at DESC, so s2 should appear first
+&gt;       assert results[0].subject == "Physics"
+E       AssertionError: assert 'Math' == 'Physics'
+E         
+E         #x1B[0m#x1B[91m- Physics#x1B[39;49;00m#x1B[90m#x1B[39;49;00m
+E         #x1B[92m+ Math#x1B[39;49;00m#x1B[90m#x1B[39;49;00m
+
+tests\test_persistence.py:82: AssertionError</failure></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_list_surveys_filter_status" time="0.024"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpcfs8kaxj.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpcfs8kaxj.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpcfs8kaxj.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_list_surveys_search" time="0.026"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmplg4ii44_.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmplg4ii44_.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmplg4ii44_.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_list_surveys_filter_department" time="0.027"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpr44g7u5c.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpr44g7u5c.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpr44g7u5c.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestSurveyCrud" name="test_survey_cascading_delete" time="0.052"><failure message="AssertionError: assert [FormResult(s...=False, id=1)] == []&#10;  &#10;  Left contains one more item: #x1B[0mFormResult(survey_id=#x1B[94m1#x1B[39;49;00m, form_id=#x1B[33m'#x1B[39;49;00m#x1B[33mform_001#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, image_path=#x1B[33m'#x1B[39;49;00m#x1B[33m/tmp/test.jpg#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q1=#x1B[33m'#x1B[39;49;00m#x1B[33mYes#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q2=#x1B[33m'#x1B[39;49;00m#x1B[33mNo#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q3=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q4=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q5=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q6=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m,..., q10=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q11=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q12=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;...&#10;  &#10;  ...Full output truncated (30 lines hidden), use '-vv' to show">self = &lt;test_persistence.TestSurveyCrud object at 0x000001C44EE5DB50&gt;
+manager = &lt;persistence.PersistenceManager object at 0x000001C44F7223D0&gt;
+
+    def test_survey_cascading_delete(self, manager):
+        survey = Survey(university="U1", faculty="F1", department="D1", subject="S1", professor="P1", semester="1", academic_year="2024")
+        created = manager.create_survey(survey)
+        result = FormResult(
+            survey_id=created.id,
+            form_id="form_001",
+            image_path="/tmp/test.jpg",
+            q1="Yes", q2="No",
+            form_score=50.0,
+            valid=True,
+            confidence=0.95,
+        )
+        manager.create_form_result(result)
+        manager.delete_survey(created.id)
+&gt;       assert manager.get_form_results(created.id) == []
+E       AssertionError: assert [FormResult(s...=False, id=1)] == []
+E         
+E         Left contains one more item: #x1B[0mFormResult(survey_id=#x1B[94m1#x1B[39;49;00m, form_id=#x1B[33m'#x1B[39;49;00m#x1B[33mform_001#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, image_path=#x1B[33m'#x1B[39;49;00m#x1B[33m/tmp/test.jpg#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q1=#x1B[33m'#x1B[39;49;00m#x1B[33mYes#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q2=#x1B[33m'#x1B[39;49;00m#x1B[33mNo#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q3=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q4=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q5=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q6=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m,..., q10=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q11=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m, q12=#x1B[33m'#x1B[39;49;00m#x1B[33m'#x1B[39;...
+E         
+E         ...Full output truncated (30 lines hidden), use '-vv' to show
+
+tests\test_persistence.py:129: AssertionError</failure></testcase><testcase classname="tests.test_persistence.TestFormResultCrud" name="test_create_form_result" time="0.024"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpv_h1_xhc.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpv_h1_xhc.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpv_h1_xhc.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestFormResultCrud" name="test_get_form_results" time="0.028"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmph11byz8e.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmph11byz8e.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmph11byz8e.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestFormResultCrud" name="test_update_form_result" time="0.029"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpoy9j1u5s.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpoy9j1u5s.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpoy9j1u5s.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestFormResultCrud" name="test_delete_form_results_for_survey" time="0.037"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp4vzg7oer.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmp4vzg7oer.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp4vzg7oer.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestAppSettings" name="test_set_and_get" time="0.021"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpbcagwogw.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpbcagwogw.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpbcagwogw.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestAppSettings" name="test_get_default" time="0.018"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp8rjzdft2.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmp8rjzdft2.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp8rjzdft2.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestAppSettings" name="test_update_existing" time="0.025"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpl3c9u49m.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpl3c9u49m.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpl3c9u49m.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestAppSettings" name="test_get_all_settings" time="0.026"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp1iil91k6.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmp1iil91k6.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp1iil91k6.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestAppSettings" name="test_delete_setting" time="0.026"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp8b4t0inz.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmp8b4t0inz.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmp8b4t0inz.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestAppSettings" name="test_complex_json_value" time="0.021"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpe30rr0bi.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpe30rr0bi.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpe30rr0bi.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestConfigPersistence" name="test_round_trip" time="0.044"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpusl011rg.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpusl011rg.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpusl011rg.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase><testcase classname="tests.test_persistence.TestConfigPersistence" name="test_defaults_when_empty" time="0.018"><error message="failed on teardown with &quot;PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpbma1yv4r.db'&quot;">@pytest.fixture
+    def manager():
+        """Return a PersistenceManager backed by a temporary database."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+            db_path = tmp.name
+        pm = PersistenceManager(db_path=db_path)
+        yield pm
+&gt;       Path(db_path).unlink(missing_ok=True)
+
+tests\test_persistence.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = WindowsPath('C:/Users/nasir/AppData/Local/Temp/tmpbma1yv4r.db')
+missing_ok = True
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+&gt;           os.unlink(self)
+E           PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\nasir\\AppData\\Local\\Temp\\tmpbma1yv4r.db'
+
+C:\Users\nasir\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1147: PermissionError</error></testcase></testsuite></testsuites>
