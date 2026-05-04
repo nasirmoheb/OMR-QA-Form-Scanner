@@ -24,6 +24,14 @@ _WIDE_ROW_V_OFFSET: int = 13  # pixels to shift wide rows downward
 _CELL_PAD_X: int = 8
 _CELL_PAD_Y: int = 4
 
+# Timing mark column (far-right edge in RTL forms)
+_TIMING_MARK_X_START: int = 720
+_TIMING_MARK_X_END: int = 790
+_TIMING_MARK_MIN_AREA: int = 30
+_TIMING_MARK_MAX_AREA: int = 300
+_TIMING_MARK_FILL_RATIO: float = 0.5
+_TIMING_MARK_COUNT_TOLERANCE: int = 3
+
 
 def _cell_box(
     row: int,
@@ -32,6 +40,7 @@ def _cell_box(
     form_h: int,
     rows: int,
     cols: int,
+    row_y_positions: list[int] | None = None,
 ) -> tuple[int, int, int, int]:
     """Return ``(x1, y1, x2, y2)`` for the checkbox at *row*, *col*.
 
@@ -53,15 +62,19 @@ def _cell_box(
     cell_h = (usable_h - (rows - 1) * _ROW_GAP) // rows
 
     x1 = _MARGIN_LEFT + col * (cell_w + _COL_GAP)
-    y1 = _MARGIN_TOP + row * (cell_h + _ROW_GAP)
 
-    # Apply vertical offset for rows after wide Q1, Q11, and Q14
-    if row >= 1:  # After Q1
-        y1 += _WIDE_ROW_V_OFFSET
-    if row >= 11:  # After Q10 comes Q11 (also wide)
-        y1 += _WIDE_ROW_V_OFFSET
-    if row >= 13:  # After Q13 comes Q14 (also wide)
-        y1 += _WIDE_ROW_V_OFFSET
+    if row_y_positions is not None and 0 <= row < len(row_y_positions):
+        cy = row_y_positions[row]
+        y1 = cy - cell_h // 2
+    else:
+        y1 = _MARGIN_TOP + row * (cell_h + _ROW_GAP)
+        # Apply vertical offset for rows after wide Q1, Q11, and Q14
+        if row >= 1:  # After Q1
+            y1 += _WIDE_ROW_V_OFFSET
+        if row >= 11:  # After Q10 comes Q11 (also wide)
+            y1 += _WIDE_ROW_V_OFFSET
+        if row >= 13:  # After Q13 comes Q14 (also wide)
+            y1 += _WIDE_ROW_V_OFFSET
 
     x2 = x1 + cell_w
     y2 = y1 + cell_h
@@ -124,13 +137,15 @@ class CheckboxReader:
     # ------------------------------------------------------------------ #
 
     def get_checkbox_bounds(
-        self, row: int, col: int
+        self, row: int, col: int, row_y_positions: list[int] | None = None
     ) -> tuple[int, int, int, int]:
         """Compute bounding box for the checkbox at *row*, *col*.
 
         Args:
             row: Zero-based row index (0 .. ROW_COUNT-1).
             col: Zero-based column index (0 .. COLUMN_COUNT-1).
+            row_y_positions: Optional list of calibrated y-centres from
+                detected timing marks.
 
         Returns:
             ``(x1, y1, x2, y2)`` in pixel coordinates.
@@ -142,7 +157,86 @@ class CheckboxReader:
             self.config.FORM_HEIGHT,
             self.config.ROW_COUNT,
             self.config.COLUMN_COUNT,
+            row_y_positions,
         )
+
+    # ------------------------------------------------------------------ #
+    #  Timing mark detection
+    # ------------------------------------------------------------------ #
+
+    def detect_timing_marks(
+        self, aligned_image: np.ndarray
+    ) -> list[int] | None:
+        """Detect solid black timing marks on the far-right edge.
+
+        Scans a vertical strip on the right edge, finds dark blobs,
+        filters by size and fill ratio, and returns their centre
+        y-coordinates in top-to-bottom order.
+
+        Args:
+            aligned_image: Perspective-corrected form image.
+
+        Returns:
+            List of y-centre integers (one per timing mark) or ``None``
+            if detection fails or the count is off.
+        """
+        if len(aligned_image.shape) == 3:
+            gray = cv2.cvtColor(aligned_image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = aligned_image.copy()
+
+        h, w = gray.shape
+        x1 = max(0, min(w, _TIMING_MARK_X_START))
+        x2 = max(0, min(w, _TIMING_MARK_X_END))
+        if x2 <= x1:
+            x1, x2 = max(0, w - 80), w
+
+        strip = gray[:, x1:x2]
+        _, binary = cv2.threshold(strip, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        candidates: list[tuple[int, int, int, float]] = []
+
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area < _TIMING_MARK_MIN_AREA or area > _TIMING_MARK_MAX_AREA:
+                continue
+            bx, by, bw, bh = cv2.boundingRect(cnt)
+            if bw < 3 or bh < 3:
+                continue
+            fill_ratio = area / (bw * bh)
+            if fill_ratio < _TIMING_MARK_FILL_RATIO:
+                continue
+            moments = cv2.moments(cnt)
+            if moments["m00"] == 0:
+                continue
+            cy = int(moments["m01"] / moments["m00"])
+            cx = int(moments["m10"] / moments["m00"])
+            candidates.append((cy, area, fill_ratio, cx + x1))
+
+        candidates.sort(key=lambda t: t[0])
+        expected = self.config.ROW_COUNT
+        tol = _TIMING_MARK_COUNT_TOLERANCE
+
+        if len(candidates) < expected - tol:
+            logger.warning(
+                "Only %d timing mark(s) found (need ~%d).", len(candidates), expected
+            )
+            return None
+
+        if len(candidates) > expected + tol:
+            logger.info("%d timing marks; keeping %d largest.", len(candidates), expected)
+            candidates = sorted(candidates, key=lambda t: t[1], reverse=True)[:expected]
+            candidates.sort(key=lambda t: t[0])
+
+        if len(candidates) != expected:
+            logger.info(
+                "Timing mark count mismatch (%d vs %d); falling back to uniform grid.",
+                len(candidates), expected
+            )
+            return None
+
+        return [c[0] for c in candidates]
 
     # ------------------------------------------------------------------ #
     #  Grid reading
@@ -152,6 +246,10 @@ class CheckboxReader:
         self, aligned_image: np.ndarray
     ) -> list[list[float]]:
         """Measure pixel density for every cell in the 14 x 3 grid.
+
+        Uses detected timing marks (when available) to calibrate each
+        row's y-position, compensating for paper stretch, shrink, or
+        minor skew after perspective correction.
 
         Args:
             aligned_image: Perspective-corrected form image.
@@ -164,11 +262,15 @@ class CheckboxReader:
         else:
             gray = aligned_image.copy()
 
+        row_y_positions = self.detect_timing_marks(aligned_image)
+        if row_y_positions is not None:
+            logger.info("Using %d timing marks for row calibration.", len(row_y_positions))
+
         densities: list[list[float]] = []
         for row in range(self.config.ROW_COUNT):
             row_densities: list[float] = []
             for col in range(self.config.COLUMN_COUNT):
-                x1, y1, x2, y2 = self.get_checkbox_bounds(row, col)
+                x1, y1, x2, y2 = self.get_checkbox_bounds(row, col, row_y_positions)
                 # Clamp to image bounds
                 h, w = gray.shape
                 x1, y1 = max(x1, 0), max(y1, 0)

@@ -26,6 +26,13 @@ ROW_GAP = 2
 # Special handling: wide rows (Q1, Q11, Q14) need vertical offset
 WIDE_ROW_V_OFFSET = 13  # pixels to shift wide rows downward
 
+# Timing mark detection constants
+TIMING_MARK_X_START = 100
+TIMING_MARK_X_END = 100
+TIMING_MARK_MIN_AREA = 30
+TIMING_MARK_MAX_AREA = 10
+TIMING_MARK_FILL_RATIO = 0.5
+
 
 def cell_box(
     row: int,
@@ -58,11 +65,58 @@ def cell_box(
     return x1, y1, x2, y2
 
 
+def detect_timing_marks(gray: np.ndarray) -> list[tuple[int, int, int, int]]:
+    """Detect timing marks and return list of (cy, area, fill_ratio, cx)."""
+    h, w = gray.shape
+    x1 = max(0, min(w, TIMING_MARK_X_START))
+    x2 = max(0, min(w, TIMING_MARK_X_END))
+    if x2 <= x1:
+        x1, x2 = max(0, w - 80), w
+
+    strip = gray[:, x1:x2]
+    _, binary = cv2.threshold(strip, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    candidates: list[tuple[int, int, int, int]] = []
+
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area < TIMING_MARK_MIN_AREA or area > TIMING_MARK_MAX_AREA:
+            continue
+        bx, by, bw, bh = cv2.boundingRect(cnt)
+        if bw < 3 or bh < 3:
+            continue
+        fill_ratio = area / (bw * bh)
+        if fill_ratio < TIMING_MARK_FILL_RATIO:
+            continue
+        moments = cv2.moments(cnt)
+        if moments["m00"] == 0:
+            continue
+        cy = int(moments["m01"] / moments["m00"])
+        cx = int(moments["m10"] / moments["m00"])
+        candidates.append((cy, area, fill_ratio, cx + x1))
+
+    candidates.sort(key=lambda t: t[0])
+    return candidates
+
+
 def annotate(image: np.ndarray) -> np.ndarray:
     """Draw the current grid + densities on the aligned image."""
     vis = image.copy()
     gray = cv2.cvtColor(vis, cv2.COLOR_BGR2GRAY)
     h, w = gray.shape
+
+    # Detect and draw timing marks
+    timing_marks = detect_timing_marks(gray)
+    print(f"Detected {len(timing_marks)} timing marks")
+    for cy, area, fill_ratio, cx in timing_marks:
+        cv2.circle(vis, (cx, cy), 8, (0, 255, 0), -1)
+        cv2.putText(vis, f"TM", (cx - 10, cy - 12), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+
+    # Draw timing mark search region
+    x1 = max(0, min(w, TIMING_MARK_X_START))
+    x2 = max(0, min(w, TIMING_MARK_X_END))
+    cv2.rectangle(vis, (x1, 0), (x2, h), (255, 255, 0), 1)
 
     for row in range(14):
         for col in range(3):

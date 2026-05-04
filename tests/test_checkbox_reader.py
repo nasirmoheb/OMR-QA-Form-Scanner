@@ -48,12 +48,28 @@ def make_aligned_form(
             0,
             -1,
         )
+    _add_timing_marks(img)
+    return img
+
+
+def _add_timing_marks(img: np.ndarray) -> np.ndarray:
+    """Draw solid black timing marks on the far-right edge (one per row)."""
+    reader = CheckboxReader(Config())
+    for row in range(Config.ROW_COUNT):
+        _, y1, _, y2 = reader.get_checkbox_bounds(row, 0)
+        cy = (y1 + y2) // 2
+        my1 = max(0, cy - 6)
+        my2 = min(img.shape[0], cy + 6)
+        mx1 = max(0, img.shape[1] - 60)
+        mx2 = min(img.shape[1], img.shape[1] - 10)
+        cv2.rectangle(img, (mx1, my1), (mx2, my2), 0, -1)
     return img
 
 
 def make_empty_form(width: int = 800, height: int = 1000) -> np.ndarray:
-    """Return a blank white aligned form."""
-    return np.ones((height, width), dtype=np.uint8) * 255
+    """Return a blank white aligned form with timing marks."""
+    img = np.ones((height, width), dtype=np.uint8) * 255
+    return _add_timing_marks(img)
 
 
 # ------------------------------------------------------------------ #
@@ -215,6 +231,46 @@ class TestDecodeForm:
         reader = CheckboxReader()
         answers = reader.decode_form(img)
         assert answers == ["Invalid"] * 14
+
+
+# ------------------------------------------------------------------ #
+#  Timing mark detection tests
+# ------------------------------------------------------------------ #
+
+
+class TestDetectTimingMarks:
+    def test_detect_all_14(self):
+        img = make_empty_form()
+        reader = CheckboxReader()
+        marks = reader.detect_timing_marks(img)
+        assert marks is not None
+        assert len(marks) == 14
+        # Should be sorted top-to-bottom
+        assert marks == sorted(marks)
+
+    def test_too_few_returns_none(self):
+        img = np.ones((1000, 800), dtype=np.uint8) * 255
+        # Draw only 3 marks
+        for cy in [300, 500, 700]:
+            cv2.rectangle(img, (740, cy - 6), (780, cy + 6), 0, -1)
+        reader = CheckboxReader()
+        assert reader.detect_timing_marks(img) is None
+
+    def test_grid_uses_timing_marks(self):
+        selections = [0, 1, 2, None, 0, 1, 2, None, 0, 1, 2, None, 0, 1]
+        img = make_aligned_form(selections)
+        reader = CheckboxReader()
+        grid = reader.read_checkbox_grid(img)
+        assert len(grid) == 14
+        for row, col in enumerate(selections):
+            if col is not None:
+                assert grid[row][col] > Config.CHECKBOX_THRESHOLD
+                for other in range(3):
+                    if other != col:
+                        assert grid[row][other] < Config.CHECKBOX_THRESHOLD
+            else:
+                for c in range(3):
+                    assert grid[row][c] < Config.CHECKBOX_THRESHOLD
 
 
 if __name__ == "__main__":

@@ -49,6 +49,11 @@ def make_full_synthetic_form(
         cy = (y1 + y2) // 2
         radius = min(x2 - x1, y2 - y1) // 2 - 2
         cv2.circle(img, (cx, cy), radius, (0, 0, 0), -1)
+    # Add timing marks on the right edge
+    for row in range(Config.ROW_COUNT):
+        _, y1, _, y2 = reader.get_checkbox_bounds(row, 0)
+        cy = (y1 + y2) // 2
+        cv2.rectangle(img, (740, cy - 6), (780, cy + 6), (0, 0, 0), -1)
     return img
 
 
