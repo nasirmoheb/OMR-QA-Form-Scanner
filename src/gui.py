@@ -973,63 +973,400 @@ class ProcessPage(BasePage):
 
 
 class ResultsPage(BasePage):
-    """Results visualization and export (placeholder)."""
+    """Results visualization and export — full Phase 5 implementation."""
 
     def __init__(
         self,
         router: PageRouter,
         persistence: PersistenceManager,
         survey_id: int,
+        analytics: AnalyticsEngine | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the ResultsPage.
+
+        Args:
+            router: Application page router.
+            persistence: Database persistence manager.
+            survey_id: ID of the survey to display.
+            analytics: Optional AnalyticsEngine instance; created if ``None``.
+            **kwargs: Forwarded to ``BasePage``.
+        """
         super().__init__(router, **kwargs)
         self.persistence = persistence
         self.survey_id = survey_id
+        self.analytics = analytics or AnalyticsEngine()
+
+        # Load data
+        self.survey = self.persistence.get_survey(self.survey_id)
+        self.form_results = self.persistence.get_form_results(self.survey_id)
+        self.question_texts = self.persistence.get_setting("question_texts", None)
+
+        # Auto-update status to "Analyzed" if it was "Processed"
+        if self.survey and self.survey.status == "Processed":
+            self.survey.status = "Analyzed"
+            self.survey.updated_at = datetime.now().isoformat()
+            self.persistence.update_survey(self.survey)
+            logger.info(_("analyzed_status_set"))
+
         self._create_widgets()
 
     def _create_widgets(self) -> None:
-        survey = self.persistence.get_survey(self.survey_id)
-
+        """Build the full ResultsPage layout."""
+        # --- Header ---------------------------------------------------- #
         header_frame = ctk.CTkFrame(self, fg_color="transparent")
         header_frame.pack(pady=(16, 8), padx=20, fill="x")
+
+        back_btn = ctk.CTkButton(
+            header_frame,
+            text=_("back"),
+            command=lambda: (
+                self.navigate_callback("dashboard")
+                if self.navigate_callback
+                else self.router.navigate("dashboard")
+            ),
+            width=100,
+            height=36,
+            corner_radius=8,
+        )
+        back_btn.pack(side="left")
 
         title = ctk.CTkLabel(
             header_frame,
             text=_("results"),
             font=ctk.CTkFont(size=24, weight="bold"),
         )
-        title.pack(side="left")
+        title.pack(side="left", padx=16)
 
-        back_btn = ctk.CTkButton(
-            header_frame,
-            text=_("back"),
-            command=lambda: self.navigate_callback("dashboard") if self.navigate_callback else self.router.navigate("dashboard"),
-            width=100,
+        # --- Survey metadata card -------------------------------------- #
+        if self.survey:
+            meta_frame = ctk.CTkFrame(self, corner_radius=12)
+            meta_frame.pack(padx=20, pady=(0, 10), fill="x")
+
+            form_count = len(self.form_results)
+            batch_score = (
+                sum(fr.form_score for fr in self.form_results) / form_count
+                if form_count > 0
+                else 0.0
+            )
+
+            meta_top = ctk.CTkFrame(meta_frame, fg_color="transparent")
+            meta_top.pack(fill="x", padx=16, pady=(12, 4))
+
+            ctk.CTkLabel(
+                meta_top,
+                text=f"{self.survey.subject}  |  {self.survey.professor}  |  {self.survey.semester}",
+                font=ctk.CTkFont(size=15, weight="bold"),
+            ).pack(side="left")
+
+            meta_bottom = ctk.CTkFrame(meta_frame, fg_color="transparent")
+            meta_bottom.pack(fill="x", padx=16, pady=(0, 12))
+
+            ctk.CTkLabel(
+                meta_bottom,
+                text=_("forms_count", count=form_count),
+                font=ctk.CTkFont(size=13),
+                text_color=("gray40", "gray60"),
+            ).pack(side="left")
+
+            ctk.CTkLabel(
+                meta_bottom,
+                text="   " + _("batch_score_label", score=batch_score),
+                font=ctk.CTkFont(size=13),
+                text_color=("gray40", "gray60"),
+            ).pack(side="left")
+
+        # --- Segmented tab button ------------------------------------- #
+        self.tab_var = tk.StringVar(value=_("summary_view"))
+        self.seg_btn = ctk.CTkSegmentedButton(
+            self,
+            values=[_("summary_view"), _("raw_data_view"), _("trend_analysis")],
+            command=self._on_tab_change,
+            variable=self.tab_var,
+        )
+        self.seg_btn.pack(padx=20, pady=(0, 8), fill="x")
+
+        # --- Content area --------------------------------------------- #
+        self.content_frame = ctk.CTkScrollableFrame(self, corner_radius=12)
+        self.content_frame.pack(padx=20, pady=(0, 8), fill="both", expand=True)
+
+        # --- Export buttons row --------------------------------------- #
+        export_frame = ctk.CTkFrame(self, fg_color="transparent")
+        export_frame.pack(padx=20, pady=(0, 16), fill="x")
+
+        ctk.CTkButton(
+            export_frame,
+            text=_("export_csv"),
+            command=self._on_export_csv,
+            width=160,
             height=36,
             corner_radius=8,
+        ).pack(side="left", padx=(0, 8))
+
+        ctk.CTkButton(
+            export_frame,
+            text=_("export_pdf_report"),
+            command=self._on_export_pdf,
+            width=180,
+            height=36,
+            corner_radius=8,
+        ).pack(side="left")
+
+        # Show summary tab by default
+        self._show_summary()
+
+    # ------------------------------------------------------------------ #
+    #  Tab helpers
+    # ------------------------------------------------------------------ #
+
+    def _clear_content(self) -> None:
+        """Remove all widgets from the content frame."""
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+    def _show_summary(self) -> None:
+        """Build the summary table in the content frame."""
+        self._clear_content()
+
+        if not self.form_results:
+            ctk.CTkLabel(
+                self.content_frame,
+                text=_("no_results"),
+                font=ctk.CTkFont(size=14),
+                text_color="gray",
+            ).pack(pady=40)
+            return
+
+        columns = (
+            _("question_num_short"),
+            _("question_text") if False else "Question",  # use plain "Question" as column id
+            _("count_yes"),
+            _("count_no"),
+            _("count_somewhat"),
+            _("count_invalid"),
+            _("total_responses"),
+            _("pct_distribution"),
         )
-        back_btn.pack(side="right")
+        col_ids = ("q_num", "q_text", "yes", "no", "somewhat", "invalid", "total", "pct")
 
-        # Survey metadata card
-        if survey:
-            meta_frame = ctk.CTkFrame(self, corner_radius=12)
-            meta_frame.pack(padx=20, pady=(0, 16), fill="x")
-
-            meta_text = f"{survey.subject} - {survey.professor} ({survey.semester}, {survey.academic_year})"
-            meta_label = ctk.CTkLabel(meta_frame, text=meta_text, font=ctk.CTkFont(size=15))
-            meta_label.pack(padx=16, pady=16)
-
-        # Placeholder content
-        placeholder_frame = ctk.CTkFrame(self, corner_radius=12)
-        placeholder_frame.pack(padx=20, pady=(0, 16), fill="both", expand=True)
-
-        placeholder = ctk.CTkLabel(
-            placeholder_frame,
-            text="Results page - to be implemented in Phase 5",
-            font=ctk.CTkFont(size=16),
-            text_color="gray",
+        tree = ttk.Treeview(
+            self.content_frame,
+            columns=col_ids,
+            show="headings",
+            height=14,
         )
-        placeholder.place(relx=0.5, rely=0.5, anchor="center")
+        for cid, cname in zip(col_ids, columns):
+            tree.heading(cid, text=cname)
+            tree.column(cid, width=80, anchor="center")
+        tree.column("q_text", width=200, anchor="w")
+
+        for i in range(14):
+            q_num = i + 1
+            q_text = (
+                self.question_texts[i]
+                if self.question_texts and len(self.question_texts) == 14
+                else f"Q{q_num}"
+            )
+            count_yes = sum(1 for fr in self.form_results if fr.answers()[i] == "Yes")
+            count_no = sum(1 for fr in self.form_results if fr.answers()[i] == "No")
+            count_somewhat = sum(1 for fr in self.form_results if fr.answers()[i] == "Somewhat")
+            count_invalid = sum(1 for fr in self.form_results if fr.answers()[i] == "Invalid")
+            total = count_yes + count_no + count_somewhat + count_invalid
+            pct = f"{(count_yes / total * 100):.1f}" if total > 0 else "0.0"
+            tree.insert(
+                "",
+                "end",
+                values=(q_num, q_text, count_yes, count_no, count_somewhat, count_invalid, total, pct),
+            )
+
+        tree.pack(fill="both", expand=True)
+
+        # Scrollbar
+        vsb = ttk.Scrollbar(self.content_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y")
+
+        # View HTML Report button
+        ctk.CTkButton(
+            self.content_frame,
+            text=_("view_html_report"),
+            command=self._on_view_html_report,
+            width=180,
+            height=36,
+            corner_radius=8,
+        ).pack(pady=(12, 4))
+
+    def _show_raw_data(self) -> None:
+        """Build the raw data table in the content frame."""
+        self._clear_content()
+
+        if not self.form_results:
+            ctk.CTkLabel(
+                self.content_frame,
+                text=_("no_results"),
+                font=ctk.CTkFont(size=14),
+                text_color="gray",
+            ).pack(pady=40)
+            return
+
+        q_cols = tuple(f"Q{i}" for i in range(1, 15))
+        col_ids = ("form_id",) + q_cols + ("score", "valid")
+        col_names = ("Form ID",) + q_cols + ("Score", "Valid")
+
+        tree = ttk.Treeview(
+            self.content_frame,
+            columns=col_ids,
+            show="headings",
+            height=min(len(self.form_results), 15),
+        )
+        for cid, cname in zip(col_ids, col_names):
+            tree.heading(cid, text=cname)
+            tree.column(cid, width=55, anchor="center")
+        tree.column("form_id", width=120, anchor="w")
+
+        for fr in self.form_results:
+            row = (fr.form_id,) + tuple(fr.answers()) + (f"{fr.form_score:.1f}", str(fr.valid))
+            tree.insert("", "end", values=row)
+
+        tree.pack(fill="both", expand=True)
+
+        vsb = ttk.Scrollbar(self.content_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y")
+
+        hsb = ttk.Scrollbar(self.content_frame, orient="horizontal", command=tree.xview)
+        tree.configure(xscrollcommand=hsb.set)
+        hsb.pack(side="bottom", fill="x")
+
+    def _show_trend(self) -> None:
+        """Build the trend table in the content frame."""
+        self._clear_content()
+
+        if not self.survey:
+            ctk.CTkLabel(
+                self.content_frame,
+                text=_("no_trend_data"),
+                font=ctk.CTkFont(size=14),
+                text_color="gray",
+            ).pack(pady=40)
+            return
+
+        trend_data = self.analytics.get_trend_data(self.survey, self.persistence)
+
+        if len(trend_data) <= 1:
+            ctk.CTkLabel(
+                self.content_frame,
+                text=_("no_trend_data"),
+                font=ctk.CTkFont(size=14),
+                text_color="gray",
+            ).pack(pady=40)
+            return
+
+        col_ids = ("semester", "academic_year", "form_count", "batch_score")
+        col_names = (_("semester"), _("academic_year"), "Forms", "Score")
+
+        tree = ttk.Treeview(
+            self.content_frame,
+            columns=col_ids,
+            show="headings",
+            height=min(len(trend_data), 10),
+        )
+        for cid, cname in zip(col_ids, col_names):
+            tree.heading(cid, text=cname)
+            tree.column(cid, width=140, anchor="center")
+
+        for entry in trend_data:
+            tree.insert(
+                "",
+                "end",
+                values=(
+                    entry["semester"],
+                    entry["academic_year"],
+                    entry["form_count"],
+                    f"{entry['batch_score']:.1f}%",
+                ),
+            )
+
+        tree.pack(fill="both", expand=True)
+
+    def _on_tab_change(self, value: str) -> None:
+        """Switch content based on selected tab value."""
+        if value == _("summary_view"):
+            self._show_summary()
+        elif value == _("raw_data_view"):
+            self._show_raw_data()
+        elif value == _("trend_analysis"):
+            self._show_trend()
+
+    # ------------------------------------------------------------------ #
+    #  Export handlers
+    # ------------------------------------------------------------------ #
+
+    def _on_export_csv(self) -> None:
+        """Open save dialog and export CSV."""
+        path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv")],
+            title=_("export_csv"),
+        )
+        if not path:
+            return
+        try:
+            self.analytics.export_csv(self.form_results, path, self.question_texts)
+            messagebox.showinfo(_("export_success"), _("export_success"))
+        except Exception as exc:
+            logger.exception("CSV export failed")
+            messagebox.showerror(_("export_error"), f"{_('export_error')}:\n{exc}")
+
+    def _on_export_pdf(self) -> None:
+        """Open save dialog and export PDF report."""
+        path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf")],
+            title=_("export_pdf_report"),
+        )
+        if not path:
+            return
+        try:
+            self.analytics.export_pdf_report(
+                self.survey, self.form_results, path, self.question_texts
+            )
+            messagebox.showinfo(_("export_success"), _("export_success"))
+        except Exception as exc:
+            logger.exception("PDF export failed")
+            messagebox.showerror(_("export_error"), f"{_('export_error')}:\n{exc}")
+
+    def _on_view_html_report(self) -> None:
+        """Generate HTML report and open in default browser."""
+        try:
+            import pandas as pd
+
+            rows = []
+            for fr in self.form_results:
+                row: dict[str, Any] = {
+                    "Form_ID": fr.form_id,
+                    "Form_Score": fr.form_score,
+                    "Valid": fr.valid,
+                }
+                for i, ans in enumerate(fr.answers(), start=1):
+                    row[f"Q{i}"] = ans
+                rows.append(row)
+
+            if rows:
+                df = pd.DataFrame(rows)
+            else:
+                df = pd.DataFrame(
+                    columns=["Form_ID"] + [f"Q{i}" for i in range(1, 15)] + ["Form_Score", "Valid"]
+                )
+
+            report_path = self.analytics.generate_report(
+                df,
+                question_texts=self.question_texts,
+            )
+            webbrowser.open(f"file:///{Path(report_path).resolve()}")
+        except Exception as exc:
+            logger.exception("HTML report generation failed")
+            messagebox.showerror(_("error_report"), f"{_('error_report')}:\n{exc}")
 
 
 class OMRGUI:
@@ -1178,6 +1515,7 @@ class OMRGUI:
                 router=self.router,
                 persistence=self.persistence,
                 navigate_callback=self._navigate_to,
+                analytics=self.analytics,
                 **kwargs,
             ),
         )
