@@ -1,0 +1,239 @@
+"""Vision processing: read checkbox selections from an aligned OMR form."""
+
+from typing import Any
+
+import cv2
+import numpy as np
+
+from config import Config, setup_logging
+
+logger = setup_logging()
+
+# Grid layout constants (tuned for the real-world Persian form)
+_MARGIN_LEFT: int = 210
+_MARGIN_RIGHT: int = 445
+_MARGIN_TOP: int = 280
+_MARGIN_BOTTOM: int = 210
+_COL_GAP: int = 10
+_ROW_GAP: int = 2
+
+# Special handling: wide rows (Q1, Q11, Q14) need vertical offset
+_WIDE_ROW_V_OFFSET: int = 13  # pixels to shift wide rows downward
+
+# Inner padding: ignore the outer border of each cell to focus on the mark
+_CELL_PAD_X: int = 8
+_CELL_PAD_Y: int = 4
+
+
+def _cell_box(
+    row: int,
+    col: int,
+    form_w: int,
+    form_h: int,
+    rows: int,
+    cols: int,
+) -> tuple[int, int, int, int]:
+    """Return ``(x1, y1, x2, y2)`` for the checkbox at *row*, *col*.
+
+    Args:
+        row: Zero-based row index.
+        col: Zero-based column index.
+        form_w: Form width in pixels.
+        form_h: Form height in pixels.
+        rows: Total number of rows.
+        cols: Total number of columns.
+
+    Returns:
+        Bounding-box tuple ``(x1, y1, x2, y2)``.
+    """
+    usable_w = form_w - _MARGIN_LEFT - _MARGIN_RIGHT
+    usable_h = form_h - _MARGIN_TOP - _MARGIN_BOTTOM
+
+    cell_w = (usable_w - (cols - 1) * _COL_GAP) // cols
+    cell_h = (usable_h - (rows - 1) * _ROW_GAP) // rows
+
+    x1 = _MARGIN_LEFT + col * (cell_w + _COL_GAP)
+    y1 = _MARGIN_TOP + row * (cell_h + _ROW_GAP)
+
+    # Apply vertical offset for rows after wide Q1, Q11, and Q14
+    if row >= 1:  # After Q1
+        y1 += _WIDE_ROW_V_OFFSET
+    if row >= 11:  # After Q10 comes Q11 (also wide)
+        y1 += _WIDE_ROW_V_OFFSET
+    if row >= 13:  # After Q13 comes Q14 (also wide)
+        y1 += _WIDE_ROW_V_OFFSET
+
+    x2 = x1 + cell_w
+    y2 = y1 + cell_h
+
+    return x1, y1, x2, y2
+
+
+class CheckboxReader:
+    """Reads a 14 x 3 checkbox grid from an aligned form image."""
+
+    def __init__(self, config: Config | None = None) -> None:
+        """Initialize with configuration.
+
+        Args:
+            config: Application configuration. Uses global defaults when
+                ``None``.
+        """
+        self.config = config or Config()
+
+    # ------------------------------------------------------------------ #
+    #  Pixel-density helper
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def calculate_pixel_density(
+        region: np.ndarray, invert: bool = True
+    ) -> float:
+        """Return the ratio of dark pixels in *region*.
+
+        Grayscale conversion and binary thresholding are applied
+        internally so the function accepts colour or greyscale images.
+
+        Args:
+            region: Image patch (H, W) or (H, W, 3).
+            invert: If ``True`` (default) black pixels are considered
+                "marked". If ``False`` white pixels are marked.
+
+        Returns:
+            Ratio in ``[0.0, 1.0]`` of marked pixels.
+        """
+        if len(region.shape) == 3:
+            gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = region.copy()
+
+        # Otsu is robust to varying lighting; fallback to 127 if it fails
+        if gray.size == 0:
+            return 0.0
+
+        try:
+            _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        except cv2.error:
+            _, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
+
+        marked = cv2.countNonZero(binary) if invert else (binary.size - cv2.countNonZero(binary))
+        return marked / binary.size
+
+    # ------------------------------------------------------------------ #
+    #  Grid coordinate helper
+    # ------------------------------------------------------------------ #
+
+    def get_checkbox_bounds(
+        self, row: int, col: int
+    ) -> tuple[int, int, int, int]:
+        """Compute bounding box for the checkbox at *row*, *col*.
+
+        Args:
+            row: Zero-based row index (0 .. ROW_COUNT-1).
+            col: Zero-based column index (0 .. COLUMN_COUNT-1).
+
+        Returns:
+            ``(x1, y1, x2, y2)`` in pixel coordinates.
+        """
+        return _cell_box(
+            row,
+            col,
+            self.config.FORM_WIDTH,
+            self.config.FORM_HEIGHT,
+            self.config.ROW_COUNT,
+            self.config.COLUMN_COUNT,
+        )
+
+    # ------------------------------------------------------------------ #
+    #  Grid reading
+    # ------------------------------------------------------------------ #
+
+    def read_checkbox_grid(
+        self, aligned_image: np.ndarray
+    ) -> list[list[float]]:
+        """Measure pixel density for every cell in the 14 x 3 grid.
+
+        Args:
+            aligned_image: Perspective-corrected form image.
+
+        Returns:
+            2-D list ``densities[row][col]``.
+        """
+        if len(aligned_image.shape) == 3:
+            gray = cv2.cvtColor(aligned_image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = aligned_image.copy()
+
+        densities: list[list[float]] = []
+        for row in range(self.config.ROW_COUNT):
+            row_densities: list[float] = []
+            for col in range(self.config.COLUMN_COUNT):
+                x1, y1, x2, y2 = self.get_checkbox_bounds(row, col)
+                # Clamp to image bounds
+                h, w = gray.shape
+                x1, y1 = max(x1, 0), max(y1, 0)
+                x2, y2 = min(x2, w), min(y2, h)
+                if x2 <= x1 or y2 <= y1:
+                    row_densities.append(0.0)
+                    continue
+                region = gray[y1:y2, x1:x2]
+                density = self.calculate_pixel_density(region, invert=True)
+                row_densities.append(density)
+            densities.append(row_densities)
+        return densities
+
+    # ------------------------------------------------------------------ #
+    #  Selection determination
+    # ------------------------------------------------------------------ #
+
+    def determine_selection(
+        self, densities: list[float]
+    ) -> str:
+        """Classify a single row given its three column densities.
+
+        Args:
+            densities: Three-element list ``[col0, col1, col2]``.
+
+        Returns:
+            ``"Yes"``, ``"Somewhat"``, ``"No"`` or ``"Invalid"``.
+        """
+        if len(densities) != self.config.COLUMN_COUNT:
+            logger.warning("Unexpected density count: %d", len(densities))
+            return "Invalid"
+
+        above = [
+            i
+            for i, d in enumerate(densities)
+            if d >= self.config.CHECKBOX_THRESHOLD
+        ]
+
+        # RTL form: columns from right to left are YES, NO, MAYBE
+        # Our code scans left-to-right, so reverse: col0=MAYBE, col1=NO, col2=YES
+        col_labels = ["Somewhat", "No", "Yes"]
+
+        if len(above) == 0:
+            return "Invalid"
+        if len(above) == 1:
+            return col_labels[above[0]]
+        # More than one checkbox marked
+        logger.info(
+            "Multiple selections detected (densities %s); marking Invalid.",
+            densities,
+        )
+        return "Invalid"
+
+    # ------------------------------------------------------------------ #
+    #  Convenience: full form decode
+    # ------------------------------------------------------------------ #
+
+    def decode_form(self, aligned_image: np.ndarray) -> list[str]:
+        """Return the selected answer for every row.
+
+        Args:
+            aligned_image: Aligned form image.
+
+        Returns:
+            List of 14 answer strings (one per question).
+        """
+        grid = self.read_checkbox_grid(aligned_image)
+        return [self.determine_selection(row) for row in grid]
