@@ -17,6 +17,7 @@ from config import Config, setup_logging
 from data_store import DataStore
 from i18n import I18n, _
 from models import Survey, FormResult
+from pdf_generator import generate_prefilled_form, open_pdf
 from persistence import PersistenceManager
 from settings_page import SettingsFrame
 from vision_processor import VisionProcessor
@@ -483,16 +484,16 @@ class SurveyFormPage(BasePage):
         )
         save_btn.pack(side="left", padx=5)
 
-        print_btn = ctk.CTkButton(
+        self.print_btn = ctk.CTkButton(
             button_frame,
             text=_("print_form"),
             command=self._on_print,
-            state="disabled",
+            state="disabled" if not self.survey_id else "normal",
             width=140,
             height=40,
             corner_radius=8,
         )
-        print_btn.pack(side="left", padx=5)
+        self.print_btn.pack(side="left", padx=5)
 
     def _create_field(
         self,
@@ -555,7 +556,11 @@ class SurveyFormPage(BasePage):
             survey.updated_at = datetime.now().isoformat()
             self.persistence.update_survey(survey)
         else:
-            self.persistence.create_survey(survey)
+            saved = self.persistence.create_survey(survey)
+            self.survey_id = saved.id
+            # Enable print button now that the survey has a DB id
+            if hasattr(self, "print_btn"):
+                self.print_btn.configure(state="normal")
 
         if self.navigate_callback:
             self.navigate_callback("dashboard")
@@ -563,8 +568,38 @@ class SurveyFormPage(BasePage):
             self.router.navigate("dashboard")
 
     def _on_print(self) -> None:
-        """Print survey form (placeholder for Phase 2)."""
-        messagebox.showinfo("Info", "PDF generation will be implemented in Phase 2.")
+        """Generate a prefilled PDF and open it with the system viewer."""
+        if not self.survey_id:
+            messagebox.showwarning(_("print_form"), "Please save the survey first.")
+            return
+
+        survey = self.persistence.get_survey(self.survey_id)
+        if not survey:
+            messagebox.showerror(_("print_form"), "Survey not found.")
+            return
+
+        try:
+            import tempfile
+
+            tmp_dir = Path(tempfile.mkdtemp())
+            safe_name = (
+                f"survey_{survey.id}_{survey.subject or 'form'}"
+                .replace(" ", "_")
+                .replace("/", "-")[:60]
+            )
+            output_path = tmp_dir / f"{safe_name}.pdf"
+
+            generate_prefilled_form(
+                survey,
+                output_path,
+                persistence=self.persistence,
+            )
+            open_pdf(output_path)
+        except RuntimeError as exc:
+            messagebox.showerror(_("print_form"), str(exc))
+        except Exception as exc:
+            logger.exception("PDF generation failed")
+            messagebox.showerror(_("print_form"), f"Failed to generate PDF:\n{exc}")
 
 
 class ProcessPage(BasePage):
