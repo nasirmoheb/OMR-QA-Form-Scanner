@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import threading
 import tkinter as tk
 import webbrowser
 from datetime import datetime
@@ -603,76 +604,372 @@ class SurveyFormPage(BasePage):
 
 
 class ProcessPage(BasePage):
-    """Per-survey image upload and OMR processing (placeholder)."""
+    """Per-survey image upload and OMR processing."""
 
     def __init__(
         self,
         router: PageRouter,
         persistence: PersistenceManager,
         survey_id: int,
+        folder_path: str = "",
+        vision: VisionProcessor | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(router, **kwargs)
         self.persistence = persistence
         self.survey_id = survey_id
+        self.folder_path = folder_path
+        self.vision = vision or VisionProcessor()
+
+        self.image_files: list[Path] = []
+        self.thumbnail_cards: dict[Path, ctk.CTkFrame] = {}
+        self.is_scanning: bool = False
+
         self._create_widgets()
 
-    def _create_widgets(self) -> None:
-        survey = self.persistence.get_survey(self.survey_id)
+        # Auto-load images if a valid folder was provided
+        if self.folder_path and Path(self.folder_path).exists():
+            self._load_images_from_folder(Path(self.folder_path))
 
+    def _create_widgets(self) -> None:
+        """Build the ProcessPage layout."""
+        # --- Header ---------------------------------------------------- #
         header_frame = ctk.CTkFrame(self, fg_color="transparent")
         header_frame.pack(pady=(16, 8), padx=20, fill="x")
+
+        back_btn = ctk.CTkButton(
+            header_frame,
+            text=_("back"),
+            command=lambda: (
+                self.navigate_callback("dashboard")
+                if self.navigate_callback
+                else self.router.navigate("dashboard")
+            ),
+            width=100,
+            height=36,
+            corner_radius=8,
+        )
+        back_btn.pack(side="left")
 
         title = ctk.CTkLabel(
             header_frame,
             text=_("process"),
             font=ctk.CTkFont(size=24, weight="bold"),
         )
-        title.pack(side="left")
+        title.pack(side="left", padx=16)
 
-        back_btn = ctk.CTkButton(
-            header_frame,
-            text=_("back"),
-            command=lambda: self.navigate_callback("dashboard") if self.navigate_callback else self.router.navigate("dashboard"),
-            width=100,
-            height=36,
-            corner_radius=8,
-        )
-        back_btn.pack(side="right")
+        # --- Survey metadata card -------------------------------------- #
+        survey = None
+        try:
+            survey = self.persistence.get_survey(self.survey_id)
+        except Exception:
+            logger.warning("Could not load survey id=%s", self.survey_id)
 
-        # Survey metadata card
         if survey:
             meta_frame = ctk.CTkFrame(self, corner_radius=12)
-            meta_frame.pack(padx=20, pady=(0, 16), fill="x")
+            meta_frame.pack(padx=20, pady=(0, 10), fill="x")
+            meta_text = (
+                f"{survey.subject} - {survey.professor} "
+                f"({survey.semester}, {survey.academic_year})"
+            )
+            meta_label = ctk.CTkLabel(
+                meta_frame,
+                text=meta_text,
+                font=ctk.CTkFont(size=15),
+            )
+            meta_label.pack(padx=16, pady=12)
 
-            meta_text = f"{survey.subject} - {survey.professor} ({survey.semester}, {survey.academic_year})"
-            meta_label = ctk.CTkLabel(meta_frame, text=meta_text, font=ctk.CTkFont(size=15))
-            meta_label.pack(padx=16, pady=16)
+        # --- Add Images row ------------------------------------------- #
+        add_row = ctk.CTkFrame(self, fg_color="transparent")
+        add_row.pack(padx=20, pady=(0, 8), fill="x")
 
-        # Folder info
-        if self.folder_path:
-            folder_frame = ctk.CTkFrame(self, corner_radius=12)
-            folder_frame.pack(padx=20, pady=(0, 16), fill="x")
+        add_btn = ctk.CTkButton(
+            add_row,
+            text=_("add_images"),
+            command=self._on_add_images,
+            width=120,
+            height=34,
+            corner_radius=8,
+        )
+        add_btn.pack(side="left")
 
-            folder_label = ctk.CTkLabel(
-                folder_frame,
-                text=f"{_('select_folder')}: {self.folder_path}",
-                font=ctk.CTkFont(size=13),
+        folder_display = self.folder_path if self.folder_path else _("no_folder")
+        self.folder_path_label = ctk.CTkLabel(
+            add_row,
+            text=folder_display,
+            font=ctk.CTkFont(size=12),
+            text_color=("gray40", "gray60"),
+        )
+        self.folder_path_label.pack(side="left", padx=12)
+
+        # --- Thumbnail grid ------------------------------------------- #
+        self.thumb_frame = ctk.CTkScrollableFrame(
+            self,
+            corner_radius=12,
+            height=200,
+        )
+        self.thumb_frame.pack(padx=20, pady=(0, 10), fill="x")
+
+        # --- Progress -------------------------------------------------- #
+        self.progress_label = ctk.CTkLabel(
+            self,
+            text="",
+            font=ctk.CTkFont(size=13),
+        )
+        self.progress_label.pack(padx=20, pady=(0, 4), anchor="w")
+
+        self.progress_bar = ctk.CTkProgressBar(self, height=14, corner_radius=6)
+        self.progress_bar.set(0)
+        self.progress_bar.pack(padx=20, pady=(0, 10), fill="x")
+
+        # --- Start Scanning button ------------------------------------ #
+        self.scan_btn = ctk.CTkButton(
+            self,
+            text=_("start_scanning"),
+            command=self._on_start_scanning,
+            state="disabled",
+            height=40,
+            corner_radius=8,
+            font=ctk.CTkFont(size=14, weight="bold"),
+        )
+        self.scan_btn.pack(padx=20, pady=(0, 16), anchor="w")
+
+    # ------------------------------------------------------------------ #
+    #  Image management
+    # ------------------------------------------------------------------ #
+
+    def _on_add_images(self) -> None:
+        """Open file dialog and add selected images."""
+        files = filedialog.askopenfilenames(
+            filetypes=[("Image files", "*.jpg *.jpeg *.png")]
+        )
+        for f in files:
+            p = Path(f)
+            if p not in self.image_files:
+                self.image_files.append(p)
+        self._refresh_thumbnails()
+        if self.image_files:
+            self.scan_btn.configure(state="normal")
+
+    def _load_images_from_folder(self, folder: Path) -> None:
+        """Scan a folder for supported image files and load them."""
+        exts = {".jpg", ".jpeg", ".png"}
+        found = sorted(
+            p for p in folder.iterdir()
+            if p.is_file() and p.suffix.lower() in exts
+        )
+        self.image_files = found
+        self._refresh_thumbnails()
+        if self.image_files:
+            self.scan_btn.configure(state="normal")
+
+    def _refresh_thumbnails(self) -> None:
+        """Rebuild the thumbnail grid from ``self.image_files``."""
+        # Clear existing cards
+        for widget in self.thumb_frame.winfo_children():
+            widget.destroy()
+        self.thumbnail_cards.clear()
+
+        for path in self.image_files:
+            card = ctk.CTkFrame(
+                self.thumb_frame,
+                width=100,
+                height=80,
+                corner_radius=8,
+                border_width=1,
+                border_color=("gray80", "gray30"),
+            )
+            card.pack(side="left", padx=4, pady=4)
+            card.pack_propagate(False)
+
+            # Filename label (truncated)
+            name = path.name
+            display_name = name if len(name) <= 12 else name[:12] + "..."
+            name_lbl = ctk.CTkLabel(
+                card,
+                text=display_name,
+                font=ctk.CTkFont(size=9),
+                wraplength=90,
+            )
+            name_lbl.pack(pady=(6, 2))
+
+            # Status badge
+            status_lbl = ctk.CTkLabel(
+                card,
+                text=_("queued"),
+                font=ctk.CTkFont(size=9),
                 text_color="gray",
             )
-            folder_label.pack(padx=16, pady=12)
+            status_lbl.pack(pady=(0, 4))
 
-        # Placeholder content
-        placeholder_frame = ctk.CTkFrame(self, corner_radius=12)
-        placeholder_frame.pack(padx=20, pady=(0, 16), fill="both", expand=True)
+            # Store reference to the status label inside the card
+            card._status_label = status_lbl  # type: ignore[attr-defined]
+            self.thumbnail_cards[path] = card
 
-        placeholder = ctk.CTkLabel(
-            placeholder_frame,
-            text="Process page - to be implemented in Phase 4",
-            font=ctk.CTkFont(size=16),
-            text_color="gray",
+    def _update_thumbnail_status(self, path: Path, status: str) -> None:
+        """Update the status badge on a thumbnail card."""
+        card = self.thumbnail_cards.get(path)
+        if card is None:
+            return
+
+        color_map = {
+            "Queued": "gray",
+            "Processing": "#3B82F6",
+            "Success": "#10B981",
+            "Warning": "#F59E0B",
+            "Error": "#E94560",
+        }
+        color = color_map.get(status, "gray")
+
+        # Map status to i18n key
+        key_map = {
+            "Queued": "queued",
+            "Processing": "processing",
+            "Success": "success",
+            "Warning": "warning",
+            "Error": "error",
+        }
+        label_text = _(key_map.get(status, status.lower()))
+
+        lbl = getattr(card, "_status_label", None)
+        if lbl:
+            lbl.configure(text=label_text, text_color=color)
+
+    # ------------------------------------------------------------------ #
+    #  Scanning
+    # ------------------------------------------------------------------ #
+
+    def _on_start_scanning(self) -> None:
+        """Start the scanning process in a background thread."""
+        if self.is_scanning or not self.image_files:
+            if not self.image_files:
+                messagebox.showwarning(
+                    _("start_scanning"), _("no_images_queued")
+                )
+            return
+        self.is_scanning = True
+        self.scan_btn.configure(state="disabled")
+        t = threading.Thread(target=self._scan_worker, daemon=True)
+        t.start()
+
+    def _scan_worker(self) -> None:
+        """Background worker: process each image and save results."""
+        n = len(self.image_files)
+        counts = {"success": 0, "warning": 0, "error": 0}
+
+        for i, image_path in enumerate(self.image_files):
+            # Update thumbnail to "Processing"
+            self.after(
+                0,
+                lambda p=image_path: self._update_thumbnail_status(p, "Processing"),
+            )
+            # Update progress label
+            label_text = _("scanning_image", current=i + 1, total=n)
+            self.after(0, lambda t=label_text: self.progress_label.configure(text=t))
+            # Update progress bar
+            progress_val = (i + 1) / n
+            self.after(0, lambda v=progress_val: self.progress_bar.set(v))
+
+            try:
+                result = self.vision.process_form(image_path)
+            except Exception as exc:
+                logger.exception("Error processing %s", image_path)
+                result = {
+                    "status": "error",
+                    "form_confidence": 0.0,
+                    "Form_ID": image_path.stem,
+                    "Form_Score": 0.0,
+                    "Valid": False,
+                }
+                for qi in range(1, 15):
+                    result[f"Q{qi}"] = "Invalid"
+
+            # Determine status
+            if result.get("status") != "ok":
+                status = "Error"
+                counts["error"] += 1
+            elif result.get("form_confidence", 0.0) < 0.5:
+                status = "Warning"
+                counts["warning"] += 1
+            else:
+                status = "Success"
+                counts["success"] += 1
+
+            # Save to DB
+            try:
+                form_result = self._result_to_form_result(result, image_path)
+                self.persistence.create_form_result(form_result)
+            except Exception:
+                logger.exception("Failed to save form result for %s", image_path)
+
+            # Update thumbnail
+            self.after(
+                0,
+                lambda p=image_path, s=status: self._update_thumbnail_status(p, s),
+            )
+
+        # All done — update survey status to "Processed"
+        try:
+            survey = self.persistence.get_survey(self.survey_id)
+            if survey:
+                survey.status = "Processed"
+                survey.updated_at = datetime.now().isoformat()
+                self.persistence.update_survey(survey)
+        except Exception:
+            logger.exception("Failed to update survey status")
+
+        # Final UI updates
+        self.after(
+            0,
+            lambda: self.progress_label.configure(text=_("scan_complete")),
         )
-        placeholder.place(relx=0.5, rely=0.5, anchor="center")
+        self.after(0, lambda: setattr(self, "is_scanning", False))
+        self.after(0, lambda: self.scan_btn.configure(state="normal"))
+
+        # Summary messagebox
+        summary = (
+            f"{_('scan_summary')}\n"
+            f"{_('forms_success')}: {counts['success']}\n"
+            f"{_('forms_warning')}: {counts['warning']}\n"
+            f"{_('forms_error')}: {counts['error']}"
+        )
+        self.after(0, lambda: messagebox.showinfo(_("scan_complete"), summary))
+
+    def _result_to_form_result(
+        self, result: dict[str, Any], image_path: Path
+    ) -> FormResult:
+        """Convert a ``process_form`` result dict to a ``FormResult`` dataclass.
+
+        Args:
+            result: Dictionary returned by ``VisionProcessor.process_form``.
+            image_path: Path to the source image.
+
+        Returns:
+            Populated ``FormResult`` instance (without ``id``).
+        """
+        return FormResult(
+            survey_id=self.survey_id,
+            form_id=result.get("Form_ID", image_path.stem),
+            image_path=str(image_path),
+            q1=result.get("Q1", ""),
+            q2=result.get("Q2", ""),
+            q3=result.get("Q3", ""),
+            q4=result.get("Q4", ""),
+            q5=result.get("Q5", ""),
+            q6=result.get("Q6", ""),
+            q7=result.get("Q7", ""),
+            q8=result.get("Q8", ""),
+            q9=result.get("Q9", ""),
+            q10=result.get("Q10", ""),
+            q11=result.get("Q11", ""),
+            q12=result.get("Q12", ""),
+            q13=result.get("Q13", ""),
+            q14=result.get("Q14", ""),
+            form_score=result.get("Form_Score", 0.0),
+            valid=result.get("Valid", False),
+            confidence=result.get("form_confidence", 0.0),
+            manually_corrected=False,
+        )
 
 
 class ResultsPage(BasePage):
@@ -871,6 +1168,7 @@ class OMRGUI:
                 router=self.router,
                 persistence=self.persistence,
                 navigate_callback=self._navigate_to,
+                vision=self.vision,
                 **kwargs,
             ),
         )

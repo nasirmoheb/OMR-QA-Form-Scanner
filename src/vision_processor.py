@@ -56,6 +56,48 @@ class VisionProcessor:
         return status in ("ok", "too_many")
 
     # ------------------------------------------------------------------ #
+    #  Confidence scoring
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def calculate_row_confidence(densities: list[float], threshold: float) -> float:
+        """Calculate a confidence score for a single row's checkbox densities.
+
+        Args:
+            densities: List of density values for each column in the row.
+            threshold: The checkbox detection threshold.
+
+        Returns:
+            Confidence score in [0.0, 1.0]:
+            - 0.0 if no checkbox is above threshold (no selection)
+            - 0.0 if more than one checkbox is above threshold (ambiguous)
+            - ``min(1.0, max(above) / (threshold * 2))`` if exactly one
+              checkbox is above threshold (clear selection)
+        """
+        above = [d for d in densities if d >= threshold]
+        if len(above) == 0:
+            return 0.0
+        if len(above) > 1:
+            return 0.0
+        # Exactly one selection: scale so that density == threshold gives 0.5
+        # and density == 2*threshold gives 1.0
+        return min(1.0, max(above) / (threshold * 2))
+
+    @staticmethod
+    def calculate_form_confidence(row_confidences: list[float]) -> float:
+        """Calculate the overall form confidence as the mean of row confidences.
+
+        Args:
+            row_confidences: Per-row confidence scores.
+
+        Returns:
+            Mean confidence in [0.0, 1.0], or 0.0 for an empty list.
+        """
+        if not row_confidences:
+            return 0.0
+        return sum(row_confidences) / len(row_confidences)
+
+    # ------------------------------------------------------------------ #
     #  Single-form processing
     # ------------------------------------------------------------------ #
 
@@ -69,7 +111,8 @@ class VisionProcessor:
 
         Returns:
             Dictionary with keys ``Form_ID``, ``Q1``..``Q14``,
-            ``Form_Score``, ``Valid``, and metadata keys
+            ``Form_Score``, ``Valid``, ``densities``,
+            ``row_confidences``, ``form_confidence``, and metadata keys
             ``aligned`` and ``status``.
         """
         path = Path(image_path)
@@ -78,6 +121,9 @@ class VisionProcessor:
             "Valid": False,
             "status": "unknown",
             "aligned": None,
+            "densities": [],
+            "row_confidences": [],
+            "form_confidence": 0.0,
         }
 
         # --- load ------------------------------------------------------ #
@@ -111,17 +157,33 @@ class VisionProcessor:
         result["aligned"] = aligned
         result["status"] = "ok"
 
-        # --- read checkboxes ------------------------------------------- #
-        answers = self.reader.decode_form(aligned)
+        # --- read checkboxes and compute confidence --------------------- #
+        densities = self.reader.read_checkbox_grid(aligned)
+        row_confidences = [
+            self.calculate_row_confidence(row_d, self.config.CHECKBOX_THRESHOLD)
+            for row_d in densities
+        ]
+        form_confidence = self.calculate_form_confidence(row_confidences)
+        result["densities"] = densities
+        result["row_confidences"] = row_confidences
+        result["form_confidence"] = form_confidence
+
+        answers = [self.reader.determine_selection(row_d) for row_d in densities]
         for i, ans in enumerate(answers, start=1):
             result[f"Q{i}"] = ans
 
         # --- compute form score ---------------------------------------- #
         score = self._compute_form_score(answers)
         result["Form_Score"] = score
-        result["Valid"] = score > 0.0  # at least one valid answer
 
-        logger.info("Processed %s -> score %.1f", path.name, score)
+        # Valid if at least one answer is not "Invalid" AND form_confidence > 0
+        has_valid_answer = any(a != "Invalid" for a in answers)
+        result["Valid"] = has_valid_answer and form_confidence > 0.0
+
+        logger.info(
+            "Processed %s -> score %.1f, confidence %.2f",
+            path.name, score, form_confidence,
+        )
         return result
 
     # ------------------------------------------------------------------ #
