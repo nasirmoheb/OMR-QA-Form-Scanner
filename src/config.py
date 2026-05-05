@@ -20,10 +20,34 @@ class Config:
     ROW_COUNT: int = 14
     COLUMN_COUNT: int = 3
 
-    # Score weights
+    # Score weights (legacy 0/50/100 scale — used when LIKERT_MODE is False)
     SCORE_YES: int = 100
     SCORE_SOMEWHAT: int = 50
     SCORE_NO: int = 0
+
+    # Likert scale mode (Yes=3, Somewhat=2, No=1, Invalid=0)
+    LIKERT_MODE: bool = True
+
+    # Pedagogical dimension mapping  {dimension_name: [1-based question indices]}
+    DIMENSION_MAP: dict = {
+        "Curriculum & Resources":            [1, 2, 3],
+        "Pedagogical Delivery":              [4, 5, 9, 12],
+        "Classroom Management":              [7, 8, 10, 11],
+        "Modern & Student-Centric Teaching": [6, 13, 14],
+    }
+
+    # QA alert threshold — dimension mean below this triggers a flag
+    DIMENSION_ALERT_THRESHOLD: float = 2.2
+
+    # Polarization threshold — question SD above this is flagged
+    POLARIZATION_SD_THRESHOLD: float = 0.8
+
+    # Batch score alert threshold (0–100 legacy scale)
+    BATCH_SCORE_ALERT_THRESHOLD: float = 60.0
+
+    # Punctuality question index (1-based) and max % "No" before alert
+    PUNCTUALITY_QUESTION: int = 10
+    PUNCTUALITY_NO_THRESHOLD: float = 0.15
 
     # Supported image extensions
     SUPPORTED_EXTENSIONS: tuple[str, ...] = (".jpg", ".jpeg", ".png")

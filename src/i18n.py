@@ -129,6 +129,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "pct_distribution": "%",
         "view_html_report": "View HTML Report",
         "analyzed_status_set": "Survey marked as Analyzed.",
+        "advanced_analytics": "Advanced Analytics",
     },
     "fa": {
         "app_title": "اسکنر فورم تضمین کیفیت OMR",
@@ -245,6 +246,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "pct_distribution": "%",
         "view_html_report": "مشاهده گزارش HTML",
         "analyzed_status_set": "نظرسنجی به عنوان تحلیل شده علامت‌گذاری شد.",
+        "advanced_analytics": "تحلیل پیشرفته",
     },
     "ps": {
         "app_title": "OMR د کیفیت تضمین فورم سکینر",
@@ -361,6 +363,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "pct_distribution": "%",
         "view_html_report": "HTML راپور وګورئ",
         "analyzed_status_set": "سروۍ د تحلیل شوي په توګه نښه شوه.",
+        "advanced_analytics": "پرمختللی تحلیل",
     },
 }
 

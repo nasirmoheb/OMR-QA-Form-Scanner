@@ -86,6 +86,7 @@ class FormResult:
     valid: bool = False
     confidence: float = 0.0
     manually_corrected: bool = False
+    comment: str = ""
     id: int | None = None
 
     def answers(self) -> list[str]:
@@ -107,7 +108,7 @@ class FormResult:
 
         Expected column order:
         id, survey_id, form_id, image_path,
-        q1..q14, form_score, valid, confidence, manually_corrected
+        q1..q14, form_score, valid, confidence, manually_corrected[, comment]
         """
         return cls(
             id=row[0],
@@ -122,4 +123,64 @@ class FormResult:
             valid=bool(row[19]),
             confidence=row[20],
             manually_corrected=bool(row[21]),
+            comment=row[22] if len(row) > 22 else "",
         )
+
+
+@dataclass
+class DimensionScore:
+    """Aggregated score for a single pedagogical dimension."""
+
+    dimension_name: str
+    mean: float
+    std_dev: float
+    question_indices: list  # 1-based question numbers
+    survey_id: int | None = None
+    id: int | None = None
+
+    @property
+    def status(self) -> str:
+        """Return 'good', 'warning', or 'critical' based on mean."""
+        if self.mean >= 2.5:
+            return "good"
+        if self.mean >= 2.2:
+            return "warning"
+        return "critical"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dimension_name": self.dimension_name,
+            "mean": self.mean,
+            "std_dev": self.std_dev,
+            "question_indices": self.question_indices,
+            "survey_id": self.survey_id,
+        }
+
+
+@dataclass
+class QAAlert:
+    """A programmatic QA alert triggered by threshold violations."""
+
+    survey_id: int
+    alert_type: str          # "dimension_low", "polarization", "punctuality", "batch_low"
+    dimension_name: str = ""
+    question_index: int = 0  # 1-based, 0 means N/A
+    value: float = 0.0
+    threshold: float = 0.0
+    message: str = ""
+    severity: str = "warning"  # "warning" or "critical"
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    id: int | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "survey_id": self.survey_id,
+            "alert_type": self.alert_type,
+            "dimension_name": self.dimension_name,
+            "question_index": self.question_index,
+            "value": self.value,
+            "threshold": self.threshold,
+            "message": self.message,
+            "severity": self.severity,
+            "created_at": self.created_at,
+        }

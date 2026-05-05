@@ -1,4 +1,4 @@
-"""Results page — summary table, raw data, trend analysis, and exports."""
+"""Results page — summary table, raw data, trend analysis, advanced analytics, and exports."""
 
 from __future__ import annotations
 
@@ -22,6 +22,12 @@ from .base import BasePage, PageRouter
 
 logger = logging.getLogger("omr_qa_scanner")
 
+# Tab identifiers (not translated — used as internal keys)
+_TAB_SUMMARY  = "summary_view"
+_TAB_RAW      = "raw_data_view"
+_TAB_TREND    = "trend_analysis"
+_TAB_ADVANCED = "advanced_analytics"
+
 
 class ResultsPage(BasePage):
     """Survey results: summary, raw data, trend, and export."""
@@ -42,6 +48,9 @@ class ResultsPage(BasePage):
         self.survey: Survey | None = self.persistence.get_survey(survey_id)
         self.form_results: list[FormResult] = self.persistence.get_form_results(survey_id)
         self.question_texts: list[str] | None = self.persistence.get_setting("question_texts", None)
+
+        # Advanced analytics cache (computed lazily on first tab visit)
+        self._advanced_data: dict | None = None
 
         # Auto-advance status
         if self.survey and self.survey.status == "Processed":
@@ -130,7 +139,12 @@ class ResultsPage(BasePage):
         self.tab_var = tk.StringVar(value=_("summary_view"))
         seg = ctk.CTkSegmentedButton(
             tab_card,
-            values=[_("summary_view"), _("raw_data_view"), _("trend_analysis")],
+            values=[
+                _("summary_view"),
+                _("raw_data_view"),
+                _("trend_analysis"),
+                _("advanced_analytics"),
+            ],
             command=self._on_tab,
             variable=self.tab_var,
             font=T.body(),
@@ -186,6 +200,14 @@ class ResultsPage(BasePage):
             font=T.body(), corner_radius=T.RADIUS_MD, command=self._on_html,
         ).pack(side="right")
 
+        IC.icon_button(
+            export_inner, "trending_up", text="  Advanced Report",
+            size=14, color=T._D_TEXT2, width=190,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(), corner_radius=T.RADIUS_MD, command=self._on_advanced_html,
+        ).pack(side="right", padx=(0, 8))
+
         # Show default tab
         self._show_summary()
 
@@ -204,6 +226,8 @@ class ResultsPage(BasePage):
             self._show_raw()
         elif value == _("trend_analysis"):
             self._show_trend()
+        elif value == _("advanced_analytics"):
+            self._show_advanced()
 
     def _styled_tree(self, columns: tuple, col_names: tuple, widths: dict | None = None) -> ttk.Treeview:
         """Create a styled Treeview with alternating row colours."""
@@ -313,6 +337,235 @@ class ResultsPage(BasePage):
         tree.configure(xscrollcommand=hsb.set)
         hsb.pack(side="bottom", fill="x")
 
+    # ------------------------------------------------------------------
+    # Advanced Analytics tab
+    # ------------------------------------------------------------------
+
+    def _get_advanced_data(self) -> dict:
+        """Compute (or return cached) advanced analytics results."""
+        if self._advanced_data is None:
+            self._advanced_data = self.analytics.run_advanced_analytics(
+                self.survey_id,
+                self.form_results,
+                persistence=self.persistence,
+            )
+        return self._advanced_data
+
+    def _show_advanced(self) -> None:
+        self._clear()
+
+        if not self.form_results:
+            T.muted_label(self.content, _("no_results")).pack(pady=40)
+            return
+
+        # Loading indicator while computing
+        loading_lbl = T.muted_label(self.content, "Computing advanced analytics…")
+        loading_lbl.pack(pady=20)
+        self.content.update()
+
+        try:
+            data = self._get_advanced_data()
+        except Exception as exc:
+            logger.exception("Advanced analytics failed")
+            loading_lbl.destroy()
+            T.muted_label(self.content, f"Analytics error: {exc}").pack(pady=20)
+            return
+
+        loading_lbl.destroy()
+
+        dimension_scores = data.get("dimension_scores", [])
+        question_stats   = data.get("question_stats")
+        alerts           = data.get("alerts", [])
+        comment_analysis = data.get("comment_analysis", {})
+        polarized        = data.get("polarized_questions", [])
+        top_corr         = data.get("top_correlations", [])
+        invalid_forms    = data.get("invalid_forms", [])
+
+        # ── Section: Dimension KPI cards ──────────────────────────────────
+        T.section_title(self.content, "Pedagogical Dimensions (KPIs)").pack(
+            anchor="w", pady=(0, 8)
+        )
+        dim_row = T.transparent(self.content)
+        dim_row.pack(fill="x", pady=(0, 16))
+
+        _STATUS_COLORS = {
+            "good":     (T.KPI_ANA_NUM,   T.KPI_ANA_BG),
+            "warning":  (T.KPI_DRAFT_NUM, T.KPI_DRAFT_BG),
+            "critical": (T.DANGER,        T.DANGER_SUBTLE),
+        }
+        for ds in dimension_scores:
+            num_color, bg_color = _STATUS_COLORS.get(ds.status, (T.KPI_TOTAL_NUM, T.KPI_TOTAL_BG))
+            card = T.stat_card(
+                dim_row,
+                label=ds.dimension_name,
+                value=f"{ds.mean:.2f}",
+                icon_name="trending_up",
+                num_color=num_color,
+                bg_color=bg_color,
+            )
+            card.pack(side="left", fill="x", expand=True, padx=(0, 10))
+
+        # ── Section: QA Alerts ────────────────────────────────────────────
+        T.section_title(self.content, f"QA Alerts ({len(alerts)})").pack(
+            anchor="w", pady=(8, 6)
+        )
+        if not alerts:
+            ok_card = T.card(self.content)
+            ok_card.pack(fill="x", pady=(0, 12))
+            ctk.CTkLabel(
+                ok_card,
+                text="✅  All dimensions are within acceptable thresholds.",
+                font=T.body(),
+                text_color=T.SUCCESS,
+            ).pack(padx=T.CARD_PADDING, pady=12)
+        else:
+            for alert in alerts:
+                a_card = T.card(self.content)
+                a_card.pack(fill="x", pady=(0, 6))
+                inner = T.transparent(a_card)
+                inner.pack(fill="x", padx=T.CARD_PADDING, pady=10)
+
+                icon_name = "alert_triangle" if alert.severity == "critical" else "info"
+                color = T.DANGER if alert.severity == "critical" else T.WARNING
+
+                ctk.CTkLabel(
+                    inner,
+                    image=IC.icon(icon_name, size=16, color=color[1] if isinstance(color, tuple) else color),
+                    text=f"  {alert.message}",
+                    font=T.body(),
+                    text_color=color,
+                    anchor="w",
+                    compound="left",
+                    wraplength=900,
+                ).pack(anchor="w")
+
+        # ── Section: Polarized questions ──────────────────────────────────
+        if polarized:
+            T.section_title(self.content, "Polarized Questions (High Variance)").pack(
+                anchor="w", pady=(8, 6)
+            )
+            p_card = T.card(self.content)
+            p_card.pack(fill="x", pady=(0, 12))
+            qs_text = ", ".join(f"Q{i}" for i in polarized)
+            ctk.CTkLabel(
+                p_card,
+                text=f"⚠️  {qs_text} — Students are split. Possible comprehension gap or teaching level mismatch.",
+                font=T.body(),
+                text_color=T.WARNING,
+                anchor="w",
+                wraplength=900,
+            ).pack(padx=T.CARD_PADDING, pady=12)
+
+        # ── Section: Per-question stats table ─────────────────────────────
+        if question_stats is not None and not question_stats.empty:
+            T.section_title(self.content, "Per-Question Statistics").pack(
+                anchor="w", pady=(8, 6)
+            )
+            col_ids   = ("q", "mean", "median", "std_dev", "min", "max", "count")
+            col_names = ("Question", "Mean", "Median", "Std Dev", "Min", "Max", "Answered")
+            widths    = {"q": 70, "mean": 70, "median": 70, "std_dev": 70,
+                         "min": 50, "max": 50, "count": 80}
+            tree = self._styled_tree(col_ids, col_names, widths)
+            for idx, (q_idx, row) in enumerate(question_stats.iterrows()):
+                q_num = int(q_idx[1:]) if q_idx.startswith("Q") else idx + 1
+                q_label = (
+                    self.question_texts[q_num - 1][:40]
+                    if self.question_texts and len(self.question_texts) >= q_num
+                    else q_idx
+                )
+                tag = "odd" if idx % 2 else "even"
+                tree.insert("", "end", values=(
+                    q_label,
+                    f"{row['mean']:.2f}",
+                    f"{row['median']:.1f}",
+                    f"{row['std_dev']:.2f}",
+                    int(row["min"]),
+                    int(row["max"]),
+                    int(row["count_answered"]),
+                ), tags=(tag,))
+            tree.pack(fill="both", expand=True, pady=(0, 12))
+
+        # ── Section: Top correlations ─────────────────────────────────────
+        if top_corr:
+            T.section_title(self.content, "Top Question Correlations").pack(
+                anchor="w", pady=(8, 6)
+            )
+            corr_card = T.card(self.content)
+            corr_card.pack(fill="x", pady=(0, 12))
+            inner = T.transparent(corr_card)
+            inner.pack(fill="x", padx=T.CARD_PADDING, pady=10)
+            for p in top_corr[:5]:
+                color = T.SUCCESS if p["correlation"] > 0 else T.DANGER
+                ctk.CTkLabel(
+                    inner,
+                    text=f"{p['q1']} ↔ {p['q2']}:  r = {p['correlation']:+.3f}",
+                    font=T.body(),
+                    text_color=color,
+                    anchor="w",
+                ).pack(anchor="w", pady=2)
+
+        # ── Section: Invalid forms ────────────────────────────────────────
+        if invalid_forms:
+            T.section_title(self.content, f"Invalid Forms ({len(invalid_forms)})").pack(
+                anchor="w", pady=(8, 6)
+            )
+            inv_card = T.card(self.content)
+            inv_card.pack(fill="x", pady=(0, 12))
+            ctk.CTkLabel(
+                inv_card,
+                text="  " + ", ".join(str(f) for f in invalid_forms[:20])
+                     + ("…" if len(invalid_forms) > 20 else ""),
+                font=T.small(),
+                text_color=T.TEXT_SECONDARY,
+                anchor="w",
+                wraplength=900,
+            ).pack(padx=T.CARD_PADDING, pady=10)
+
+        # ── Section: Comment analysis ─────────────────────────────────────
+        total_comments = comment_analysis.get("total_comments", 0)
+        if total_comments > 0:
+            T.section_title(
+                self.content, f"Comment Analysis ({total_comments} comments)"
+            ).pack(anchor="w", pady=(8, 6))
+
+            sc = comment_analysis["sentiment_counts"]
+            kw = comment_analysis["top_keywords"]
+
+            c_card = T.card(self.content)
+            c_card.pack(fill="x", pady=(0, 12))
+            c_inner = T.transparent(c_card)
+            c_inner.pack(fill="x", padx=T.CARD_PADDING, pady=12)
+
+            sent_row = T.transparent(c_inner)
+            sent_row.pack(fill="x", pady=(0, 8))
+            for label, count, color in [
+                ("✅ Positive", sc["positive"], T.SUCCESS),
+                ("➖ Neutral",  sc["neutral"],  T.TEXT_SECONDARY),
+                ("❌ Negative", sc["negative"], T.DANGER),
+            ]:
+                chip = T.inner_card(sent_row, corner_radius=T.RADIUS_SM)
+                chip.pack(side="left", padx=(0, 10))
+                ctk.CTkLabel(
+                    chip,
+                    text=f"{label}: {count}",
+                    font=T.body(),
+                    text_color=color,
+                ).pack(padx=14, pady=8)
+
+            if kw:
+                T.muted_label(c_inner, "Top Keywords:").pack(anchor="w", pady=(4, 4))
+                kw_row = T.transparent(c_inner)
+                kw_row.pack(fill="x")
+                for word, count in kw[:12]:
+                    chip = T.inner_card(kw_row, corner_radius=20)
+                    chip.pack(side="left", padx=(0, 6), pady=2)
+                    ctk.CTkLabel(
+                        chip,
+                        text=f"{word}  ({count})",
+                        font=T.small(),
+                        text_color=T.ACCENT,
+                    ).pack(padx=10, pady=4)
+
     def _show_trend(self) -> None:
         self._clear()
 
@@ -398,3 +651,50 @@ class ResultsPage(BasePage):
         except Exception as exc:
             logger.exception("HTML report failed")
             messagebox.showerror(_("error_report"), f"{_('error_report')}:\n{exc}")
+
+    def _on_advanced_html(self) -> None:
+        """Generate and open the advanced QA analytics HTML report."""
+        try:
+            import pandas as pd
+            from plotly_generator import PlotlyGenerator
+
+            rows = []
+            for fr in self.form_results:
+                row: dict[str, Any] = {
+                    "Form_ID": fr.form_id,
+                    "Form_Score": fr.form_score,
+                    "Valid": fr.valid,
+                }
+                for i, ans in enumerate(fr.answers(), start=1):
+                    row[f"Q{i}"] = ans
+                rows.append(row)
+
+            df = pd.DataFrame(rows) if rows else pd.DataFrame(
+                columns=["Form_ID"] + [f"Q{i}" for i in range(1, 15)] + ["Form_Score", "Valid"]
+            )
+
+            form_count = len(self.form_results)
+            batch_score = (
+                sum(fr.form_score for fr in self.form_results) / form_count
+                if form_count > 0 else 0.0
+            )
+
+            advanced_data = self._get_advanced_data()
+
+            html = PlotlyGenerator.generate_dashboard_html(
+                df,
+                batch_score,
+                question_texts=self.question_texts,
+                mode="advanced",
+                advanced_data=advanced_data,
+            )
+
+            from config import Config
+            report_path = str(Config.PROJECT_ROOT / "assets" / "report_advanced.html")
+            with open(report_path, "w", encoding="utf-8") as fh:
+                fh.write(html)
+
+            webbrowser.open(f"file:///{Path(report_path).resolve()}")
+        except Exception as exc:
+            logger.exception("Advanced HTML report failed")
+            messagebox.showerror(_("error_report"), f"Advanced report error:\n{exc}")

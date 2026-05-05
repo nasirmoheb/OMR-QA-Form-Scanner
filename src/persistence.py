@@ -8,7 +8,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from models import FormResult, Survey
+from models import DimensionScore, FormResult, QAAlert, Survey
 
 logger = logging.getLogger("omr_qa_scanner")
 
@@ -24,7 +24,7 @@ _FORM_COLS = [
     "survey_id", "form_id", "image_path",
     "q1", "q2", "q3", "q4", "q5", "q6", "q7",
     "q8", "q9", "q10", "q11", "q12", "q13", "q14",
-    "form_score", "valid", "confidence", "manually_corrected",
+    "form_score", "valid", "confidence", "manually_corrected", "comment",
 ]
 
 
@@ -77,6 +77,7 @@ class PersistenceManager:
                     valid INTEGER NOT NULL DEFAULT 0,
                     confidence REAL NOT NULL DEFAULT 0.0,
                     manually_corrected INTEGER NOT NULL DEFAULT 0,
+                    comment TEXT NOT NULL DEFAULT '',
                     FOREIGN KEY (survey_id) REFERENCES surveys(id)
                         ON DELETE CASCADE
                 );
@@ -85,10 +86,50 @@ class PersistenceManager:
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL
                 );
+
+                CREATE TABLE IF NOT EXISTS dimension_scores (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    survey_id INTEGER NOT NULL,
+                    dimension_name TEXT NOT NULL,
+                    mean REAL NOT NULL DEFAULT 0.0,
+                    std_dev REAL NOT NULL DEFAULT 0.0,
+                    question_indices TEXT NOT NULL DEFAULT '[]',
+                    FOREIGN KEY (survey_id) REFERENCES surveys(id)
+                        ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS qa_alerts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    survey_id INTEGER NOT NULL,
+                    alert_type TEXT NOT NULL,
+                    dimension_name TEXT NOT NULL DEFAULT '',
+                    question_index INTEGER NOT NULL DEFAULT 0,
+                    value REAL NOT NULL DEFAULT 0.0,
+                    threshold REAL NOT NULL DEFAULT 0.0,
+                    message TEXT NOT NULL DEFAULT '',
+                    severity TEXT NOT NULL DEFAULT 'warning',
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (survey_id) REFERENCES surveys(id)
+                        ON DELETE CASCADE
+                );
                 """
             )
+            # Safe migrations for existing databases
+            self._migrate(conn)
             conn.commit()
             logger.info("Database initialised: %s", self.db_path)
+
+    def _migrate(self, conn: sqlite3.Connection) -> None:
+        """Apply safe ALTER TABLE migrations for schema evolution."""
+        migrations = [
+            ("form_results", "comment", "TEXT NOT NULL DEFAULT ''"),
+        ]
+        for table, column, col_def in migrations:
+            try:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_def}")
+                logger.info("Migration: added %s.%s", table, column)
+            except sqlite3.OperationalError:
+                pass  # Column already exists
 
     # ------------------------------------------------------------------ #
     #  Survey CRUD
@@ -256,3 +297,139 @@ class PersistenceManager:
             cur = conn.execute("DELETE FROM app_settings WHERE key=?", (key,))
             conn.commit()
             return cur.rowcount > 0
+
+    # ------------------------------------------------------------------ #
+    #  DimensionScore CRUD
+    # ------------------------------------------------------------------ #
+
+    def save_dimension_scores(self, scores: list[DimensionScore]) -> None:
+        """Upsert dimension scores for a survey (replaces existing)."""
+        if not scores:
+            return
+        survey_id = scores[0].survey_id
+        with self._connect() as conn:
+            conn.execute(
+                "DELETE FROM dimension_scores WHERE survey_id=?", (survey_id,)
+            )
+            for ds in scores:
+                conn.execute(
+                    """INSERT INTO dimension_scores
+                       (survey_id, dimension_name, mean, std_dev, question_indices)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (
+                        ds.survey_id,
+                        ds.dimension_name,
+                        ds.mean,
+                        ds.std_dev,
+                        json.dumps(ds.question_indices),
+                    ),
+                )
+            conn.commit()
+        logger.info("Saved %d dimension scores for survey_id=%s", len(scores), survey_id)
+
+    def get_dimension_scores(self, survey_id: int) -> list[DimensionScore]:
+        """Retrieve dimension scores for a survey."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT id, survey_id, dimension_name, mean, std_dev, question_indices "
+                "FROM dimension_scores WHERE survey_id=?",
+                (survey_id,),
+            ).fetchall()
+        result = []
+        for row in rows:
+            result.append(
+                DimensionScore(
+                    id=row[0],
+                    survey_id=row[1],
+                    dimension_name=row[2],
+                    mean=row[3],
+                    std_dev=row[4],
+                    question_indices=json.loads(row[5]),
+                )
+            )
+        return result
+
+    def get_all_dimension_scores(
+        self, department: str | None = None
+    ) -> list[DimensionScore]:
+        """Retrieve dimension scores across all surveys, optionally filtered by department."""
+        if department:
+            sql = """
+                SELECT ds.id, ds.survey_id, ds.dimension_name, ds.mean, ds.std_dev,
+                       ds.question_indices
+                FROM dimension_scores ds
+                JOIN surveys s ON s.id = ds.survey_id
+                WHERE s.department = ?
+            """
+            params: list[Any] = [department]
+        else:
+            sql = """
+                SELECT id, survey_id, dimension_name, mean, std_dev, question_indices
+                FROM dimension_scores
+            """
+            params = []
+        with self._connect() as conn:
+            rows = conn.execute(sql, params).fetchall()
+        return [
+            DimensionScore(
+                id=row[0],
+                survey_id=row[1],
+                dimension_name=row[2],
+                mean=row[3],
+                std_dev=row[4],
+                question_indices=json.loads(row[5]),
+            )
+            for row in rows
+        ]
+
+    # ------------------------------------------------------------------ #
+    #  QAAlert CRUD
+    # ------------------------------------------------------------------ #
+
+    def save_alerts(self, alerts: list[QAAlert]) -> None:
+        """Replace all alerts for a survey with the provided list."""
+        if not alerts:
+            return
+        survey_id = alerts[0].survey_id
+        with self._connect() as conn:
+            conn.execute("DELETE FROM qa_alerts WHERE survey_id=?", (survey_id,))
+            for a in alerts:
+                conn.execute(
+                    """INSERT INTO qa_alerts
+                       (survey_id, alert_type, dimension_name, question_index,
+                        value, threshold, message, severity, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        a.survey_id, a.alert_type, a.dimension_name,
+                        a.question_index, a.value, a.threshold,
+                        a.message, a.severity, a.created_at,
+                    ),
+                )
+            conn.commit()
+        logger.info("Saved %d QA alerts for survey_id=%s", len(alerts), survey_id)
+
+    def get_alerts(self, survey_id: int) -> list[QAAlert]:
+        """Retrieve all QA alerts for a survey."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                """SELECT id, survey_id, alert_type, dimension_name, question_index,
+                          value, threshold, message, severity, created_at
+                   FROM qa_alerts WHERE survey_id=?
+                   ORDER BY severity DESC, created_at""",
+                (survey_id,),
+            ).fetchall()
+        return [
+            QAAlert(
+                id=row[0],
+                survey_id=row[1],
+                alert_type=row[2],
+                dimension_name=row[3],
+                question_index=row[4],
+                value=row[5],
+                threshold=row[6],
+                message=row[7],
+                severity=row[8],
+                created_at=row[9],
+            )
+            for row in rows
+        ]
