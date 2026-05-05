@@ -415,6 +415,11 @@ class I18n:
             cls._listeners.remove(callback)
 
     @classmethod
+    def is_rtl(cls) -> bool:
+        """Return True for right-to-left languages (Dari, Pashto)."""
+        return cls._lang in ("fa", "ps")
+
+    @classmethod
     def languages(cls) -> dict[str, str]:
         return {
             "en": "English",
@@ -426,3 +431,6 @@ class I18n:
 # Aliases for convenience
 def _(key: str, **kwargs: Any) -> str:
     return I18n.t(key, **kwargs)
+
+def is_rtl() -> bool:
+    return I18n.is_rtl()

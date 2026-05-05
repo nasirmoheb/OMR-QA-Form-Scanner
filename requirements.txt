@@ -12,5 +12,5 @@ arabic-reshaper>=3.0.0
 python-bidi>=0.4.2
 hypothesis>=6.0.0
 pytest>=7.0.0
-# Icon rendering (pure Pillow, no native DLL required)
-# cairosvg>=2.7.0  # optional: enables SVG source icons if cairo DLL is present
+# Icon library - Tabler Icons (5237 high-quality SVG icons)
+pytablericons>=1.0.0
