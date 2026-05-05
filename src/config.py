@@ -29,7 +29,7 @@ class Config:
     SUPPORTED_EXTENSIONS: tuple[str, ...] = (".jpg", ".jpeg", ".png")
 
     # UI preferences
-    APPEARANCE_MODE: str = "System"  # Light, Dark, System
+    APPEARANCE_MODE: str = "Dark"   # dark-navy palette is the primary design
     LANGUAGE: str = "en"             # en, fa (Dari), ps (Pashto)
 
     # Survey question texts (14 items; empty list means use defaults from pdf_generator)

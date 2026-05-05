@@ -11,6 +11,7 @@ from typing import Any
 
 import customtkinter as ctk
 
+import icons as IC
 import theme as T
 from i18n import _
 from models import FormResult
@@ -20,7 +21,7 @@ from .base import BasePage, PageRouter
 
 logger = logging.getLogger("omr_qa_scanner")
 
-# Status → (colour, i18n key)
+# Status - (colour, i18n key)
 _STATUS_MAP = {
     "Queued":     (T.TEXT_MUTED,    "queued"),
     "Processing": (T.INFO,          "processing"),
@@ -64,21 +65,21 @@ class ProcessPage(BasePage):
     def _build(self) -> None:
         self.configure(fg_color=T.PAGE_BG)
 
-        # ── Header ─────────────────────────────────────────────────────
+        # -- Header ----
         header = T.transparent(self)
         header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
-        T.secondary_btn(
-            header,
-            f"← {_('back')}",
-            width=100,
-            height=36,
-            command=lambda: self.go("dashboard"),
+        IC.icon_button(
+            header, "arrow_left", text="  " + _("back"),
+            size=14, color=T._D_TEXT2, width=110, height=36,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(), command=lambda: self.go("dashboard"),
         ).pack(side="left")
 
         T.page_title(header, _("process")).pack(side="left", padx=16)
 
-        # ── Survey meta card ───────────────────────────────────────────
+        # -- Survey meta card ----
         survey = None
         try:
             survey = self.persistence.get_survey(self.survey_id)
@@ -94,35 +95,39 @@ class ProcessPage(BasePage):
 
             ctk.CTkLabel(
                 meta_inner,
-                text=f"📚  {survey.subject}",
-                font=T.h4(),
-                text_color=T.TEXT_PRIMARY,
-                anchor="w",
+                image=IC.icon("book", size=15, color=T._D_TEXT1),
+                text=f"  {survey.subject}",
+                font=T.h4(), text_color=T.TEXT_PRIMARY, anchor="w",
+                compound="left",
             ).pack(anchor="w")
 
-            T.muted_label(
+            ctk.CTkLabel(
                 meta_inner,
-                f"👤 {survey.professor}   •   📅 {survey.semester}   •   🎓 {survey.academic_year}",
-                anchor="w",
+                image=IC.icon("user", size=12, color=T._D_TEXT2),
+                text=f"  {survey.professor}   •   {survey.semester}   •   {survey.academic_year}",
+                font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w",
+                compound="left",
             ).pack(anchor="w", pady=(4, 0))
 
-        # ── Upload zone ────────────────────────────────────────────────
+        # -- Upload zone ----
         upload_card = T.card(self)
         upload_card.pack(fill="x", padx=T.PAGE_PADDING, pady=(16, 0))
 
         upload_inner = T.transparent(upload_card)
         upload_inner.pack(fill="x", padx=T.CARD_PADDING, pady=14)
 
-        T.section_title(upload_inner, "🖼  " + _("add_images")).pack(anchor="w", pady=(0, 10))
+        T.section_title(upload_inner, _("add_images")).pack(anchor="w", pady=(0, 10))
 
         btn_row = T.transparent(upload_inner)
         btn_row.pack(fill="x")
 
-        T.primary_btn(
-            btn_row,
-            f"📂  {_('add_images')}",
+        IC.icon_button(
+            btn_row, "upload", text="  " + _("add_images"),
+            size=15, color="#FFFFFF", width=160,
+            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#FFFFFF", font=T.font(13, "bold"),
+            corner_radius=T.RADIUS_MD,
             command=self._on_add,
-            width=160,
         ).pack(side="left")
 
         self.folder_lbl = T.muted_label(
@@ -131,7 +136,7 @@ class ProcessPage(BasePage):
         )
         self.folder_lbl.pack(side="left", padx=12)
 
-        # ── Thumbnail grid ─────────────────────────────────────────────
+        # -- Thumbnail grid ----
         thumb_card = T.card(self)
         thumb_card.pack(fill="x", padx=T.PAGE_PADDING, pady=(12, 0))
 
@@ -143,7 +148,7 @@ class ProcessPage(BasePage):
         )
         self.thumb_frame.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
-        # ── Progress ───────────────────────────────────────────────────
+        # -- Progress ----
         prog_card = T.card(self)
         prog_card.pack(fill="x", padx=T.PAGE_PADDING, pady=(12, 0))
 
@@ -169,17 +174,18 @@ class ProcessPage(BasePage):
         self.progress_bar.set(0)
         self.progress_bar.pack(fill="x")
 
-        # ── Scan button ────────────────────────────────────────────────
+        # -- Scan button ----
         action_row = T.transparent(self)
         action_row.pack(fill="x", padx=T.PAGE_PADDING, pady=(16, T.PAGE_PADDING))
 
-        self.scan_btn = T.primary_btn(
-            action_row,
-            f"🔍  {_('start_scanning')}",
+        self.scan_btn = IC.icon_button(
+            action_row, "scan", text="  " + _("start_scanning"),
+            size=16, color="#FFFFFF",
+            state="disabled", width=200, height=44,
+            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#FFFFFF", font=T.font(13, "bold"),
+            corner_radius=T.RADIUS_MD,
             command=self._on_scan,
-            state="disabled",
-            width=200,
-            height=44,
         )
         self.scan_btn.pack(side="left")
 
@@ -323,9 +329,9 @@ class ProcessPage(BasePage):
 
         summary = (
             f"{_('scan_summary')}\n"
-            f"✅ {_('forms_success')}: {counts['success']}\n"
-            f"⚠️ {_('forms_warning')}: {counts['warning']}\n"
-            f"❌ {_('forms_error')}: {counts['error']}"
+            f"{_('forms_success')}: {counts['success']}\n"
+            f"{_('forms_warning')}: {counts['warning']}\n"
+            f"{_('forms_error')}: {counts['error']}"
         )
         self.after(0, lambda: messagebox.showinfo(_("scan_complete"), summary))
 

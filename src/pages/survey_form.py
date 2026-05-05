@@ -11,6 +11,7 @@ from typing import Any
 
 import customtkinter as ctk
 
+import icons as IC
 import theme as T
 from i18n import _
 from models import Survey
@@ -46,15 +47,20 @@ class SurveyFormPage(BasePage):
     def _build(self) -> None:
         self.configure(fg_color=T.PAGE_BG)
 
-        # ── Header ─────────────────────────────────────────────────────
+        # -- Header ----
         header = T.transparent(self)
         header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
-        T.secondary_btn(
+        IC.icon_button(
             header,
-            f"← {_('back')}",
-            width=100,
-            height=36,
+            "arrow_left",
+            text="  " + _("back"),
+            size=14, color=T._D_TEXT2,
+            width=110, height=36,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT,
+            border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(),
             command=lambda: self.go("dashboard"),
         ).pack(side="left")
 
@@ -63,15 +69,15 @@ class SurveyFormPage(BasePage):
             _("edit_survey") if self.survey_id else _("new_survey"),
         ).pack(side="left", padx=16)
 
-        # ── Scrollable body ────────────────────────────────────────────
+        # -- Scrollable body ----
         scroll = ctk.CTkScrollableFrame(self, fg_color="transparent", corner_radius=0)
         scroll.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
-        # ── Form card ──────────────────────────────────────────────────
+        # -- Form card ----
         form_card = T.card(scroll)
         form_card.pack(fill="x", pady=(0, 16))
 
-        T.section_title(form_card, "📋  " + _("new_survey")).pack(
+        T.section_title(form_card, _("new_survey")).pack(
             anchor="w", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0)
         )
         T.divider(form_card).pack(fill="x", padx=T.CARD_PADDING, pady=(12, 0))
@@ -97,23 +103,32 @@ class SurveyFormPage(BasePage):
         for label, key, row, col in fields:
             self._field(grid, label, key, row=row, col=col)
 
-        # ── Action buttons ─────────────────────────────────────────────
+        # -- Action buttons ----
         btn_row = T.transparent(scroll)
         btn_row.pack(fill="x", pady=(0, 16))
 
-        T.primary_btn(
-            btn_row,
-            f"💾  {_('save_survey')}",
+        IC.icon_button(
+            btn_row, "save",
+            text="  " + _("save_survey"),
+            size=15, color="#FFFFFF",
+            width=180, height=40,
+            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#FFFFFF", font=T.font(13, "bold"),
+            corner_radius=T.RADIUS_MD,
             command=self._on_save,
-            width=180,
         ).pack(side="left", padx=(0, 10))
 
-        self.print_btn = T.secondary_btn(
-            btn_row,
-            f"🖨  {_('print_form')}",
-            command=self._on_print,
-            width=180,
+        self.print_btn = IC.icon_button(
+            btn_row, "print_icon",
+            text="  " + _("print_form"),
+            size=15, color=T._D_TEXT2,
+            width=180, height=40,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT,
+            border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(),
             state="disabled" if not self.survey_id else "normal",
+            command=self._on_print,
         )
         self.print_btn.pack(side="left")
 

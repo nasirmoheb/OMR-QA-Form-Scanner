@@ -430,10 +430,10 @@ def _draw_instructions(c: Any, lx: float, cw: float, y: float) -> float:
 def _draw_table(c: Any, questions: list[str], lx: float, cw: float, y: float) -> float:
     """Draw the 14-row OMR table in true RTL column order.
 
-    RTL visual order (right → left on page):
+    RTL visual order (right - left on page):
         timing | # | question text | بلی | نخیر | نسبتاً | پیشنهادات
 
-    In PDF coordinate space (left → right) this becomes:
+    In PDF coordinate space (left - right) this becomes:
         پیشنهادات | نسبتاً | نخیر | بلی | question text | # | timing
     """
     # Column widths as fractions of content width
@@ -447,7 +447,7 @@ def _draw_table(c: Any, questions: list[str], lx: float, cw: float, y: float) ->
     row_h    = 11 * mm
     border_lw = 1.0
 
-    # Pre-compute left-edge x for each column (PDF left→right order):
+    # Pre-compute left-edge x for each column (PDF left-right order):
     # [پیشنهادات] [نسبتاً] [نخیر] [بلی] [question] [#] [timing]
     x_suggest  = lx
     x_nesbatan = lx + suggest_w

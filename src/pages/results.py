@@ -12,6 +12,7 @@ from typing import Any
 
 import customtkinter as ctk
 
+import icons as IC
 import theme as T
 from analytics_engine import AnalyticsEngine
 from i18n import _
@@ -57,21 +58,21 @@ class ResultsPage(BasePage):
     def _build(self) -> None:
         self.configure(fg_color=T.PAGE_BG)
 
-        # ── Header ─────────────────────────────────────────────────────
+        # -- Header ----
         header = T.transparent(self)
         header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
-        T.secondary_btn(
-            header,
-            f"← {_('back')}",
-            width=100,
-            height=36,
-            command=lambda: self.go("dashboard"),
+        IC.icon_button(
+            header, "arrow_left", text="  " + _("back"),
+            size=14, color=T._D_TEXT2, width=110, height=36,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(), command=lambda: self.go("dashboard"),
         ).pack(side="left")
 
         T.page_title(header, _("results")).pack(side="left", padx=16)
 
-        # ── Survey meta card ───────────────────────────────────────────
+        # -- Survey meta card ----
         if self.survey:
             meta = T.card(self)
             meta.pack(fill="x", padx=T.PAGE_PADDING, pady=(16, 0))
@@ -84,18 +85,20 @@ class ResultsPage(BasePage):
 
             ctk.CTkLabel(
                 top_row,
-                text=f"📚  {self.survey.subject}",
-                font=T.h3(),
-                text_color=T.TEXT_PRIMARY,
-                anchor="w",
+                image=IC.icon("book", size=16, color=T._D_TEXT1),
+                text=f"  {self.survey.subject}",
+                font=T.h3(), text_color=T.TEXT_PRIMARY, anchor="w",
+                compound="left",
             ).pack(side="left")
 
             T.status_chip(top_row, self.survey.status).pack(side="left", padx=(12, 0))
 
-            T.muted_label(
+            ctk.CTkLabel(
                 meta_inner,
-                f"👤 {self.survey.professor}   •   📅 {self.survey.semester}   •   🎓 {self.survey.academic_year}",
-                anchor="w",
+                image=IC.icon("user", size=12, color=T._D_TEXT2),
+                text=f"  {self.survey.professor}   •   {self.survey.semester}   •   {self.survey.academic_year}",
+                font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w",
+                compound="left",
             ).pack(anchor="w", pady=(6, 0))
 
             # KPI chips
@@ -108,19 +111,19 @@ class ResultsPage(BasePage):
             kpi_row.pack(fill="x", pady=(10, 0))
 
             for label, value in [
-                (_("forms_count", count=form_count), "📄"),
-                (_("batch_score_label", score=batch_score), "📊"),
+                (_("forms_count", count=form_count), "forms"),
+                (_("batch_score_label", score=batch_score), "score"),
             ]:
                 chip = T.inner_card(kpi_row, corner_radius=T.RADIUS_SM)
                 chip.pack(side="left", padx=(0, 10))
                 ctk.CTkLabel(
                     chip,
-                    text=f"{value}  {label}",
+                    text=label,
                     font=T.small(),
                     text_color=T.TEXT_SECONDARY,
                 ).pack(padx=12, pady=6)
 
-        # ── Tab switcher ───────────────────────────────────────────────
+        # -- Tab switcher ----
         tab_card = T.card(self)
         tab_card.pack(fill="x", padx=T.PAGE_PADDING, pady=(12, 0))
 
@@ -141,7 +144,7 @@ class ResultsPage(BasePage):
         )
         seg.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
-        # ── Content area ───────────────────────────────────────────────
+        # -- Content area ----
         self.content = ctk.CTkScrollableFrame(
             self, fg_color="transparent", corner_radius=0
         )
@@ -150,34 +153,37 @@ class ResultsPage(BasePage):
             padx=T.PAGE_PADDING, pady=(12, 0),
         )
 
-        # ── Export bar ─────────────────────────────────────────────────
+        # -- Export bar ----
         export_bar = T.card(self)
         export_bar.pack(fill="x", padx=T.PAGE_PADDING, pady=(12, T.PAGE_PADDING))
 
         export_inner = T.transparent(export_bar)
         export_inner.pack(fill="x", padx=T.CARD_PADDING, pady=12)
 
-        T.section_title(export_inner, "📤  Export").pack(side="left")
+        T.section_title(export_inner, _("export_csv")).pack(side="left")
 
-        T.primary_btn(
-            export_inner,
-            f"📊  {_('export_csv')}",
-            command=self._on_csv,
-            width=160,
+        IC.icon_button(
+            export_inner, "download", text="  " + _("export_csv"),
+            size=14, color="#FFFFFF", width=160,
+            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#FFFFFF", font=T.font(13, "bold"),
+            corner_radius=T.RADIUS_MD, command=self._on_csv,
         ).pack(side="right", padx=(8, 0))
 
-        T.secondary_btn(
-            export_inner,
-            f"📄  {_('export_pdf_report')}",
-            command=self._on_pdf,
-            width=180,
+        IC.icon_button(
+            export_inner, "file_text", text="  " + _("export_pdf_report"),
+            size=14, color=T._D_TEXT2, width=180,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(), corner_radius=T.RADIUS_MD, command=self._on_pdf,
         ).pack(side="right", padx=(8, 0))
 
-        T.secondary_btn(
-            export_inner,
-            f"🌐  {_('view_html_report')}",
-            command=self._on_html,
-            width=180,
+        IC.icon_button(
+            export_inner, "globe", text="  " + _("view_html_report"),
+            size=14, color=T._D_TEXT2, width=180,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(), corner_radius=T.RADIUS_MD, command=self._on_html,
         ).pack(side="right")
 
         # Show default tab

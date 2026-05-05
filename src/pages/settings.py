@@ -10,6 +10,7 @@ from typing import Any
 
 import customtkinter as ctk
 
+import icons as IC
 import theme as T
 from config import Config
 from i18n import I18n, _
@@ -42,21 +43,21 @@ class SettingsFrame(ctk.CTkFrame):
     # ------------------------------------------------------------------
 
     def _build(self) -> None:
-        # ── Header ─────────────────────────────────────────────────────
+        # -- Header ----
         header = T.transparent(self)
         header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
-        T.secondary_btn(
-            header,
-            f"← {_('back')}",
-            width=100,
-            height=36,
-            command=self._on_back,
+        IC.icon_button(
+            header, "arrow_left", text="  " + _("back"),
+            size=14, color=T._D_TEXT2, width=110, height=36,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(), command=self._on_back,
         ).pack(side="left")
 
-        T.page_title(header, f"⚙️  {_('settings')}").pack(side="left", padx=16)
+        T.page_title(header, _("settings")).pack(side="left", padx=16)
 
-        # ── Scrollable body ────────────────────────────────────────────
+        # -- Scrollable body ----
         scroll = ctk.CTkScrollableFrame(self, fg_color="transparent", corner_radius=0)
         scroll.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
@@ -66,25 +67,45 @@ class SettingsFrame(ctk.CTkFrame):
         self._scoring_card(scroll)
         self._branding_card(scroll)
         self._coords_card(scroll)
-        self._questions_card(scroll)
-
-        # ── Footer ─────────────────────────────────────────────────────
+        self._questions_card(scroll)        # -- Footer ----
         footer = T.transparent(self)
         footer.pack(fill="x", padx=T.PAGE_PADDING, pady=(0, T.PAGE_PADDING))
 
-        T.primary_btn(footer, f"💾  {_('save')}", command=self._save, width=140).pack(side="right", padx=(8, 0))
-        T.secondary_btn(footer, _("close"), command=self._on_back, width=100).pack(side="right")
+        IC.icon_button(
+            footer, "save", text="  " + _("save"),
+            size=14, color="#FFFFFF", width=140,
+            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#FFFFFF", font=T.font(13, "bold"),
+            corner_radius=T.RADIUS_MD, command=self._save,
+        ).pack(side="right", padx=(8, 0))
+
+        IC.icon_button(
+            footer, "arrow_left", text="  " + _("close"),
+            size=14, color=T._D_TEXT2, width=100,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(), corner_radius=T.RADIUS_MD, command=self._on_back,
+        ).pack(side="right")
 
     # ------------------------------------------------------------------
     # Cards
     # ------------------------------------------------------------------
 
-    def _section_card(self, parent: Any, title: str, icon: str = "") -> ctk.CTkFrame:
+    def _section_card(self, parent: Any, title: str, icon_name: str = "") -> ctk.CTkFrame:
         c = T.card(parent)
         c.pack(fill="x", pady=(0, 14))
-        T.section_title(c, f"{icon}  {title}" if icon else title).pack(
-            anchor="w", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0)
-        )
+        hdr = T.transparent(c)
+        hdr.pack(anchor="w", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0), fill="x")
+        if icon_name:
+            ctk.CTkLabel(
+                hdr,
+                image=IC.icon(icon_name, size=14, color=T._D_TEXT2),
+                text=f"  {title}",
+                font=T.h4(), text_color=T.TEXT_PRIMARY, anchor="w",
+                compound="left",
+            ).pack(side="left")
+        else:
+            T.section_title(hdr, title).pack(side="left")
         T.divider(c).pack(fill="x", padx=T.CARD_PADDING, pady=(10, 0))
         return c
 
@@ -98,7 +119,7 @@ class SettingsFrame(ctk.CTkFrame):
         return entry
 
     def _general_card(self, parent: Any) -> None:
-        c = self._section_card(parent, _("general"), "🌐")
+        c = self._section_card(parent, _("general"), "globe")
         body = T.transparent(c)
         body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
@@ -141,7 +162,7 @@ class SettingsFrame(ctk.CTkFrame):
         self.appear_seg.pack(fill="x")
 
     def _geometry_card(self, parent: Any) -> None:
-        c = self._section_card(parent, _("form_geometry"), "📐")
+        c = self._section_card(parent, _("form_geometry"), "layers")
         for label, key in [
             (_("form_width"),  "form_width"),
             (_("form_height"), "form_height"),
@@ -151,11 +172,11 @@ class SettingsFrame(ctk.CTkFrame):
             self._row(c, label, key)
 
     def _detection_card(self, parent: Any) -> None:
-        c = self._section_card(parent, _("threshold"), "🎯")
+        c = self._section_card(parent, _("threshold"), "eye")
         self._row(c, _("threshold"), "threshold")
 
     def _scoring_card(self, parent: Any) -> None:
-        c = self._section_card(parent, f"{_('score_yes')} / {_('score_somewhat')} / {_('score_no')}", "🏆")
+        c = self._section_card(parent, f"{_('score_yes')} / {_('score_somewhat')} / {_('score_no')}", "bar_chart")
         for label, key in [
             (_("score_yes"),      "score_yes"),
             (_("score_somewhat"), "score_somewhat"),
@@ -164,11 +185,10 @@ class SettingsFrame(ctk.CTkFrame):
             self._row(c, label, key)
 
     def _branding_card(self, parent: Any) -> None:
-        c = self._section_card(parent, _("university_branding"), "🏛")
+        c = self._section_card(parent, _("university_branding"), "building")
         body = T.transparent(c)
         body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
-        # University name
         T.muted_label(body, _("university_name")).pack(anchor="w", pady=(0, 4))
         uni_default = (
             self._persistence.get_setting("university_name", "")
@@ -181,33 +201,36 @@ class SettingsFrame(ctk.CTkFrame):
 
         T.divider(body).pack(fill="x", pady=(0, 12))
 
-        # Logo
         logo_row = T.transparent(body)
         logo_row.pack(fill="x")
         T.muted_label(logo_row, _("logo_upload")).pack(side="left")
 
-        T.secondary_btn(
-            logo_row,
-            f"📁  {_('select_logo')}",
+        IC.icon_button(
+            logo_row, "upload", text="  " + _("select_logo"),
+            size=13, color=T._D_TEXT2,
+            height=34, width=160,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.small(), corner_radius=T.RADIUS_MD,
             command=self._select_logo,
-            height=34,
-            width=160,
         ).pack(side="right")
 
         self.logo_lbl = T.muted_label(body, _("no_logo"))
         self.logo_lbl.pack(anchor="w", pady=(6, 12))
 
         if self._persistence:
-            T.primary_btn(
-                body,
-                f"💾  {_('save')}",
+            IC.icon_button(
+                body, "save", text="  " + _("save"),
+                size=13, color="#FFFFFF",
+                height=36, width=120,
+                fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+                text_color="#FFFFFF", font=T.font(12, "bold"),
+                corner_radius=T.RADIUS_MD,
                 command=self._save_branding,
-                height=36,
-                width=120,
             ).pack(anchor="e")
 
     def _coords_card(self, parent: Any) -> None:
-        c = self._section_card(parent, _("pdf_coords"), "📍")
+        c = self._section_card(parent, _("pdf_coords"), "layers")
         body = T.transparent(c)
         body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
@@ -221,28 +244,26 @@ class SettingsFrame(ctk.CTkFrame):
                     pass
 
         self.pdf_coords_box = ctk.CTkTextbox(
-            body,
-            height=120,
-            font=T.mono(),
+            body, height=120, font=T.mono(),
             corner_radius=T.RADIUS_MD,
-            fg_color=T.INPUT_BG,
-            border_color=T.INPUT_BORDER,
-            border_width=1,
+            fg_color=T.INPUT_BG, border_color=T.INPUT_BORDER, border_width=1,
         )
         self.pdf_coords_box.pack(fill="x", pady=(0, 10))
         self.pdf_coords_box.insert("1.0", coords_default)
 
         if self._persistence:
-            T.primary_btn(
-                body,
-                f"💾  {_('save')}",
+            IC.icon_button(
+                body, "save", text="  " + _("save"),
+                size=13, color="#FFFFFF",
+                height=36, width=120,
+                fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+                text_color="#FFFFFF", font=T.font(12, "bold"),
+                corner_radius=T.RADIUS_MD,
                 command=self._save_coords,
-                height=36,
-                width=120,
             ).pack(anchor="e")
 
     def _questions_card(self, parent: Any) -> None:
-        c = self._section_card(parent, _("survey_questions"), "❓")
+        c = self._section_card(parent, _("survey_questions"), "file_text")
         body = T.transparent(c)
         body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
@@ -253,7 +274,6 @@ class SettingsFrame(ctk.CTkFrame):
             if isinstance(stored, list) and len(stored) == 14:
                 defaults = stored
 
-        # Header
         hdr = T.transparent(body)
         hdr.pack(fill="x", pady=(0, 6))
         T.muted_label(hdr, _("question_num")).pack(side="left")
@@ -282,12 +302,14 @@ class SettingsFrame(ctk.CTkFrame):
             self._q_entries.append(entry)
 
         if self._persistence:
-            T.primary_btn(
-                body,
-                f"💾  {_('save_questions')}",
+            IC.icon_button(
+                body, "save", text="  " + _("save_questions"),
+                size=13, color="#FFFFFF",
+                height=36, width=160,
+                fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+                text_color="#FFFFFF", font=T.font(12, "bold"),
+                corner_radius=T.RADIUS_MD,
                 command=self._save_questions,
-                height=36,
-                width=160,
             ).pack(anchor="e")
 
     # ------------------------------------------------------------------
