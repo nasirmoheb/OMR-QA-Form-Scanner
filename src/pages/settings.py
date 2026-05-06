@@ -48,13 +48,13 @@ _NAV_ITEMS = [
     ("advanced",   "cpu",        "pdf_coords",         T._D_RED),
 ]
 
-# Section subtitles shown in the content panel header
-_SECTION_META = {
-    "general":   ("General",            "Branding, language and appearance preferences"),
-    "detection": ("Detection",          "Checkbox recognition sensitivity settings"),
-    "scoring":   ("Scoring",            "Likert scale weights for Yes / Somewhat / No"),
-    "questions": ("Survey Questions",   "Edit the 14 question texts shown on the form"),
-    "advanced":  ("Advanced",           "PDF template coordinates and form geometry"),
+# Section subtitles shown in the content panel header — resolved at call time via _()
+_SECTION_META_KEYS = {
+    "general":   ("settings_section_general",   "settings_section_general_sub"),
+    "detection": ("settings_section_detection", "settings_section_detection_sub"),
+    "scoring":   ("settings_section_scoring",   "settings_section_scoring_sub"),
+    "questions": ("settings_section_questions", "settings_section_questions_sub"),
+    "advanced":  ("settings_section_advanced",  "settings_section_advanced_sub"),
 }
 
 
@@ -100,7 +100,7 @@ class SettingsFrame(ctk.CTkFrame):
         ).pack(anchor=get_anchor())
         
         ctk.CTkLabel(
-            title_col, text="Configure your application preferences, detection levels, and branding.",
+            title_col, text=_("settings_subtitle"),
             font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor(),
         ).pack(anchor=get_anchor(), pady=(4, 0))
 
@@ -127,7 +127,7 @@ class SettingsFrame(ctk.CTkFrame):
         # Nav section label
         ctk.CTkLabel(
             self._nav_inner,
-            text="SECTIONS",
+            text=_("sections"),
             font=T.font(9, "bold"),
             text_color=T.TEXT_MUTED,
             anchor=get_anchor(),
@@ -196,7 +196,7 @@ class SettingsFrame(ctk.CTkFrame):
         # Label
         text_lbl = ctk.CTkLabel(
             row,
-            text=_SECTION_META.get(section_id, (label_key, ""))[0],
+            text=_(_SECTION_META_KEYS.get(section_id, (section_id, ""))[0]),
             font=T.body(),
             text_color=T.TEXT_SECONDARY,
             anchor=get_anchor(),
@@ -268,7 +268,9 @@ class SettingsFrame(ctk.CTkFrame):
         ph_inner = T.transparent(ph)
         ph_inner.pack(fill="both", expand=True, padx=T.PAGE_PADDING)
 
-        title_text, subtitle_text = _SECTION_META.get(section_id, (section_id, ""))
+        title_key, sub_key = _SECTION_META_KEYS.get(section_id, (section_id, ""))
+        title_text    = _(title_key)
+        subtitle_text = _(sub_key)
         # Find accent for this section
         accent = next((a for sid, _, _, a in _NAV_ITEMS if sid == section_id), T._D_ACCENT)
         icon_name = next((ic for sid, ic, _, _ in _NAV_ITEMS if sid == section_id), "settings")
@@ -388,7 +390,7 @@ class SettingsFrame(ctk.CTkFrame):
 
         # ── Language card ─────────────────────────────────────────────────
         lang_card = self._field_card(
-            scroll, "Language", "Choose the display language for the interface", "globe"
+            scroll, _("language_card_title"), _("language_subtitle"), "globe"
         )
         lang_body = T.transparent(lang_card)
         lang_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
@@ -440,7 +442,7 @@ class SettingsFrame(ctk.CTkFrame):
 
         # ── Appearance card ───────────────────────────────────────────────
         appear_card = self._field_card(
-            scroll, "Appearance", "Switch between light, dark, or system theme", "eye"
+            scroll, _("appearance_card_title"), _("appearance_subtitle"), "eye"
         )
         appear_body = T.transparent(appear_card)
         appear_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
@@ -451,13 +453,13 @@ class SettingsFrame(ctk.CTkFrame):
         self._appear_frames: dict[str, ctk.CTkFrame] = {}
 
         _themes = [
-            ("Light",  "sun",   "#F5A623"),
-            ("Dark",   "moon",  "#4A9EFF"),
-            ("System", "cpu",   "#00C896"),
+            (_("light"),  "sun",   "#F5A623", "Light"),
+            (_("dark"),   "moon",  "#4A9EFF", "Dark"),
+            (_("system"), "cpu",   "#00C896", "System"),
         ]
         current_mode = ctk.get_appearance_mode()
-        for mode, icon_n, color in _themes:
-            is_active = mode == current_mode
+        for mode_label, icon_n, color, mode_en in _themes:
+            is_active = mode_en.lower() == current_mode.lower()
             opt = ctk.CTkFrame(
                 appear_row,
                 corner_radius=T.RADIUS_MD,
@@ -476,32 +478,32 @@ class SettingsFrame(ctk.CTkFrame):
                 text="",
             ).place(relx=0.5, rely=0.35, anchor="center")
             ctk.CTkLabel(
-                opt, text=mode, font=T.font(11, "bold"), text_color=T.TEXT_PRIMARY,
+                opt, text=mode_label, font=T.font(11, "bold"), text_color=T.TEXT_PRIMARY,
             ).place(relx=0.5, rely=0.75, anchor="center")
 
-            self._appear_frames[mode] = opt
+            self._appear_frames[mode_en] = opt
 
-            def _select_mode(m=mode):
-                self.appear_var.set(m)
+            def _select_mode(m_en=mode_en):
+                self.appear_var.set(m_en)
                 for mm, fr in self._appear_frames.items():
-                    active = mm == m
+                    active = mm == m_en
                     fr.configure(
                         fg_color=T.ACCENT_SUBTLE if active else T.SURFACE_RAISED,
                         border_color=T.ACCENT if active else T.CARD_BORDER,
                     )
-                ctk.set_appearance_mode(m)
+                ctk.set_appearance_mode(m_en)
 
-            opt.bind("<Button-1>", lambda _e, m=mode: _select_mode(m))
+            opt.bind("<Button-1>", lambda _e, m_en=mode_en: _select_mode(m_en))
 
         # ── Branding card ─────────────────────────────────────────────────
         brand_card = self._field_card(
-            scroll, "Institution Branding", "Printed on survey forms and PDF reports", "building"
+            scroll, _("branding_card_title"), _("branding_subtitle"), "building"
         )
         brand_body = T.transparent(brand_card)
         brand_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
         ctk.CTkLabel(
-            brand_body, text="University Name",
+            brand_body, text=_("university_name"),
             font=T.body(), text_color=T.TEXT_PRIMARY, anchor=get_anchor(),
         ).pack(anchor=get_anchor(), pady=(0, 6))
         
@@ -517,7 +519,7 @@ class SettingsFrame(ctk.CTkFrame):
             border_width=1,
             font=T.body(),
             text_color=T.TEXT_PRIMARY,
-            placeholder_text="e.g. Kabul University",
+            placeholder_text=_("university_name_placeholder"),
             placeholder_text_color=T.TEXT_MUTED,
         )
         if uni_default:
@@ -526,7 +528,7 @@ class SettingsFrame(ctk.CTkFrame):
 
         # Logo upload
         ctk.CTkLabel(
-            brand_body, text="Institution Logo",
+            brand_body, text=_("institution_logo"),
             font=T.body(), text_color=T.TEXT_PRIMARY, anchor=get_anchor(),
         ).pack(anchor=get_anchor(), pady=(0, 4))
 
@@ -567,12 +569,12 @@ class SettingsFrame(ctk.CTkFrame):
         outer, scroll = self._panel_scaffold(parent, "detection")
 
         thresh_card = self._field_card(
-            scroll, "Checkbox Detection",
-            "Adjust how sensitive the OMR reader is to filled checkboxes", "eye"
+            scroll, _("checkbox_detection"),
+            _("detection_subtitle"), "eye"
         )
         self._field_row(
-            thresh_card, "Detection Threshold",
-            "threshold", "Float 0.0–1.0. Lower = more sensitive.", 120,
+            thresh_card, _("detection_threshold"),
+            "threshold", _("threshold_hint"), 120,
         )
 
         # Visual threshold guide
@@ -581,26 +583,25 @@ class SettingsFrame(ctk.CTkFrame):
         g_inner = T.transparent(guide)
         g_inner.pack(fill="x", padx=14, pady=10)
         ctk.CTkLabel(
-            g_inner, text="Recommended range: 0.15 – 0.35",
+            g_inner, text=_("threshold_guide"),
             font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor(),
         ).pack(anchor=get_anchor())
         ctk.CTkLabel(
             g_inner,
-            text="• Too low (< 0.10): false positives on blank forms\n"
-                 "• Too high (> 0.40): misses lightly filled bubbles",
-            font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor(), justify="left",
+            text=_("threshold_warning"),
+            font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor(), justify=get_start(),
         ).pack(anchor=get_anchor(), pady=(4, 0))
 
         # Form geometry card
         geom_card = self._field_card(
-            scroll, "Form Geometry",
-            "Pixel dimensions and grid layout of the scanned form", "layers"
+            scroll, _("form_geometry_card"),
+            _("form_geometry_subtitle"), "layers"
         )
         for label, key, hint in [
-            ("Form Width",  "form_width",  "pixels"),
-            ("Form Height", "form_height", "pixels"),
-            ("Row Count",   "rows",        "questions per form"),
-            ("Column Count","columns",     "answer options per question"),
+            (_("form_width_label"),  "form_width",  _("pixels")),
+            (_("form_height_label"), "form_height", _("pixels")),
+            (_("row_count"),         "rows",        _("questions_per_form")),
+            (_("column_count"),      "columns",     _("options_per_question")),
         ]:
             self._field_row(geom_card, label, key, hint)
         T.transparent(geom_card).pack(pady=8)  # bottom padding
@@ -615,8 +616,8 @@ class SettingsFrame(ctk.CTkFrame):
         outer, scroll = self._panel_scaffold(parent, "scoring")
 
         score_card = self._field_card(
-            scroll, "Likert Scale Weights",
-            "Numeric values assigned to each answer option", "bar_chart"
+            scroll, _("likert_scale_weights"),
+            _("scoring_subtitle"), "bar_chart"
         )
 
         # Visual score preview chips
@@ -624,9 +625,9 @@ class SettingsFrame(ctk.CTkFrame):
         preview.pack(fill="x", padx=T.CARD_PADDING, pady=(12, 0))
 
         _score_items = [
-            ("Yes",      "score_yes",      "#00C896", "3",   "Optimal — full satisfaction"),
-            ("Somewhat", "score_somewhat", "#F5A623", "2",   "Partial — needs improvement"),
-            ("No",       "score_no",       "#FF4D6A", "1",   "Critical — immediate action"),
+            (_("yes"),      "score_yes",      "#00C896", "3",   _("optimal_satisfaction")),
+            (_("somewhat"), "score_somewhat", "#F5A623", "2",   _("partial_improvement")),
+            (_("no"),       "score_no",       "#FF4D6A", "1",   _("critical_action")),
         ]
         for answer, key, color, default_val, desc in _score_items:
             chip_row = ctk.CTkFrame(
@@ -672,10 +673,9 @@ class SettingsFrame(ctk.CTkFrame):
         note.pack(fill="x", padx=T.CARD_PADDING, pady=(4, T.CARD_PADDING))
         ctk.CTkLabel(
             note,
-            text="ℹ️  These weights are used for Likert-scale analytics. "
-                 "The legacy 0/50/100 scale is preserved for backward compatibility.",
+            text=_("likert_info"),
             font=T.small(), text_color=T.TEXT_MUTED,
-            wraplength=560, justify="left", anchor=get_anchor(),
+            wraplength=560, justify=get_start(), anchor=get_anchor(),
         ).pack(padx=14, pady=10)
 
         return outer
@@ -694,8 +694,8 @@ class SettingsFrame(ctk.CTkFrame):
         outer, scroll = self._panel_scaffold(parent, "questions")
 
         q_card = self._field_card(
-            scroll, "Survey Question Texts",
-            "These 14 questions appear on the printed OMR form", "file_text"
+            scroll, _("survey_question_texts"),
+            _("questions_subtitle"), "file_text"
         )
         q_body = T.transparent(q_card)
         q_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
@@ -710,8 +710,8 @@ class SettingsFrame(ctk.CTkFrame):
         # Column headers
         hdr = T.transparent(q_body)
         hdr.pack(fill="x", pady=(0, 8))
-        ctk.CTkLabel(hdr, text="#", font=T.font(10, "bold"), text_color=T.TEXT_MUTED, width=36, anchor=get_anchor()).pack(side=get_start())
-        ctk.CTkLabel(hdr, text="Question Text", font=T.font(10, "bold"), text_color=T.TEXT_MUTED, anchor=get_anchor()).pack(side=get_start(), padx=(8, 0))
+        ctk.CTkLabel(hdr, text=_("question_num_short"), font=T.font(10, "bold"), text_color=T.TEXT_MUTED, width=36, anchor=get_anchor()).pack(side=get_start())
+        ctk.CTkLabel(hdr, text=_("question_text_header"), font=T.font(10, "bold"), text_color=T.TEXT_MUTED, anchor=get_anchor()).pack(side=get_start(), padx=(8, 0))
 
         self._q_entries: list[ctk.CTkEntry] = []
 
@@ -797,18 +797,18 @@ class SettingsFrame(ctk.CTkFrame):
         legend.pack(fill="x", pady=(12, 0))
         leg_inner = T.transparent(legend)
         leg_inner.pack(fill="x", padx=14, pady=10)
-        ctk.CTkLabel(leg_inner, text="Dimension Groups:", font=T.font(10, "bold"), text_color=T.TEXT_SECONDARY, anchor=get_anchor()).pack(anchor=get_anchor(), pady=(0, 6))
+        ctk.CTkLabel(leg_inner, text=_("dimension_groups"), font=T.font(10, "bold"), text_color=T.TEXT_SECONDARY, anchor=get_anchor()).pack(anchor=get_anchor(), pady=(0, 6))
         leg_row = T.transparent(leg_inner)
         leg_row.pack(fill="x")
-        for lbl, color, desc in [
-            ("A", "#4A9EFF", "Curriculum & Resources (Q1–3)"),
-            ("B", "#00C896", "Pedagogical Delivery (Q4,5,9,12)"),
-            ("C", "#F5A623", "Classroom Management (Q7,8,10,11)"),
-            ("D", "#A78BFA", "Modern Teaching (Q6,13,14)"),
+        for lbl, color, desc_key in [
+            ("A", "#4A9EFF", "curriculum_resources"),
+            ("B", "#00C896", "pedagogical_delivery"),
+            ("C", "#F5A623", "classroom_management"),
+            ("D", "#A78BFA", "modern_teaching"),
         ]:
             chip = ctk.CTkFrame(leg_row, corner_radius=T.RADIUS_SM, fg_color=_tint(color, 0.18))
             chip.pack(side=get_start(), padx=(0, 8))
-            ctk.CTkLabel(chip, text=f"{lbl}  {desc}", font=T.small(), text_color=color).pack(padx=10, pady=4)
+            ctk.CTkLabel(chip, text=f"{lbl}  {_(desc_key)}", font=T.small(), text_color=color).pack(padx=10, pady=4)
 
         self._save_btn(q_card, self._save_questions, _("save_questions"))
 
@@ -822,8 +822,8 @@ class SettingsFrame(ctk.CTkFrame):
         outer, scroll = self._panel_scaffold(parent, "advanced")
 
         coords_card = self._field_card(
-            scroll, "PDF Template Coordinates",
-            "JSON object mapping field names to (x, y) positions on the form", "cpu"
+            scroll, _("pdf_coords_card"),
+            _("pdf_coords_subtitle"), "cpu"
         )
         coords_body = T.transparent(coords_card)
         coords_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
@@ -851,7 +851,7 @@ class SettingsFrame(ctk.CTkFrame):
 
         ctk.CTkLabel(
             coords_body,
-            text='Example: {"name_x": 120, "name_y": 45, "semester_x": 300}',
+            text=_("pdf_coords_example"),
             font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor(),
         ).pack(anchor=get_anchor(), pady=(0, 4))
 
@@ -859,21 +859,21 @@ class SettingsFrame(ctk.CTkFrame):
 
         # QA thresholds info card
         qa_card = self._field_card(
-            scroll, "QA Alert Thresholds",
-            "Current thresholds used by the automated QA engine", "warning"
+            scroll, _("qa_thresholds"),
+            _("qa_thresholds_subtitle"), "warning"
         )
         qa_body = T.transparent(qa_card)
         qa_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
         _thresholds = [
-            ("Dimension Alert Threshold", f"{self._config.DIMENSION_ALERT_THRESHOLD}", "#F5A623",
-             "Dimension mean below this triggers a QA flag"),
-            ("Polarization SD Threshold", f"{self._config.POLARIZATION_SD_THRESHOLD}", "#FB7185",
-             "Question std dev above this = polarized classroom"),
-            ("Batch Score Alert", f"{self._config.BATCH_SCORE_ALERT_THRESHOLD}%", "#FF4D6A",
-             "Batch score below this triggers a critical alert"),
-            ("Punctuality No Threshold", f"{int(self._config.PUNCTUALITY_NO_THRESHOLD * 100)}%", "#F5A623",
-             "% of 'No' on Q10 before punctuality alert fires"),
+            (_("dimension_alert_threshold"), f"{self._config.DIMENSION_ALERT_THRESHOLD}", "#F5A623",
+             _("dimension_alert_desc")),
+            (_("polarization_threshold"), f"{self._config.POLARIZATION_SD_THRESHOLD}", "#FB7185",
+             _("polarization_desc")),
+            (_("batch_score_alert"), f"{self._config.BATCH_SCORE_ALERT_THRESHOLD}%", "#FF4D6A",
+             _("batch_alert_desc")),
+            (_("punctuality_threshold"), f"{int(self._config.PUNCTUALITY_NO_THRESHOLD * 100)}%", "#F5A623",
+             _("punctuality_desc")),
         ]
         for label, value, color, desc in _thresholds:
             t_row = ctk.CTkFrame(qa_body, corner_radius=T.RADIUS_SM, fg_color=T.SURFACE_RAISED, height=52)
@@ -893,9 +893,9 @@ class SettingsFrame(ctk.CTkFrame):
 
         ctk.CTkLabel(
             qa_body,
-            text="ℹ️  To change these thresholds, edit DIMENSION_ALERT_THRESHOLD and related constants in src/config.py",
+            text=_("qa_config_note"),
             font=T.small(), text_color=T.TEXT_MUTED,
-            wraplength=560, justify="left", anchor=get_anchor(),
+            wraplength=560, justify=get_start(), anchor=get_anchor(),
         ).pack(anchor=get_anchor(), pady=(8, 0))
 
         return outer
@@ -989,7 +989,7 @@ class SettingsFrame(ctk.CTkFrame):
         try:
             parsed = json.loads(raw)
         except json.JSONDecodeError as exc:
-            messagebox.showerror(_("pdf_coords"), f"Invalid JSON:\n{exc}")
+            messagebox.showerror(_("pdf_coords"), f"{_('invalid_json')}\n{exc}")
             return
         self._persistence.set_setting("pdf_coords", parsed)
         messagebox.showinfo(_("pdf_coords"), _("settings_saved"))

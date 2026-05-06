@@ -15,7 +15,7 @@ import customtkinter as ctk
 import icons as IC
 import theme as T
 from analytics_engine import AnalyticsEngine
-from i18n import _, get_start, get_end, get_anchor, get_compound
+from i18n import _, get_start, get_end, get_anchor, get_compound, is_rtl
 from models import FormResult, Survey
 from persistence import PersistenceManager
 from .base import BasePage, PageRouter
@@ -73,13 +73,13 @@ class ResultsPage(BasePage):
 
         # Title
         ctk.CTkLabel(
-            header, text="Survey Results & Analytics", font=T.h1(), text_color=T.TEXT_PRIMARY
+            header, text=_("survey_results_analytics"), font=T.h1(), text_color=T.TEXT_PRIMARY
         ).pack(anchor=get_anchor())
 
         # Subtitle
         ctk.CTkLabel(
-            header, text="View score distribution, raw form data, and advanced pedagogical insights.",
-            font=T.small(), text_color=T.TEXT_SECONDARY, justify="left"
+            header, text=_("survey_results_subtitle"),
+            font=T.small(), text_color=T.TEXT_SECONDARY, justify=get_start()
         ).pack(anchor=get_anchor(), pady=(4, 0))
 
         # -- Main Content (2 Columns Layout) ----
@@ -87,10 +87,10 @@ class ResultsPage(BasePage):
         content_wrap.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
         left_col = T.transparent(content_wrap)
-        left_col.pack(side=get_start(), fill="both", expand=True, padx=(0, 16))
+        left_col.pack(side=get_start(), fill="both", expand=True, padx=(0, 16) if not is_rtl() else (16, 0))
 
         right_col = T.transparent(content_wrap)
-        right_col.pack(side=get_end(), fill="y", padx=(16, 0))
+        right_col.pack(side=get_end(), fill="y", padx=(16, 0) if not is_rtl() else (0, 16))
 
         # -------------------------------------------------------------
         # LEFT COLUMN: Tabs and Tables
@@ -142,7 +142,7 @@ class ResultsPage(BasePage):
             meta_inner.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
             
             ctk.CTkLabel(
-                meta_inner, text="SURVEY SUMMARY",
+                meta_inner, text=_("survey_summary"),
                 font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
             ).pack(anchor=get_anchor(), pady=(0, 12))
 
@@ -154,7 +154,7 @@ class ResultsPage(BasePage):
 
             ctk.CTkLabel(
                 meta_inner, text=f"{self.survey.professor}\n{self.survey.semester} • {self.survey.academic_year}",
-                font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor(), justify="left"
+                font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor(), justify=get_start()
             ).pack(anchor=get_anchor(), pady=(8, 0))
 
             T.status_chip(meta_inner, self.survey.status).pack(anchor=get_anchor(), pady=(12, 0))
@@ -175,8 +175,8 @@ class ResultsPage(BasePage):
                 ctk.CTkLabel(r, text=label, font=T.tiny(), text_color=T.TEXT_MUTED).pack(side=get_start())
                 ctk.CTkLabel(r, text=value, font=T.font(12, "bold"), text_color=T.TEXT_PRIMARY).pack(side=get_end())
 
-            _kpi_row("Total Forms", str(form_count), "file_text")
-            _kpi_row("Avg Score", f"{batch_score:.1f}%", "trending_up")
+            _kpi_row(_("total_forms"), str(form_count), "file_text")
+            _kpi_row(_("avg_score"), f"{batch_score:.1f}%", "trending_up")
 
         # -- Export Card ----
         export_card = T.card(right_col)
@@ -185,7 +185,7 @@ class ResultsPage(BasePage):
         export_header = T.transparent(export_card)
         export_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
         ctk.CTkLabel(
-            export_header, text="EXPORT REPORTS",
+            export_header, text=_("export_reports"),
             font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
         ).pack(anchor=get_anchor())
 
@@ -194,14 +194,14 @@ class ResultsPage(BasePage):
 
         # HTML Dashboard
         ctk.CTkButton(
-            export_body, text="  HTML Dashboard", image=IC.icon("globe", size=16, color="#000000"),
+            export_body, text="  " + _("html_dashboard"), image=IC.icon("globe", size=16, color="#000000"),
             height=44, corner_radius=T.RADIUS_MD, fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
             text_color="#000000", font=T.font(13, "bold"), command=self._on_html,
         ).pack(fill="x", pady=(0, 12))
 
         # Advanced HTML
         IC.icon_button(
-            export_body, "trending_up", text="  Advanced Analytics",
+            export_body, "trending_up", text="  " + _("advanced_analytics"),
             size=16, color=T.TEXT_PRIMARY[1], height=40,
             fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_PRIMARY, font=T.font(12),
@@ -211,7 +211,7 @@ class ResultsPage(BasePage):
 
         # PDF Report
         IC.icon_button(
-            export_body, "file_text", text="  PDF Summary",
+            export_body, "file_text", text="  " + _("pdf_summary"),
             size=16, color=T.TEXT_PRIMARY[1], height=40,
             fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_PRIMARY, font=T.font(12),
@@ -221,7 +221,7 @@ class ResultsPage(BasePage):
 
         # Official Dari Report
         IC.icon_button(
-            export_body, "globe", text="  Official Dari Report",
+            export_body, "globe", text="  " + _("official_dari_report"),
             size=16, color=T.TEXT_PRIMARY[1], height=40,
             fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_PRIMARY, font=T.font(12),
@@ -231,7 +231,7 @@ class ResultsPage(BasePage):
 
         # CSV Data
         IC.icon_button(
-            export_body, "download", text="  CSV Raw Data",
+            export_body, "download", text="  " + _("csv_raw_data"),
             size=16, color=T.TEXT_PRIMARY[1], height=40,
             fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_PRIMARY, font=T.font(12),
@@ -241,7 +241,7 @@ class ResultsPage(BasePage):
 
         # Back Button
         ctk.CTkButton(
-            export_body, text="  Back to Home", image=IC.icon("arrow_left", size=16, color=T.TEXT_SECONDARY[1]),
+            export_body, text="  " + _("back_to_home"), image=IC.icon("arrow_left", size=16, color=T.TEXT_SECONDARY[1]),
             height=36, corner_radius=T.RADIUS_MD, fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_SECONDARY, font=T.font(13), command=lambda: self.go("dashboard"),
         ).pack(fill="x", pady=(20, 0))
@@ -319,7 +319,7 @@ class ResultsPage(BasePage):
 
         col_ids   = ("q_num", "q_text", "yes", "no", "somewhat", "invalid", "total", "pct")
         col_names = (
-            _("question_num_short"), "Question",
+            _("question_num_short"), _("question"),
             _("count_yes"), _("count_no"), _("count_somewhat"),
             _("count_invalid"), _("total_responses"), _("pct_distribution"),
         )
@@ -358,7 +358,7 @@ class ResultsPage(BasePage):
 
         q_cols    = tuple(f"Q{i}" for i in range(1, 15))
         col_ids   = ("form_id",) + q_cols + ("score", "valid")
-        col_names = ("Form ID",) + q_cols + ("Score", "Valid")
+        col_names = (_("form_id"),) + q_cols + (_("score"), _("valid"))
         widths    = {c: 52 for c in col_ids}
         widths["form_id"] = 130
         widths["score"]   = 60
@@ -400,7 +400,7 @@ class ResultsPage(BasePage):
             return
 
         # Loading indicator while computing
-        loading_lbl = T.muted_label(self.content, "Computing advanced analytics…")
+        loading_lbl = T.muted_label(self.content, _("computing_analytics"))
         loading_lbl.pack(pady=20)
         self.content.update()
 
@@ -423,7 +423,7 @@ class ResultsPage(BasePage):
         invalid_forms    = data.get("invalid_forms", [])
 
         # ── Section: Dimension KPI cards ──────────────────────────────────
-        T.section_title(self.content, "Pedagogical Dimensions (KPIs)").pack(
+        T.section_title(self.content, _("pedagogical_dimensions")).pack(
             anchor=get_anchor(), pady=(0, 8)
         )
         dim_row = T.transparent(self.content)
@@ -447,7 +447,7 @@ class ResultsPage(BasePage):
             card.pack(side=get_start(), fill="x", expand=True, padx=(0, 10))
 
         # ── Section: QA Alerts ────────────────────────────────────────────
-        T.section_title(self.content, f"QA Alerts ({len(alerts)})").pack(
+        T.section_title(self.content, f"{_('qa_alerts')} ({len(alerts)})").pack(
             anchor=get_anchor(), pady=(8, 6)
         )
         if not alerts:
@@ -455,7 +455,7 @@ class ResultsPage(BasePage):
             ok_card.pack(fill="x", pady=(0, 12))
             ctk.CTkLabel(
                 ok_card,
-                text="✅  All dimensions are within acceptable thresholds.",
+                text=_("all_dimensions_ok"),
                 font=T.body(),
                 text_color=T.SUCCESS,
             ).pack(padx=T.CARD_PADDING, pady=12)
@@ -482,7 +482,7 @@ class ResultsPage(BasePage):
 
         # ── Section: Polarized questions ──────────────────────────────────
         if polarized:
-            T.section_title(self.content, "Polarized Questions (High Variance)").pack(
+            T.section_title(self.content, _("polarized_questions")).pack(
                 anchor=get_anchor(), pady=(8, 6)
             )
             p_card = T.card(self.content)
@@ -490,7 +490,7 @@ class ResultsPage(BasePage):
             qs_text = ", ".join(f"Q{i}" for i in polarized)
             ctk.CTkLabel(
                 p_card,
-                text=f"⚠️  {qs_text} — Students are split. Possible comprehension gap or teaching level mismatch.",
+                text=f"⚠️  {qs_text} — {_('polarized_questions')}",
                 font=T.body(),
                 text_color=T.WARNING,
                 anchor=get_anchor(),
@@ -499,11 +499,11 @@ class ResultsPage(BasePage):
 
         # ── Section: Per-question stats table ─────────────────────────────
         if question_stats is not None and not question_stats.empty:
-            T.section_title(self.content, "Per-Question Statistics").pack(
+            T.section_title(self.content, _("per_question_stats")).pack(
                 anchor=get_anchor(), pady=(8, 6)
             )
             col_ids   = ("q", "mean", "median", "std_dev", "min", "max", "count")
-            col_names = ("Question", "Mean", "Median", "Std Dev", "Min", "Max", "Answered")
+            col_names = (_("question"), _("mean"), _("median"), _("std_dev"), _("min"), _("max"), _("answered"))
             widths    = {"q": 70, "mean": 70, "median": 70, "std_dev": 70,
                          "min": 50, "max": 50, "count": 80}
             tree = self._styled_tree(col_ids, col_names, widths)
@@ -528,7 +528,7 @@ class ResultsPage(BasePage):
 
         # ── Section: Top correlations ─────────────────────────────────────
         if top_corr:
-            T.section_title(self.content, "Top Question Correlations").pack(
+            T.section_title(self.content, _("top_correlations")).pack(
                 anchor=get_anchor(), pady=(8, 6)
             )
             corr_card = T.card(self.content)
@@ -547,7 +547,7 @@ class ResultsPage(BasePage):
 
         # ── Section: Invalid forms ────────────────────────────────────────
         if invalid_forms:
-            T.section_title(self.content, f"Invalid Forms ({len(invalid_forms)})").pack(
+            T.section_title(self.content, f"{_('invalid_forms')} ({len(invalid_forms)})").pack(
                 anchor=get_anchor(), pady=(8, 6)
             )
             inv_card = T.card(self.content)
@@ -566,7 +566,7 @@ class ResultsPage(BasePage):
         total_comments = comment_analysis.get("total_comments", 0)
         if total_comments > 0:
             T.section_title(
-                self.content, f"Comment Analysis ({total_comments} comments)"
+                self.content, f"{_('comment_analysis')} ({total_comments})"
             ).pack(anchor=get_anchor(), pady=(8, 6))
 
             sc = comment_analysis["sentiment_counts"]
@@ -580,9 +580,9 @@ class ResultsPage(BasePage):
             sent_row = T.transparent(c_inner)
             sent_row.pack(fill="x", pady=(0, 8))
             for label, count, color in [
-                ("✅ Positive", sc["positive"], T.SUCCESS),
-                ("➖ Neutral",  sc["neutral"],  T.TEXT_SECONDARY),
-                ("❌ Negative", sc["negative"], T.DANGER),
+                (_("positive"), sc["positive"], T.SUCCESS),
+                (_("neutral"),  sc["neutral"],  T.TEXT_SECONDARY),
+                (_("negative"), sc["negative"], T.DANGER),
             ]:
                 chip = T.inner_card(sent_row, corner_radius=T.RADIUS_SM)
                 chip.pack(side=get_start(), padx=(0, 10))
@@ -594,7 +594,7 @@ class ResultsPage(BasePage):
                 ).pack(padx=14, pady=8)
 
             if kw:
-                T.muted_label(c_inner, "Top Keywords:").pack(anchor=get_anchor(), pady=(4, 4))
+                T.muted_label(c_inner, _("top_keywords")).pack(anchor=get_anchor(), pady=(4, 4))
                 kw_row = T.transparent(c_inner)
                 kw_row.pack(fill="x")
                 for word, count in kw[:12]:
@@ -620,7 +620,7 @@ class ResultsPage(BasePage):
             return
 
         col_ids   = ("semester", "academic_year", "form_count", "batch_score")
-        col_names = (_("semester"), _("academic_year"), "Forms", "Score")
+        col_names = (_("semester"), _("academic_year"), _("forms"), _("score"))
         widths    = {"semester": 160, "academic_year": 160, "form_count": 100, "batch_score": 120}
 
         tree = self._styled_tree(col_ids, col_names, widths)
@@ -752,4 +752,4 @@ class ResultsPage(BasePage):
             webbrowser.open(f"file:///{Path(report_path).resolve()}")
         except Exception as exc:
             logger.exception("Advanced HTML report failed")
-            messagebox.showerror(_("error_report"), f"Advanced report error:\n{exc}")
+            messagebox.showerror(_("error_report"), f"{_('error_report')}:\n{exc}")

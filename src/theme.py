@@ -176,6 +176,14 @@ CARD_PADDING    = 20
 # ---------------------------------------------------------------------------
 
 def font(size: int = 13, weight: str = "normal", family: str | None = None) -> ctk.CTkFont:
+    """Create a font with RTL support."""
+    # Use Segoe UI for RTL languages (supports Arabic/Dari/Pashto well on Windows)
+    # Fall back to system default if family is explicitly specified
+    if family is None:
+        from i18n import is_rtl
+        if is_rtl():
+            family = "Segoe UI"  # Excellent RTL support on Windows
+    
     kw: dict = {"size": size, "weight": weight}
     if family:
         kw["family"] = family

@@ -70,7 +70,7 @@ class SurveyFormPage(BasePage):
         header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
         # Title
-        title_text = "Edit Evaluation Survey" if self.survey_id else "Create New Evaluation Survey"
+        title_text = _("edit_evaluation_survey") if self.survey_id else _("create_new_evaluation_survey")
         ctk.CTkLabel(
             header, text=title_text, font=T.h1(), text_color=T.TEXT_PRIMARY
         ).pack(anchor=get_anchor())
@@ -157,14 +157,14 @@ class SurveyFormPage(BasePage):
 
         # Save Survey
         ctk.CTkButton(
-            action_body, text="  Save Survey", image=IC.icon("save", size=16, color="#000000"),
+            action_body, text="  " + _("save_survey"), image=IC.icon("save", size=16, color="#000000"),
             height=44, corner_radius=T.RADIUS_MD, fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
             text_color="#000000", font=T.font(14, "bold"), command=self._on_save,
         ).pack(fill="x", pady=(0, 12))
 
         # Print Survey Form
         self.print_btn = ctk.CTkButton(
-            action_body, text="  Print Survey Form", image=IC.icon("print_icon", size=16, color=T.TEXT_PRIMARY[1]),
+            action_body, text="  " + _("print_form"), image=IC.icon("print_icon", size=16, color=T.TEXT_PRIMARY[1]),
             height=44, corner_radius=T.RADIUS_MD, fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_PRIMARY, font=T.font(13), border_width=1, border_color=T.CARD_BORDER,
             state="disabled" if not self.survey_id else "normal", command=self._on_print,
@@ -173,7 +173,7 @@ class SurveyFormPage(BasePage):
 
         # Discard Draft
         ctk.CTkButton(
-            action_body, text="  Discard Draft", image=IC.icon("trash", size=16, color=T.TEXT_SECONDARY[1]),
+            action_body, text="  " + _("discard_draft"), image=IC.icon("trash", size=16, color=T.TEXT_SECONDARY[1]),
             height=36, corner_radius=T.RADIUS_MD, fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_SECONDARY, font=T.font(13), command=lambda: self.go("dashboard"),
         ).pack(fill="x")

@@ -79,6 +79,7 @@ class OMRGUI:
             corner_radius=0,
             fg_color=T.SIDEBAR_BG,
         )
+        from i18n import is_rtl
         self.sidebar.pack(side="right", fill="y")
         self.sidebar.pack_propagate(False)
 
@@ -86,27 +87,31 @@ class OMRGUI:
         logo_wrap = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         logo_wrap.pack(fill="x", padx=18, pady=(24, 0))
 
+        from i18n import is_rtl, _
+        _logo_anchor = "e" if is_rtl() else "w"
+        _logo_side = "right" if is_rtl() else "left"
+
         title_row = ctk.CTkFrame(logo_wrap, fg_color="transparent")
-        title_row.pack(anchor="w")
+        title_row.pack(anchor=_logo_anchor)
         ctk.CTkLabel(
             title_row,
             text="Obsidian",
             font=T.font(16, "bold"),
             text_color=T.TEXT_PRIMARY,
-        ).pack(side="left")
+        ).pack(side=_logo_side)
         ctk.CTkLabel(
             title_row,
             text=" OMR",
             font=T.font(16, "bold"),
             text_color=T.ACCENT,
-        ).pack(side="left")
+        ).pack(side=_logo_side)
 
         ctk.CTkLabel(
             logo_wrap,
             text="QA Systems v2.4",
             font=T.small(),
             text_color=T.TEXT_SECONDARY,
-        ).pack(anchor="w", pady=(2, 0))
+        ).pack(anchor=_logo_anchor, pady=(2, 0))
 
         # -- New Survey Button ----
         survey_btn_wrap = ctk.CTkFrame(self.sidebar, fg_color="transparent")
@@ -114,12 +119,12 @@ class OMRGUI:
         
         IC.icon_button(
             survey_btn_wrap, "plus",
-            text="  New Survey",
+            text="  " + _("new_survey"),
             size=16, color="#000000",
             height=44, corner_radius=T.RADIUS_MD,
             fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
             text_color="#000000", font=T.font(14, "bold"),
-            compound="left",
+            compound="right" if is_rtl() else "left",
             command=lambda: self._navigate("survey_form"),
         ).pack(fill="x")
 
@@ -140,11 +145,12 @@ class OMRGUI:
             row = ctk.CTkFrame(nav_frame, fg_color="transparent")
             row.pack(fill="x", pady=(0, 2))
 
-            # Left-side active indicator pill
+            # Active indicator pill — always on the left edge (inner side facing content)
+            from i18n import is_rtl
             pill = ctk.CTkFrame(
                 row, width=4, height=28, corner_radius=2, fg_color="transparent",
             )
-            pill.pack(side="right", padx=(4, 0))
+            pill.pack(side="left", padx=(0, 4))
             pill.pack_propagate(False)
             self._nav_pills[page_id] = pill
 
@@ -158,8 +164,8 @@ class OMRGUI:
                 fg_color="transparent",
                 hover_color=T.SIDEBAR_HOVER_BG,
                 text_color=T.SIDEBAR_TEXT,
-                anchor="w",
-                compound="right",
+                anchor="e" if is_rtl() else "w",
+                compound="left" if is_rtl() else "right",
                 command=lambda pid=page_id: self._navigate(pid),
             )
             btn.pack(side="right", fill="x", expand=True)
@@ -190,6 +196,7 @@ class OMRGUI:
         self.content_frame = ctk.CTkFrame(
             parent, fg_color=T.PAGE_BG, corner_radius=0
         )
+        from i18n import is_rtl
         self.content_frame.pack(side="left", fill="both", expand=True)
         self.router = PageRouter(self.root, self.content_frame)
 
