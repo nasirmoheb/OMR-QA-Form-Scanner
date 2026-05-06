@@ -16,12 +16,12 @@ from vision_processor import VisionProcessor
 # ------------------------------------------------------------------ #
 #  Configurable grid constants  (edit these after visual inspection)
 # ------------------------------------------------------------------ #
-MARGIN_LEFT = 310
+MARGIN_LEFT = 320
 MARGIN_RIGHT = 690
-MARGIN_TOP = 355
-MARGIN_BOTTOM = 430
-COL_GAP = 15
-ROW_GAP = 10
+MARGIN_TOP = 360
+MARGIN_BOTTOM = 445
+COL_GAP = 20
+ROW_GAP = 20
 
 # Special handling: wide rows (Q1, Q11, Q14) need vertical offset
 WIDE_ROW_V_OFFSET = 0  # pixels to shift wide rows downward

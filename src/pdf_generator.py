@@ -519,10 +519,10 @@ def _draw_table(c: Any, questions: list[str], lx: float, cw: float, y: float) ->
     y -= header_h
 
     # ---- Data rows --------------------------------------------------------- #
-    bubble_size = 5 * mm
+    bubble_size = 3.5 * mm
 
     for i, question in enumerate(questions[:14]):
-        row_bg = colors.HexColor("#fafafa") if i % 2 == 0 else colors.white
+        row_bg = colors.white
 
         c.setFillColor(row_bg)
         c.setStrokeColor(colors.black)
@@ -564,12 +564,11 @@ def _draw_table(c: Any, questions: list[str], lx: float, cw: float, y: float) ->
             bx_centre = bx_left + bubble_w / 2
             c.setFillColor(colors.white)
             c.setStrokeColor(colors.black)
-            c.setLineWidth(1.5)
-            c.rect(
-                bx_centre - bubble_size / 2,
-                row_mid_y - bubble_size / 2,
-                bubble_size,
-                bubble_size,
+            c.setLineWidth(0.5)
+            c.circle(
+                bx_centre,
+                row_mid_y,
+                bubble_size / 2,
                 fill=1,
                 stroke=1,
             )

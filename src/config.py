@@ -14,19 +14,19 @@ class Config:
     FORM_HEIGHT: int = 1754
 
     # Checkbox detection
-    CHECKBOX_THRESHOLD: float = 0.20
+    CHECKBOX_THRESHOLD: float = 0.06  # Floor threshold for mixed blue/black pen
 
     # Grid layout
     ROW_COUNT: int = 14
     COLUMN_COUNT: int = 3
 
     # Grid margins (pixels) — calibrated against the real A4 Persian form
-    MARGIN_LEFT: int = 310
+    MARGIN_LEFT: int = 320
     MARGIN_RIGHT: int = 690
-    MARGIN_TOP: int = 355
-    MARGIN_BOTTOM: int = 430
-    COL_GAP: int = 15
-    ROW_GAP: int = 10
+    MARGIN_TOP: int = 360
+    MARGIN_BOTTOM: int = 445
+    COL_GAP: int = 20
+    ROW_GAP: int = 20
 
     # Timing mark detection — set to False for forms that use only corner
     # fiducial markers (no row-level timing marks)

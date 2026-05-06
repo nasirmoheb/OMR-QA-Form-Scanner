@@ -11,12 +11,12 @@ logger = setup_logging()
 
 # Grid layout constants (calibrated against the real A4 Persian form)
 # These are defaults — Config values take precedence when set.
-_MARGIN_LEFT: int = 310
+_MARGIN_LEFT: int = 320
 _MARGIN_RIGHT: int = 690
-_MARGIN_TOP: int = 355
-_MARGIN_BOTTOM: int = 430
-_COL_GAP: int = 15
-_ROW_GAP: int = 10
+_MARGIN_TOP: int = 360
+_MARGIN_BOTTOM: int = 445
+_COL_GAP: int = 20
+_ROW_GAP: int = 20
 
 # Special handling: wide rows (Q1, Q11, Q14) — no offset needed for A4 form
 _WIDE_ROW_V_OFFSET: int = 0  # pixels to shift wide rows downward
@@ -107,6 +107,50 @@ class CheckboxReader:
                 ``None``.
         """
         self.config = config or Config()
+
+    # ------------------------------------------------------------------ #
+    #  Image preprocessing
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def preprocess_for_omr(image: np.ndarray) -> np.ndarray:
+        """Enhance image for mixed blue/black pen detection.
+
+        Uses minimum channel method to capture both blue and black ink:
+        - Blue ink: low in R/G channels, high in B → min is low
+        - Black ink: low in all channels → min is low
+        - White paper: high in all channels → min is high
+        After inversion, both inks appear dark with excellent contrast.
+
+        Args:
+            image: Input image (BGR or grayscale).
+
+        Returns:
+            Preprocessed grayscale image.
+        """
+        # Minimum channel method (works for all pen colors)
+        if len(image.shape) == 3:
+            # Take minimum across BGR channels (ink is dark = low values)
+            gray = np.min(image, axis=2).astype(np.uint8)
+        else:
+            # Already grayscale
+            gray = image.copy()
+
+        # 1. Normalize contrast — stretch histogram to full 0-255 range
+        normalized = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+
+        # 2. Apply gamma correction to darken mid-tones
+        # gamma = 0.75 is balanced for mixed blue (0.8) and black (0.7) pens
+        gamma = 0.75
+        inv_gamma = 1.0 / gamma
+        table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in range(256)]).astype("uint8")
+        gamma_corrected = cv2.LUT(normalized, table)
+
+        # 3. Morphological dilation to thicken marks slightly
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
+        dilated = cv2.dilate(gamma_corrected, kernel, iterations=1)
+
+        return dilated
 
     # ------------------------------------------------------------------ #
     #  Pixel-density helper
@@ -272,16 +316,17 @@ class CheckboxReader:
         row's y-position, compensating for paper stretch, shrink, or
         minor skew after perspective correction.
 
+        Applies preprocessing (CLAHE + sharpening) to enhance lightly-
+        filled checkboxes before density calculation.
+
         Args:
             aligned_image: Perspective-corrected form image.
 
         Returns:
             2-D list ``densities[row][col]``.
         """
-        if len(aligned_image.shape) == 3:
-            gray = cv2.cvtColor(aligned_image, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = aligned_image.copy()
+        # Preprocess for better contrast and sharpness
+        gray = self.preprocess_for_omr(aligned_image)
 
         row_y_positions = self.detect_timing_marks(aligned_image)
         if row_y_positions is not None:
@@ -314,6 +359,13 @@ class CheckboxReader:
     ) -> str:
         """Classify a single row given its three column densities.
 
+        Uses an adaptive strategy: the column with the highest density
+        wins if it (a) exceeds the absolute floor threshold AND (b) is
+        at least 1.5× the second-highest density (clear dominance).
+        This handles lightly-filled forms where absolute densities are
+        low but the relative difference between marked and unmarked
+        cells is still visible.
+
         Args:
             densities: Three-element list ``[col0, col1, col2]``.
 
@@ -324,26 +376,30 @@ class CheckboxReader:
             logger.warning("Unexpected density count: %d", len(densities))
             return "Invalid"
 
-        above = [
-            i
-            for i, d in enumerate(densities)
-            if d >= self.config.CHECKBOX_THRESHOLD
-        ]
-
         # RTL form: columns from right to left are YES, NO, MAYBE
-        # Our code scans left-to-right, so reverse: col0=MAYBE, col1=NO, col2=YES
+        # Our code scans left-to-right, so: col0=Somewhat, col1=No, col2=Yes
         col_labels = ["Somewhat", "No", "Yes"]
 
-        if len(above) == 0:
+        threshold = self.config.CHECKBOX_THRESHOLD
+        sorted_d = sorted(densities, reverse=True)
+        max_d = sorted_d[0]
+        second_d = sorted_d[1]
+
+        # Must clear the absolute floor
+        if max_d < threshold:
             return "Invalid"
-        if len(above) == 1:
-            return col_labels[above[0]]
-        # More than one checkbox marked
-        logger.info(
-            "Multiple selections detected (densities %s); marking Invalid.",
-            densities,
-        )
-        return "Invalid"
+
+        # Must be clearly dominant over the second-highest
+        # (ratio >= 1.5, or second is near-zero)
+        if second_d > 0 and (max_d / second_d) < 1.5:
+            logger.info(
+                "Ambiguous selection (densities %s); marking Invalid.",
+                densities,
+            )
+            return "Invalid"
+
+        winner = densities.index(max_d)
+        return col_labels[winner]
 
     # ------------------------------------------------------------------ #
     #  Convenience: full form decode

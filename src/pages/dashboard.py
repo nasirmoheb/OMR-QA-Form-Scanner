@@ -478,6 +478,15 @@ class DashboardPage(BasePage):
             command=lambda sid=survey.id: self._on_print(sid),
         ).pack(side=self._start(), padx=self._pad_after(6))
 
+        # Reprocess button
+        IC.icon_button(
+            parent, "cpu", text="",
+            size=16, color=T.TEXT_SECONDARY[1],
+            width=38, height=38, corner_radius=T.RADIUS_SM,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            command=lambda sid=survey.id: self._on_process_click(sid),
+        ).pack(side=self._start(), padx=self._pad_after(6))
+
         # Delete button
         IC.icon_button(
             parent, "trash", text="",
