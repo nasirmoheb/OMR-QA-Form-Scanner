@@ -62,6 +62,8 @@ class Config:
     # Derived paths
     PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
     ASSETS_DIR: Path = PROJECT_ROOT / "assets"
+    DEFAULT_LOGO_PATH: Path = ASSETS_DIR / "uni_logo.png"
+    QA_LOGO_PATH: Path = ASSETS_DIR / "mohe_logo.png"
 
     @classmethod
     def from_persistence(cls, persistence: Any) -> "Config":

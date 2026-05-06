@@ -215,6 +215,11 @@ def generate_prefilled_form(
     if logo_path is not None and Path(str(logo_path)).exists():
         resolved_logo = str(logo_path)
 
+    if resolved_logo is None:
+        from config import Config
+        if Config.DEFAULT_LOGO_PATH.exists():
+            resolved_logo = str(Config.DEFAULT_LOGO_PATH)
+
     _draw_form(survey, output_path, questions, coords, resolved_logo)
     logger.info("PDF generated: %s", output_path)
     return output_path
@@ -329,8 +334,27 @@ def _draw_header(
         _draw_rtl_centred(c, _rtl("لوگوی پوهنتون"), _FONT_NAME, 6, left_logo_cx, logo_cy, colors.black)
 
     # Right logo (QA)
-    c.circle(right_logo_cx, logo_cy, logo_r, fill=1, stroke=1)
-    _draw_rtl_centred(c, _rtl("لوگوی تضمین کیفیت"), _FONT_NAME, 5.5, right_logo_cx, logo_cy, colors.black)
+    qa_logo_drawn = False
+    from config import Config
+    qa_path = str(Config.QA_LOGO_PATH)
+    if os.path.exists(qa_path):
+        try:
+            c.drawImage(
+                qa_path,
+                right_logo_cx - logo_r,
+                logo_cy - logo_r,
+                width=logo_d,
+                height=logo_d,
+                preserveAspectRatio=True,
+                mask="auto",
+            )
+            qa_logo_drawn = True
+        except Exception:
+            pass
+
+    if not qa_logo_drawn:
+        c.circle(right_logo_cx, logo_cy, logo_r, fill=1, stroke=1)
+        _draw_rtl_centred(c, _rtl("لوگوی تضمین کیفیت"), _FONT_NAME, 5.5, right_logo_cx, logo_cy, colors.black)
 
     # Centre text block
     text_cx = lx + cw / 2
