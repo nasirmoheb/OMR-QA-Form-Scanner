@@ -95,20 +95,20 @@ class OMRGUI:
         title_row.pack(anchor=_logo_anchor)
         ctk.CTkLabel(
             title_row,
-            text="Obsidian",
-            font=T.font(16, "bold"),
+            text="Tadris",
+            font=T.font(18, "bold"),
             text_color=T.TEXT_PRIMARY,
-        ).pack(side=_logo_side)
+        ).pack(side="left")
         ctk.CTkLabel(
             title_row,
-            text=" OMR",
-            font=T.font(16, "bold"),
+            text=" QA",
+            font=T.font(18, "bold"),
             text_color=T.ACCENT,
-        ).pack(side=_logo_side)
+        ).pack(side="left")
 
         ctk.CTkLabel(
             logo_wrap,
-            text="QA Systems v2.4",
+            text="Quality Assurance System",
             font=T.small(),
             text_color=T.TEXT_SECONDARY,
         ).pack(anchor=_logo_anchor, pady=(2, 0))
@@ -185,10 +185,11 @@ class OMRGUI:
         footer = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         footer.pack(fill="x", padx=18, pady=(0, 16))
 
+        from i18n import rtl_text
         ctk.CTkLabel(
             footer,
-            text="v1.0  •  OMR QA",
-            font=T.tiny(),
+            text=rtl_text("ساخته شده توسط نصیر احمد محب"),
+            font=T.font(9),
             text_color=T.SIDEBAR_TEXT,
             anchor="center",
         ).pack(fill="x")
