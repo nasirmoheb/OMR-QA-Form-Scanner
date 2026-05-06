@@ -2,90 +2,211 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>گزارش QA - {{ meta.teacher_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گزارش تحلیل پیشرفته تضمین کیفیت</title>
+    <!-- Load Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
+        /* Base Styles & Print Optimization */
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
-        body { margin: 0; background-color: #f3f4f6; font-family: 'Vazirmatn', sans-serif; font-size: 9.5pt; }
+        
+        body { margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Vazirmatn', 'Tahoma', sans-serif; color: #1f2937; font-size: 9.5pt; }
+        
         @page { size: A4 portrait; margin: 0; }
-        .a4-page { width: 210mm; min-height: 297mm; background: white; margin: 10mm auto; padding: 12mm 15mm; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px; }
+        
+        .a4-page {
+            width: 210mm; min-height: 297mm; background: white; margin: 10mm auto;
+            padding: 12mm 15mm; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Header Layout */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px; }
+        .logo-box { width: 70px; height: 70px; border: 1px solid #94a3b8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8pt; text-align: center; background: #f8fafc; }
         .title-block { text-align: center; flex-grow: 1; }
         .title-block h1 { margin: 0 0 5px 0; font-size: 14pt; color: #1e3a8a; }
-        .title-block h2 { margin: 0; font-size: 11pt; color: #475569; }
+        .title-block h2 { margin: 0; font-size: 11pt; font-weight: normal; color: #475569; }
+
+        /* Metadata Grid */
         .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        .meta-item { font-size: 9.5pt; }
+        .meta-item strong { color: #0369a1; }
+
+        /* QA Note Box */
+        .qa-note { background-color: #fef2f2; border-right: 4px solid #ef4444; padding: 10px; margin-bottom: 15px; font-size: 9pt; line-height: 1.5; color: #7f1d1d; }
+
+        /* Chart Section */
+        .chart-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 20px; height: 420px; }
+        .chart-title { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 11pt; color: #334155; }
+
+        /* Data Table */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 9pt; }
+        th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; vertical-align: middle; }
+        .text-right { text-align: right; }
+        th { background-color: #1e40af; color: white; font-weight: bold; }
         
-        /* Analysis Section Styling */
-        .analysis-box { background: #f8fafc; border: 1px solid #cbd5e1; border-right: 4px solid #3b82f6; padding: 12px; margin-bottom: 15px; border-radius: 4px; }
-        .analysis-box h3 { margin: 0 0 10px 0; color: #1e3a8a; font-size: 11pt; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
-        .insight-item { margin-bottom: 8px; line-height: 1.5; }
+        /* Category Headers in Table */
+        .cat-header td { background-color: #e2e8f0; color: #0f172a; font-weight: bold; text-align: right; font-size: 9.5pt; }
         
-        .chart-container { height: 350px; margin-bottom: 20px; }
+        /* Highlight Cells */
+        .bg-green { background-color: #dcfce7; color: #166534; font-weight: bold; }
+        .bg-yellow { background-color: #fef9c3; color: #854d0e; }
+        .bg-red { background-color: #fee2e2; color: #991b1b; font-weight: bold; }
+
+        /* Footer */
         .footer { display: flex; justify-content: space-around; margin-top: 30px; font-weight: bold; }
         .sign-box { text-align: center; width: 200px; padding-top: 40px; border-top: 1px dashed #94a3b8; }
+
         @media print { body { background: none; } .a4-page { margin: 0; box-shadow: none; } }
     </style>
 </head>
 <body>
+
     <div class="a4-page">
+        <!-- Header -->
         <div class="header">
+            <div class="logo-box">لوگوی<br>پوهنتون</div>
             <div class="title-block">
-                <h1>وزارت تحصیلات عالی - سیستم اتوماتیک OMR</h1>
-                <h2>گزارش تحلیلی تضمین کیفیت و ارزیابی استاد</h2>
+                <h1>وزارت تحصیلات عالی - پوهنتون بدخشان</h1>
+                <h2>پوهنحی کمپیوتر ساینس | کمیته ارتقای کیفیت</h2>
+                <h2 style="font-weight: bold; color: #000; margin-top: 5px;">گزارش تحلیل پیشرفته ارزیابی استاد توسط محصلان</h2>
             </div>
+            <div class="logo-box">لوگوی<br>QA</div>
         </div>
 
-        <!-- Injected Metadata -->
+        <!-- Metadata -->
         <div class="meta-grid">
-            <div><strong>نام استاد:</strong> {{ meta.teacher_name }}</div>
-            <div><strong>مضمون:</strong> {{ meta.subject }}</div>
-            <div><strong>دیپارتمنت:</strong> {{ meta.department }}</div>
-            <div><strong>سمستر:</strong> {{ meta.semester }}</div>
-            <div><strong>تعداد ارزیابی:</strong> {{ meta.total_students }} محصل</div>
-            <div><strong>نمره عمومی قناعت:</strong> <span style="color: green; font-weight: bold;">{{ overall_score }}٪</span></div>
+            <div class="meta-item"><strong>نام استاد:</strong> {{ meta.teacher_name }}</div>
+            <div class="meta-item"><strong>مضمون:</strong> {{ meta.subject }}</div>
+            <div class="meta-item"><strong>دیپارتمنت:</strong> {{ meta.department }}</div>
+            <div class="meta-item"><strong>سمستر / سال:</strong> {{ meta.semester }}</div>
+            <div class="meta-item"><strong>تعداد ارزیابی کنندگان:</strong> {{ meta.total_students }} محصل (۱۰۰٪ صنف)</div>
+            <div class="meta-item"><strong>نمره عمومی قناعت:</strong> {{ overall_score }}٪</div>
         </div>
 
-        <!-- INJECTED AUTOMATED ANALYSIS -->
-        <div class="analysis-box">
-            <h3>تحلیل و استنتاج هوشمند دیتا (Automated QA Insights)</h3>
-            {% for insight in insights %}
-                <div class="insight-item">{{ insight | safe }}</div>
-            {% endfor %}
+        <!-- Analytical Note -->
+        <div class="qa-note">
+            <strong>نکته تحلیلی تضمین کیفیت:</strong> در این چارت، دیتای مربوط به سوال ۱۱ <em>(صحبت خارج از موضوع درس)</em> به صورت معکوس (Reverse-coded) تحلیل شده است. از آنجایی که پاسخ "نخیر" به این سوال نشانه عملکرد عالی استاد است، در گراف زیر رنگ سبز برای این سوال نمایانگر پاسخ "نخیر" محصلان میباشد. 
         </div>
 
+        <!-- Visual Dashboard -->
         <div class="chart-container">
+            <div class="chart-title">گراف ارزیابی تفکیکی (توزیع عملکرد مثبت و منفی)</div>
             <canvas id="qaChart"></canvas>
         </div>
 
+        <!-- Categorized Data Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 50%;">موارد ارزیابی (دستهبندی شده)</th>
+                    <th style="width: 15%;">عملکرد مطلوب (سبز)</th>
+                    <th style="width: 15%;">متوسط (زرد)</th>
+                    <th style="width: 15%;">نیاز به بهبود (سرخ)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in table_data %}
+                <tr class="cat-header"><td colspan="5">{{ cat.name }}</td></tr>
+                {% for q in cat.questions %}
+                <tr>
+                    <td>{{ q.num }}</td>
+                    <td class="text-right">{{ q.text | safe }}</td>
+                    <td class="{{ q.green_bg }}">{{ q.green_text | safe }}</td>
+                    <td class="{{ q.yellow_bg }}">{{ q.yellow_text }}</td>
+                    <td class="{{ q.red_bg }}">{{ q.red_text }}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Signatures -->
         <div class="footer">
-            <div class="sign-box">امضای استاد مضمون</div>
+            <div class="sign-box">امضای استاد مضمون<br>({{ meta.teacher_name }})</div>
             <div class="sign-box">امضای آمر دیپارتمنت</div>
             <div class="sign-box">امضای مسئول تضمین کیفیت</div>
         </div>
+
     </div>
 
     <script>
+        // Disable animation for perfect PDF printing
         Chart.defaults.animation = false;
-        Chart.defaults.font.family = "'Vazirmatn', sans-serif";
+        Chart.defaults.font.family = "'Vazirmatn', 'Tahoma', sans-serif";
+
         const ctx = document.getElementById('qaChart').getContext('2d');
         
+        const labels = ['Q1: تشریح پالیسی', 'Q2: تطبیق پالیسی', 'Q3: معرفی مواد', 'Q4: قابل فهم بودن*', 'Q5: رضایت از میتود', 'Q6: سهم دادن محصل', 'Q7: سلوک اکادمیک', 'Q8: پلان منظم', 'Q9: جواب به سوالات', 'Q10: پابندی به وقت', 'Q11: تمرکز بر درس (معکوس)', 'Q12: حل مشکلات*', 'Q13: شیوه ارزیابی', 'Q14: استفاده از تکنالوژی'];
+
+        // Green Data
+        const positiveData = {{ positive_data }};
+        
+        // Yellow Data
+        const neutralData = {{ neutral_data }};
+        
+        // Red Data
+        const negativeData = {{ negative_data }};
+
         new Chart(ctx, {
             type: 'bar',
             plugins: [ChartDataLabels],
             data: {
-                labels: ['Q1: پالیسی', 'Q2: تطبیق', 'Q3: مواد', 'Q4: قابل فهم', 'Q5: میتود', 'Q6: سهم محصل', 'Q7: سلوک', 'Q8: پلان', 'Q9: سوالات', 'Q10: وقت', 'Q11: تمرکز(معکوس)', 'Q12: حل مشکل', 'Q13: ارزیابی', 'Q14: تکنالوژی'],
+                labels: labels,
                 datasets: [
-                    { label: 'مثبت', data: {{ positive_data }}, backgroundColor: '#22c55e', datalabels: { color: '#fff', font:{weight:'bold'} } },
-                    { label: 'متوسط', data: {{ neutral_data }}, backgroundColor: '#facc15', datalabels: { color: '#854d0e', display: function(c){return c.dataset.data[c.dataIndex]>0;} } },
-                    { label: 'منفی', data: {{ negative_data }}, backgroundColor: '#ef4444', datalabels: { color: '#fff', display: function(c){return c.dataset.data[c.dataIndex]>0;} } }
+                    {
+                        label: 'عملکرد مطلوب (مثبت)',
+                        data: positiveData,
+                        backgroundColor: '#22c55e', // Semantic Green
+                        datalabels: { color: '#fff', font: {weight: 'bold'} }
+                    },
+                    {
+                        label: 'نسبتاً (متوسط)',
+                        data: neutralData,
+                        backgroundColor: '#facc15', // Semantic Yellow
+                        datalabels: { color: '#854d0e', font: {weight: 'bold'}, display: function(context) { return context.dataset.data[context.dataIndex] > 0; } } // Only show if > 0
+                    },
+                    {
+                        label: 'نیاز به بهبود (منفی)',
+                        data: negativeData,
+                        backgroundColor: '#ef4444', // Semantic Red
+                        datalabels: { color: '#fff', font: {weight: 'bold'}, display: function(context) { return context.dataset.data[context.dataIndex] > 0; } }
+                    }
                 ]
             },
             options: {
-                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                scales: { x: { stacked: true, max: 100 }, y: { stacked: true } },
-                plugins: { legend: { position: 'top' }, datalabels: { formatter: function(v){return v>0 ? v+'%' : '';} } }
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        max: 100,
+                        ticks: { callback: function(value) { return value + '٪'; } }
+                    },
+                    y: { 
+                        stacked: true,
+                        ticks: { font: {size: 11} }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw + '٪';
+                            }
+                        }
+                    },
+                    datalabels: {
+                        formatter: function(value, context) {
+                            if(value > 0) return value + '٪';
+                            return '';
+                        }
+                    }
+                }
             }
         });
     </script>
