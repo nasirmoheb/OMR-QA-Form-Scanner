@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger("omr_qa_scanner")
+logger = logging.getLogger("tadris_qa_system")
 
 # ---------------------------------------------------------------------------
 # Optional heavy imports

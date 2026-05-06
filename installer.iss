@@ -1,13 +1,13 @@
-; Inno Setup script for OMR QA Form Scanner
+; Inno Setup script for Tadris QA System
 ; Download Inno Setup from: https://jrsoftware.org/isdl.php
 ; Compile with:  iscc installer.iss
 
-#define AppName      "OMR QA Form Scanner"
+#define AppName      "Tadris QA System"
 #define AppVersion   "1.0.0"
 #define AppPublisher "Your Organization"
 #define AppURL       "https://your-org.example.com"
-#define AppExeName   "OMR_Scanner.exe"
-#define DistDir      "dist\OMR_Scanner"
+#define AppExeName   "Tadris_QA.exe"
+#define DistDir      "dist\Tadris_QA"
 
 [Setup]
 ; Unique GUID — regenerate with Tools > Generate GUID in Inno Setup IDE
@@ -23,7 +23,7 @@ AllowNoIcons=yes
 ; Require admin rights so the app can write to Program Files
 PrivilegesRequired=admin
 OutputDir=installer_output
-OutputBaseFilename=OMR_Scanner_Setup_v{#AppVersion}
+OutputBaseFilename=Tadris_QA_Setup_v{#AppVersion}
 ; Compression
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -34,9 +34,9 @@ MinVersion=10.0
 ; Target 64-bit architecture
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-; Uncomment once you have an icon:
-; SetupIconFile=assets\icon.ico
-; UninstallDisplayIcon={app}\{#AppExeName}
+; Application icon
+SetupIconFile=assets\app_icon.ico
+UninstallDisplayIcon={app}\{#AppExeName}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

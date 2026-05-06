@@ -12,14 +12,14 @@ from typing import Any
 
 from models import DimensionScore, FormResult, QAAlert, Survey
 
-logger = logging.getLogger("omr_qa_scanner")
+logger = logging.getLogger("tadris_qa_system")
 
 
 def _get_default_db_path() -> Path:
     """Get the default database path in the user's AppData directory.
     
-    On Windows: %LOCALAPPDATA%\OMR_QA_Scanner\data\omr.db
-    On Linux/Mac: ~/.local/share/OMR_QA_Scanner/data/omr.db
+    On Windows: %LOCALAPPDATA%\Tadris_QA\data\omr.db
+    On Linux/Mac: ~/.local/share/Tadris_QA/data/omr.db
     
     Falls back to the application directory if running in development mode.
     """
@@ -29,10 +29,10 @@ def _get_default_db_path() -> Path:
         if os.name == 'nt':  # Windows
             app_data = os.environ.get('LOCALAPPDATA')
             if app_data:
-                return Path(app_data) / "OMR_QA_Scanner" / "data" / "omr.db"
+                return Path(app_data) / "Tadris_QA" / "data" / "omr.db"
         else:  # Linux/Mac
             home = Path.home()
-            return home / ".local" / "share" / "OMR_QA_Scanner" / "data" / "omr.db"
+            return home / ".local" / "share" / "Tadris_QA" / "data" / "omr.db"
     
     # Development mode - use local data directory
     return Path(__file__).resolve().parent.parent / "data" / "omr.db"

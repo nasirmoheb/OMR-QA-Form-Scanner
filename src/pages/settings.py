@@ -16,7 +16,7 @@ import theme as T
 from config import Config
 from i18n import I18n, _, get_start, get_end, get_anchor, get_compound, rtl_text
 
-logger = logging.getLogger("omr_qa_scanner")
+logger = logging.getLogger("tadris_qa_system")
 
 
 def _tint(hex_color: str, factor: float = 0.15) -> str:
@@ -145,7 +145,7 @@ class SettingsFrame(ctk.CTkFrame):
         T.transparent(self._nav_inner).pack(fill="both", expand=True)
         ctk.CTkLabel(
             self._nav_inner,
-            text="OMR QA Scanner",
+            text="Tadris QA System",
             font=T.font(9),
             text_color=T.TEXT_MUTED,
             anchor=get_anchor(),

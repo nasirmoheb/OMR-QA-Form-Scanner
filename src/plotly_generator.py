@@ -551,7 +551,7 @@ class PlotlyGenerator:
 <html>
 <head>
     <meta charset="utf-8">
-    <title>OMR QA Report</title>
+    <title>Tadris QA Report</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body {{ font-family: 'Segoe UI', sans-serif; margin: 2em; background: #f8f9fa; }}
@@ -561,7 +561,7 @@ class PlotlyGenerator:
     </style>
 </head>
 <body>
-    <h1>OMR QA Form Scanner — Batch Report</h1>
+    <h1>Tadris QA System — Batch Report</h1>
     <div class="card">{score_div}</div>
     <div class="card">{bar_div}</div>
     <div class="card">{pie_div}</div>
@@ -679,7 +679,7 @@ class PlotlyGenerator:
 <html>
 <head>
     <meta charset="utf-8">
-    <title>OMR QA Advanced Report</title>
+    <title>Tadris QA Advanced Report</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body {{ font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4fa; color: #0f172a; }}
@@ -712,7 +712,7 @@ class PlotlyGenerator:
 </head>
 <body>
     <div class="header">
-        <h1>OMR QA Advanced Analytics Report</h1>
+        <h1>Tadris QA Advanced Analytics Report</h1>
         <p>Comprehensive pedagogical quality assessment</p>
     </div>
     <div class="container">

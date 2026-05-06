@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger("omr_qa_scanner")
+logger = logging.getLogger("tadris_qa_system")
 
 # RTL text processing libraries
 try:
@@ -24,7 +24,7 @@ except ImportError:
 
 _TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
-        "app_title": "OMR QA Form Scanner",
+        "app_title": "Tadris QA System",
         "browse": "Browse",
         "start_processing": "Start Processing",
         "view_report": "View & Print Report",
@@ -268,7 +268,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "settings_section_advanced_sub": "PDF template coordinates and form geometry",
     },
     "fa": {
-        "app_title": "اسکنر فورم تضمین کیفیت OMR",
+        "app_title": "سیستم تضمین کیفیت تدریس",
         "browse": "جستجو",
         "start_processing": "شروع پردازش",
         "view_report": "مشاهده و چاپ گزارش",
@@ -512,7 +512,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "settings_section_advanced_sub": "مختصات قالب PDF و هندسه فورم",
     },
     "ps": {
-        "app_title": "OMR د کیفیت تضمین فورم سکینر",
+        "app_title": "د تدریس د کیفیت تضمین سیسټم",
         "browse": "لټون",
         "start_processing": "د پروسس پیل",
         "view_report": "راپور کتنه او چاپ",

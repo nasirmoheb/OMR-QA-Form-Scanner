@@ -91,6 +91,24 @@ class OMRGUI:
         _logo_anchor = "e" if is_rtl() else "w"
         _logo_side = "right" if is_rtl() else "left"
 
+        # Load and display logo image
+        try:
+            from PIL import Image
+            from pathlib import Path
+            logo_path = Path(__file__).parent.parent / "assets" / "app logo.png"
+            if logo_path.exists():
+                logo_img = Image.open(logo_path)
+                # Resize to fit sidebar (80x80 pixels)
+                logo_img = logo_img.resize((80, 80), Image.Resampling.LANCZOS)
+                logo_photo = ctk.CTkImage(light_image=logo_img, dark_image=logo_img, size=(80, 80))
+                ctk.CTkLabel(
+                    logo_wrap,
+                    image=logo_photo,
+                    text="",
+                ).pack(anchor="center", pady=(0, 12))
+        except Exception as e:
+            logger.warning(f"Could not load app logo: {e}")
+
         title_row = ctk.CTkFrame(logo_wrap, fg_color="transparent")
         title_row.pack(anchor=_logo_anchor)
         ctk.CTkLabel(

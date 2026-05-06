@@ -16,7 +16,7 @@ class TestOMRGUIInit:
     def test_can_instantiate(self):
         app = OMRGUI()
         assert app.root is not None
-        assert app.root.title() == "OMR QA Form Scanner"
+        assert app.root.title() == "Tadris QA System"
         app.root.destroy()
 
     def test_sidebar_nav_buttons_exist(self):

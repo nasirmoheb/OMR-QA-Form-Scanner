@@ -20,7 +20,7 @@ from .base import BasePage, PageRouter
 import webbrowser
 from config import Config
 import report_generator
-logger = logging.getLogger("omr_qa_scanner")
+logger = logging.getLogger("tadris_qa_system")
 
 _SORT_OPTIONS = ["Newest first", "Oldest first", "Subject A->Z", "Subject Z->A"]
 

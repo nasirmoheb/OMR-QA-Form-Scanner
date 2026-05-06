@@ -1,6 +1,6 @@
 # Building the Windows Installer
 
-This guide shows how to create a standalone Windows installer (`.exe`) for the OMR QA Form Scanner.
+This guide shows how to create a standalone Windows installer (`.exe`) for the Tadris QA System.
 
 ---
 
@@ -35,7 +35,7 @@ This script:
 4. Runs Inno Setup to wrap it into a single installer
 
 **Output:**
-- `installer_output/OMR_Scanner_Setup_v1.0.0.exe` — ready to distribute
+- `installer_output/Tadris_QA_Setup_v1.0.0.exe` — ready to distribute
 
 ---
 
@@ -54,12 +54,12 @@ venv\Scripts\pyinstaller build.spec --noconfirm
 ```
 
 This creates:
-- `dist/OMR_Scanner/` — folder containing the exe and all dependencies
-- `dist/OMR_Scanner/OMR_Scanner.exe` — the main executable
+- `dist/Tadris_QA/` — folder containing the exe and all dependencies
+- `dist/Tadris_QA/Tadris_QA.exe` — the main executable
 
 You can test it directly:
 ```powershell
-.\dist\OMR_Scanner\OMR_Scanner.exe
+.\dist\Tadris_QA\Tadris_QA.exe
 ```
 
 ### Step 3: Create the Installer
@@ -68,24 +68,22 @@ You can test it directly:
 ```
 
 This creates:
-- `installer_output/OMR_Scanner_Setup_v1.0.0.exe`
+- `installer_output/Tadris_QA_Setup_v1.0.0.exe`
 
 ---
 
 ## Customization
 
-### Change App Icon
-1. Create or obtain an `.ico` file (256x256 recommended)
-2. Save it as `assets/icon.ico`
-3. Uncomment these lines in `build.spec`:
-   ```python
-   # icon="assets/icon.ico",
+### Application Icon
+The application icon is already configured using `assets/app_icon.ico` (converted from `assets/app logo.png`).
+
+If you need to change the icon:
+1. Replace `assets/app logo.png` with your new logo (square PNG recommended)
+2. Run the conversion script:
+   ```powershell
+   python convert_logo_to_ico.py
    ```
-4. Uncomment these lines in `installer.iss`:
-   ```ini
-   ; SetupIconFile=assets\icon.ico
-   ; UninstallDisplayIcon={app}\{#AppExeName}
-   ```
+3. Rebuild the application
 
 ### Change Version Number
 Edit `installer.iss`:
@@ -154,7 +152,7 @@ The app creates `data/omr.db` in the install directory. If installed to `Program
    from pathlib import Path
    
    # Use AppData instead of install dir
-   DEFAULT_DB_PATH = Path(os.getenv("APPDATA")) / "OMR_Scanner" / "omr.db"
+   DEFAULT_DB_PATH = Path(os.getenv("APPDATA")) / "Tadris_QA" / "omr.db"
    ```
 
 ---
@@ -163,16 +161,16 @@ The app creates `data/omr.db` in the install directory. If installed to `Program
 
 The final installer is a single `.exe` file:
 ```
-installer_output/OMR_Scanner_Setup_v1.0.0.exe
+installer_output/Tadris_QA_Setup_v1.0.0.exe
 ```
 
 Users can:
 1. Double-click to install
-2. Choose install location (default: `C:\Program Files\OMR QA Form Scanner\`)
+2. Choose install location (default: `C:\Program Files\Tadris QA System\`)
 3. Optionally create desktop shortcut
 4. Launch the app from Start Menu or desktop
 
-**Uninstall:** Via Windows Settings → Apps → OMR QA Form Scanner → Uninstall
+**Uninstall:** Via Windows Settings → Apps → Tadris QA System → Uninstall
 
 ---
 
@@ -211,7 +209,7 @@ To automate builds in GitHub Actions / Azure Pipelines:
 - name: Upload Installer
   uses: actions/upload-artifact@v3
   with:
-    name: OMR-Scanner-Installer
+    name: Tadris-QA-Installer
     path: installer_output/*.exe
 ```
 

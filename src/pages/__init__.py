@@ -1,4 +1,4 @@
-"""Pages sub-package for the OMR Scanner GUI."""
+"""Pages sub-package for the Tadris QA System GUI."""
 
 from .base import PageRouter, BasePage
 from .dashboard import DashboardPage

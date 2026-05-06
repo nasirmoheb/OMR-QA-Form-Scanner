@@ -19,7 +19,7 @@ from persistence import PersistenceManager
 from vision_processor import VisionProcessor
 from .base import BasePage, PageRouter
 
-logger = logging.getLogger("omr_qa_scanner")
+logger = logging.getLogger("tadris_qa_system")
 
 # Status - (colour, i18n key)
 _STATUS_MAP = {

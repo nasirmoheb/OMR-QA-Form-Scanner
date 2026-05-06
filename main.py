@@ -1,4 +1,4 @@
-"""Application entry point for the OMR QA Form Scanner."""
+"""Application entry point for the Tadris QA System."""
 
 import sys
 from pathlib import Path
@@ -9,7 +9,7 @@ from gui import OMRGUI
 
 
 def main() -> None:
-    """Create and launch the OMR GUI."""
+    """Create and launch the Tadris QA GUI."""
     app = OMRGUI()
     app.run()
 

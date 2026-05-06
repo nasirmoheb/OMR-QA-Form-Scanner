@@ -18,7 +18,7 @@ from models import Survey
 from persistence import PersistenceManager
 from .base import BasePage, PageRouter
 
-logger = logging.getLogger("omr_qa_scanner")
+logger = logging.getLogger("tadris_qa_system")
 
 
 class SurveyFormPage(BasePage):

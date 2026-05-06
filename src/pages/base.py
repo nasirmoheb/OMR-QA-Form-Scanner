@@ -7,7 +7,7 @@ from typing import Any, Callable
 
 import customtkinter as ctk
 
-logger = logging.getLogger("omr_qa_scanner")
+logger = logging.getLogger("tadris_qa_system")
 
 
 class PageRouter:

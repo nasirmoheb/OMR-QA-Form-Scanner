@@ -1,9 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 #
-# PyInstaller spec for OMR QA Form Scanner
+# PyInstaller spec for Tadris QA System
 # Run with:  pyinstaller build.spec
 #
-# Produces:  dist/OMR_Scanner/  (folder mode, then Inno Setup wraps it)
+# Produces:  dist/Tadris_QA/  (folder mode, then Inno Setup wraps it)
 
 import sys
 from pathlib import Path
@@ -125,7 +125,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="OMR_Scanner",
+    name="Tadris_QA",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -135,7 +135,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # icon="assets/icon.ico",   # uncomment once you have an .ico file
+    icon="assets/app_icon.ico",
 )
 
 # ---------------------------------------------------------------------------
@@ -149,5 +149,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="OMR_Scanner",
+    name="Tadris_QA",
 )

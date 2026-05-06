@@ -146,7 +146,7 @@ class TestGenerateReport:
         path = engine.generate_report(sample_dataframe, output_path=str(out))
         assert Path(path).exists()
         content = Path(path).read_text(encoding="utf-8")
-        assert "OMR QA Report" in content
+        assert "Tadris QA Report" in content
         assert "Overall Satisfaction Score" in content
         assert "plotly" in content
 
@@ -175,7 +175,7 @@ class TestPlotlyGenerator:
 
     def test_dashboard_html_contains_all_sections(self, sample_dataframe):
         html = PlotlyGenerator.generate_dashboard_html(sample_dataframe, 73.5)
-        assert "OMR QA Report" in html
+        assert "Tadris QA Report" in html
         assert "Overall Satisfaction Score" in html
         assert "Answer Distribution by Question" in html
         assert "Overall Answer Distribution" in html

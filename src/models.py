@@ -1,4 +1,4 @@
-"""Domain models for the OMR QA Form Scanner."""
+"""Domain models for the Tadris QA System."""
 
 from __future__ import annotations
 
