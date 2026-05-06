@@ -389,8 +389,8 @@ def _draw_metadata(c: Any, survey: Any, lx: float, cw: float, y: float) -> float
     c.rect(lx, y - row_h, cw, row_h, fill=1, stroke=1)
     c.setFillColor(colors.black)
 
-    # Fields: (label_dari, value, relative_x_from_right, width)
-    # RTL layout — fields go right to left
+    # Fields: (label_dari, value)
+    # RTL layout — fields go right to left: پوهنحی | دیپارتمنت | اسم استاد | مضمون | سمستر
     fields = [
         ("پوهنحی:", survey.faculty or ""),
         ("دیپارتمنت:", survey.department or ""),
@@ -399,31 +399,39 @@ def _draw_metadata(c: Any, survey: Any, lx: float, cw: float, y: float) -> float
         ("سمستر:", survey.semester or ""),
     ]
 
-    # Divide content width equally among 5 fields
-    field_w = cw / len(fields)
+    # Explicit proportional widths (must sum to 1.0):
+    # semester is numeric/short → 0.05, department & professor are longer → 0.26 each
+    field_ratios = [0.21, 0.26, 0.26, 0.18, 0.09]  # faculty, dept, professor, subject, semester
+    field_widths = [cw * r for r in field_ratios]
+    # Compute left-edge x for each field (RTL: field 0 is rightmost)
+    field_rights = []
+    x = lx + cw
+    for w in field_widths:
+        field_rights.append(x)
+        x -= w
+
     text_y = y - row_h / 2 - 1.5 * mm
 
     for i, (label, value) in enumerate(fields):
-        # In RTL, field 0 is rightmost
-        field_x_right = lx + cw - i * field_w
-        field_x_left = field_x_right - field_w
-        centre_x = (field_x_left + field_x_right) / 2
+        field_x_right = field_rights[i]
+        field_x_left  = field_x_right - field_widths[i]
+
+        # Vertical divider between fields
+        if i > 0:
+            c.setLineWidth(0.5)
+            c.setStrokeColor(colors.black)
+            c.line(field_x_right, y, field_x_right, y - row_h)
 
         # Label (bold)
-        c.setFont(_FONT_BOLD_NAME, 8.5)
+        c.setFont(_FONT_BOLD_NAME, 7.5)
         label_shaped = _rtl(label)
-        label_w = c.stringWidth(label_shaped, _FONT_BOLD_NAME, 8.5)
+        label_w = c.stringWidth(label_shaped, _FONT_BOLD_NAME, 7.5)
+        c.setFillColor(colors.black)
         c.drawString(field_x_right - label_w - 2 * mm, text_y, label_shaped)
 
-        # Value with dashed underline
-        c.setFont(_FONT_NAME, 8.5)
+        # Value
+        c.setFont(_FONT_NAME, 7.5)
         val_text = _rtl(value) if value else ""
-        val_x = field_x_right - label_w - 2 * mm - 18 * mm
-        # Dashed underline
-        c.setDash(2, 2)
-        c.setLineWidth(0.5)
-        c.line(val_x, text_y - 1 * mm, field_x_right - label_w - 3 * mm, text_y - 1 * mm)
-        c.setDash()
         if val_text:
             c.drawRightString(field_x_right - label_w - 3 * mm, text_y, val_text)
 

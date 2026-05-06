@@ -343,7 +343,7 @@ class DashboardPage(BasePage):
         icon_box = ctk.CTkFrame(
             wrap, width=44, height=44, corner_radius=T.RADIUS_MD, fg_color=T.SURFACE_RAISED
         )
-        icon_box.pack(side=S, padx=(0, 16))
+        icon_box.pack(side=S, padx=(24, 0) if is_rtl() else (0, 24))
         icon_box.pack_propagate(False)
         ctk.CTkLabel(
             icon_box, text="", image=IC.icon("file_text", size=20, color=T.TEXT_SECONDARY[1])
@@ -425,6 +425,15 @@ class DashboardPage(BasePage):
     # ----
 
     def _draft_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
+        # Print button
+        IC.icon_button(
+            parent, "printer", text="",
+            size=16, color=T.TEXT_SECONDARY[1],
+            width=38, height=38, corner_radius=T.RADIUS_SM,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            command=lambda sid=survey.id: self._on_print(sid),
+        ).pack(side=self._start(), padx=self._pad_after(6))
+
         # Edit/Process buttons
         IC.icon_button(
             parent, "edit", text="",
