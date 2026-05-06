@@ -219,6 +219,16 @@ class ResultsPage(BasePage):
             command=self._on_pdf,
         ).pack(fill="x", pady=(0, 12))
 
+        # Official Dari Report
+        IC.icon_button(
+            export_body, "globe", text="  Official Dari Report",
+            size=16, color=T.TEXT_PRIMARY[1], height=40,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            text_color=T.TEXT_PRIMARY, font=T.font(12),
+            border_width=1, border_color=T.CARD_BORDER,
+            command=self._on_dari_report,
+        ).pack(fill="x", pady=(0, 12))
+
         # CSV Data
         IC.icon_button(
             export_body, "download", text="  CSV Raw Data",
@@ -641,6 +651,19 @@ class ResultsPage(BasePage):
         except Exception as exc:
             logger.exception("CSV export failed")
             messagebox.showerror(_("export_error"), f"{_('export_error')}:\n{exc}")
+
+    def _on_dari_report(self) -> None:
+        try:
+            from config import Config
+            import report_generator
+            
+            report_path = str(Config.PROJECT_ROOT / "assets" / "dari_qa_report.html")
+            report_generator.generate_dari_qa_report(self.survey, self.form_results, report_path)
+            
+            webbrowser.open(f"file:///{Path(report_path).resolve()}")
+        except Exception as exc:
+            logger.exception("Dari report generation failed")
+            messagebox.showerror(_("error_report"), f"{_('error_report')}:\n{exc}")
 
     def _on_pdf(self) -> None:
         path = filedialog.asksaveasfilename(

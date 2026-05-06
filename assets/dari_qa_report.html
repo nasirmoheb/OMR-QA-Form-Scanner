@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>گزارش QA - nasir</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+        body { margin: 0; background-color: #f3f4f6; font-family: 'Vazirmatn', sans-serif; font-size: 9.5pt; }
+        @page { size: A4 portrait; margin: 0; }
+        .a4-page { width: 210mm; min-height: 297mm; background: white; margin: 10mm auto; padding: 12mm 15mm; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px; }
+        .title-block { text-align: center; flex-grow: 1; }
+        .title-block h1 { margin: 0 0 5px 0; font-size: 14pt; color: #1e3a8a; }
+        .title-block h2 { margin: 0; font-size: 11pt; color: #475569; }
+        .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        
+        /* Analysis Section Styling */
+        .analysis-box { background: #f8fafc; border: 1px solid #cbd5e1; border-right: 4px solid #3b82f6; padding: 12px; margin-bottom: 15px; border-radius: 4px; }
+        .analysis-box h3 { margin: 0 0 10px 0; color: #1e3a8a; font-size: 11pt; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
+        .insight-item { margin-bottom: 8px; line-height: 1.5; }
+        
+        .chart-container { height: 350px; margin-bottom: 20px; }
+        .footer { display: flex; justify-content: space-around; margin-top: 30px; font-weight: bold; }
+        .sign-box { text-align: center; width: 200px; padding-top: 40px; border-top: 1px dashed #94a3b8; }
+        @media print { body { background: none; } .a4-page { margin: 0; box-shadow: none; } }
+    </style>
+</head>
+<body>
+    <div class="a4-page">
+        <div class="header">
+            <div class="title-block">
+                <h1>وزارت تحصیلات عالی - سیستم اتوماتیک OMR</h1>
+                <h2>گزارش تحلیلی تضمین کیفیت و ارزیابی استاد</h2>
+            </div>
+        </div>
+
+        <!-- Injected Metadata -->
+        <div class="meta-grid">
+            <div><strong>نام استاد:</strong> nasir</div>
+            <div><strong>مضمون:</strong> is</div>
+            <div><strong>دیپارتمنت:</strong> is</div>
+            <div><strong>سمستر:</strong> 9 / 202</div>
+            <div><strong>تعداد ارزیابی:</strong> 5 محصل</div>
+            <div><strong>نمره عمومی قناعت:</strong> <span style="color: green; font-weight: bold;">37٪</span></div>
+        </div>
+
+        <!-- INJECTED AUTOMATED ANALYSIS -->
+        <div class="analysis-box">
+            <h3>تحلیل و استنتاج هوشمند دیتا (Automated QA Insights)</h3>
+            
+                <div class="insight-item">⭐ <strong>نقطه قوت (Q1):</strong> کورس پالیسی در آغاز سمستر با موفقیت کامل (۱۰۰٪) تشریح شده است.</div>
+            
+        </div>
+
+        <div class="chart-container">
+            <canvas id="qaChart"></canvas>
+        </div>
+
+        <div class="footer">
+            <div class="sign-box">امضای استاد مضمون</div>
+            <div class="sign-box">امضای آمر دیپارتمنت</div>
+            <div class="sign-box">امضای مسئول تضمین کیفیت</div>
+        </div>
+    </div>
+
+    <script>
+        Chart.defaults.animation = false;
+        Chart.defaults.font.family = "'Vazirmatn', sans-serif";
+        const ctx = document.getElementById('qaChart').getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'bar',
+            plugins: [ChartDataLabels],
+            data: {
+                labels: ['Q1: پالیسی', 'Q2: تطبیق', 'Q3: مواد', 'Q4: قابل فهم', 'Q5: میتود', 'Q6: سهم محصل', 'Q7: سلوک', 'Q8: پلان', 'Q9: سوالات', 'Q10: وقت', 'Q11: تمرکز(معکوس)', 'Q12: حل مشکل', 'Q13: ارزیابی', 'Q14: تکنالوژی'],
+                datasets: [
+                    { label: 'مثبت', data: [100, 0, 0, 100, 0, 0, 40, 40, 40, 40, 40, 40, 40, 40], backgroundColor: '#22c55e', datalabels: { color: '#fff', font:{weight:'bold'} } },
+                    { label: 'متوسط', data: [0, 0, 100, 0, 0, 100, 20, 20, 20, 20, 20, 20, 20, 20], backgroundColor: '#facc15', datalabels: { color: '#854d0e', display: function(c){return c.dataset.data[c.dataIndex]>0;} } },
+                    { label: 'منفی', data: [0, 100, 0, 0, 100, 0, 40, 40, 40, 40, 40, 40, 40, 40], backgroundColor: '#ef4444', datalabels: { color: '#fff', display: function(c){return c.dataset.data[c.dataIndex]>0;} } }
+                ]
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                scales: { x: { stacked: true, max: 100 }, y: { stacked: true } },
+                plugins: { legend: { position: 'top' }, datalabels: { formatter: function(v){return v>0 ? v+'%' : '';} } }
+            }
+        });
+    </script>
+</body>
+</html>
