@@ -119,12 +119,12 @@ class OMRGUI:
         
         IC.icon_button(
             survey_btn_wrap, "plus",
-            text="  " + _("new_survey"),
+            text=_("new_survey") + "  " if is_rtl() else "  " + _("new_survey"),
             size=16, color="#000000",
             height=44, corner_radius=T.RADIUS_MD,
             fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
             text_color="#000000", font=T.font(14, "bold"),
-            compound="right" if is_rtl() else "left",
+            compound="left" if is_rtl() else "left",
             command=lambda: self._navigate("survey_form"),
         ).pack(fill="x")
 
@@ -145,19 +145,22 @@ class OMRGUI:
             row = ctk.CTkFrame(nav_frame, fg_color="transparent")
             row.pack(fill="x", pady=(0, 2))
 
-            # Active indicator pill — always on the left edge (inner side facing content)
+            # Active indicator pill — on the inner edge facing the content area
+            # In LTR: sidebar is on the left, so pill goes on the right edge of the row
+            # In RTL: sidebar is on the right, so pill goes on the left edge of the row
             from i18n import is_rtl
             pill = ctk.CTkFrame(
                 row, width=4, height=28, corner_radius=2, fg_color="transparent",
             )
-            pill.pack(side="left", padx=(0, 4))
+            _pill_side = "left" if is_rtl() else "right"
+            pill.pack(side=_pill_side, padx=(4, 0) if is_rtl() else (0, 4))
             pill.pack_propagate(False)
             self._nav_pills[page_id] = pill
 
             btn = ctk.CTkButton(
                 row,
                 image=IC.icon(icon_name, size=16, color=_NAV_ICON_COLOR),
-                text=f"  {label}",
+                text=f"{label}  " if is_rtl() else f"  {label}",
                 font=T.font(13),
                 height=44,
                 corner_radius=T.RADIUS_MD,
@@ -165,10 +168,10 @@ class OMRGUI:
                 hover_color=T.SIDEBAR_HOVER_BG,
                 text_color=T.SIDEBAR_TEXT,
                 anchor="e" if is_rtl() else "w",
-                compound="left" if is_rtl() else "right",
+                compound="right" if is_rtl() else "left",
                 command=lambda pid=page_id: self._navigate(pid),
             )
-            btn.pack(side="right", fill="x", expand=True)
+            btn.pack(side="left", fill="x", expand=True)
             self._nav_btns[page_id] = btn
 
         # -- Spacer ----
@@ -292,11 +295,13 @@ class OMRGUI:
     # ----
 
     def _on_lang_change(self) -> None:
+        from i18n import is_rtl
         self.root.title(_("app_title"))
         for page_id, icon_name, key in _NAV_ITEMS:
             btn = self._nav_btns.get(page_id)
             if btn:
-                btn.configure(text=f"  {_(key)}")
+                label = _(key)
+                btn.configure(text=f"{label}  " if is_rtl() else f"  {label}")
         self._navigate("dashboard")
 
     # ----

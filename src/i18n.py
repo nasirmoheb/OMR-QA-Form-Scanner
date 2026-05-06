@@ -85,6 +85,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "faculty": "Faculty",
         "professor_name": "Professor Name",
         "save_survey": "Save Survey",
+        "required_fields_missing": "Please fill in all required fields:",
         "print_form": "Print Survey Form",
         "back": "Back",
         "no_surveys": "No surveys found. Click 'New Survey' to create one.",
@@ -316,22 +317,23 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "draft": "پیش‌نویس",
         "processed": "پردازش شده",
         "analyzed": "تحلیل شده",
-        "subject": "موضوع",
+        "subject": "مضمون",
         "professor": "استاد",
-        "semester": "ترم",
+        "semester": "سمستر",
         "academic_year": "سال تحصیلی",
-        "department": "دانشکده",
+        "department": "دیپارتمنت",
         "search": "جستجو...",
-        "filter_dept": "فیلتر بر اساس دانشکده",
-        "all_departments": "همه دانشکده‌ها",
+        "filter_dept": "فیلتر بر اساس دیپارتمنت",
+        "all_departments": "همه دیپارتمنت‌ها",
         "university": "دانشگاه",
-        "faculty": " دانشکده",
+        "faculty": "دانشکده",
         "professor_name": "نام استاد",
         "save_survey": "ذخیره نظرسنجی",
+        "required_fields_missing": "لطفاً تمام فیلدهای ضروری را پر کنید:",
         "print_form": "چاپ فرم نظرسنجی",
         "back": "بازگشت",
         "no_surveys": "نظرسنجی یافت نشد. برای ایجاد یک نظرسنجی جدید روی 'نظرسنجی جدید' کلیک کنید.",
-        "university_branding": "برندینگ دانشگاه",
+        "university_branding": "اطلاعات دانشگاه",
         "university_name": "نام دانشگاه",
         "logo_upload": "آپلود لوگو",
         "logo_preview": "پیش‌نمایش لوگو",
@@ -571,6 +573,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "faculty": "فیکلټي",
         "professor_name": "د پروفیسور نوم",
         "save_survey": "سروۍ خوندي کړئ",
+        "required_fields_missing": "مهرباني وکړئ ټول اړین ساحې ډک کړئ:",
         "print_form": "د سروۍ فورم چاپ کړئ",
         "back": "بیرته",
         "no_surveys": "هیڅ سروۍ ونه موندل شوه. د نوي سروۍ جوړولو لپاره 'نوي سروۍ' کلیک وکړئ.",
@@ -835,6 +838,16 @@ def _(key: str, **kwargs: Any) -> str:
 
 def is_rtl() -> bool:
     return I18n.is_rtl()
+
+def rtl_text(text: str) -> str:
+    """Reshape and apply bidi algorithm to an arbitrary string for RTL display."""
+    if not I18n.is_rtl() or not _RTL_SUPPORT or not text:
+        return text
+    try:
+        reshaped = arabic_reshaper.reshape(text)
+        return get_display(reshaped)
+    except Exception:
+        return text
 
 def get_start() -> str:
     return "right" if is_rtl() else "left"

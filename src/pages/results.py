@@ -15,7 +15,7 @@ import customtkinter as ctk
 import icons as IC
 import theme as T
 from analytics_engine import AnalyticsEngine
-from i18n import _, get_start, get_end, get_anchor, get_compound, is_rtl
+from i18n import _, get_start, get_end, get_anchor, get_compound, is_rtl, rtl_text
 from models import FormResult, Survey
 from persistence import PersistenceManager
 from .base import BasePage, PageRouter
@@ -647,10 +647,10 @@ class ResultsPage(BasePage):
             return
         try:
             self.analytics.export_csv(self.form_results, path, self.question_texts)
-            messagebox.showinfo(_("export_success"), _("export_success"))
+            messagebox.showinfo(rtl_text(_("export_success")), rtl_text(_("export_success")))
         except Exception as exc:
             logger.exception("CSV export failed")
-            messagebox.showerror(_("export_error"), f"{_('export_error')}:\n{exc}")
+            messagebox.showerror(rtl_text(_("export_error")), rtl_text(f"{_('export_error')}:\n{exc}"))
 
     def _on_dari_report(self) -> None:
         try:
@@ -664,7 +664,7 @@ class ResultsPage(BasePage):
             webbrowser.open(f"file:///{Path(report_path).resolve()}")
         except Exception as exc:
             logger.exception("Dari report generation failed")
-            messagebox.showerror(_("error_report"), f"{_('error_report')}:\n{exc}")
+            messagebox.showerror(rtl_text(_("error_report")), rtl_text(f"{_('error_report')}:\n{exc}"))
 
     def _on_pdf(self) -> None:
         path = filedialog.asksaveasfilename(
@@ -678,10 +678,10 @@ class ResultsPage(BasePage):
             self.analytics.export_pdf_report(
                 self.survey, self.form_results, path, self.question_texts
             )
-            messagebox.showinfo(_("export_success"), _("export_success"))
+            messagebox.showinfo(rtl_text(_("export_success")), rtl_text(_("export_success")))
         except Exception as exc:
             logger.exception("PDF export failed")
-            messagebox.showerror(_("export_error"), f"{_('export_error')}:\n{exc}")
+            messagebox.showerror(rtl_text(_("export_error")), rtl_text(f"{_('export_error')}:\n{exc}"))
 
     def _on_html(self) -> None:
         try:
@@ -705,7 +705,7 @@ class ResultsPage(BasePage):
             webbrowser.open(f"file:///{Path(report_path).resolve()}")
         except Exception as exc:
             logger.exception("HTML report failed")
-            messagebox.showerror(_("error_report"), f"{_('error_report')}:\n{exc}")
+            messagebox.showerror(rtl_text(_("error_report")), rtl_text(f"{_('error_report')}:\n{exc}"))
 
     def _on_advanced_html(self) -> None:
         """Generate and open the advanced QA analytics HTML report."""
@@ -752,4 +752,4 @@ class ResultsPage(BasePage):
             webbrowser.open(f"file:///{Path(report_path).resolve()}")
         except Exception as exc:
             logger.exception("Advanced HTML report failed")
-            messagebox.showerror(_("error_report"), f"{_('error_report')}:\n{exc}")
+            messagebox.showerror(rtl_text(_("error_report")), rtl_text(f"{_('error_report')}:\n{exc}"))

@@ -13,7 +13,7 @@ import customtkinter as ctk
 
 import icons as IC
 import theme as T
-from i18n import _, is_rtl
+from i18n import _, is_rtl, rtl_text
 from models import FormResult
 from persistence import PersistenceManager
 from vision_processor import VisionProcessor
@@ -298,7 +298,7 @@ class ProcessPage(BasePage):
     def _on_scan(self) -> None:
         if self.is_scanning or not self.image_files:
             if not self.image_files:
-                messagebox.showwarning(_("start_scanning"), _("no_images_queued"))
+                messagebox.showwarning(rtl_text(_("start_scanning")), rtl_text(_("no_images_queued")))
             return
         self.is_scanning = True
         self.scan_btn.configure(state="disabled")
@@ -359,7 +359,7 @@ class ProcessPage(BasePage):
             f"{_('forms_warning')}: {counts['warning']}\n"
             f"{_('forms_error')}: {counts['error']}"
         )
-        self.after(0, lambda: messagebox.showinfo(_("scan_complete"), summary))
+        self.after(0, lambda: messagebox.showinfo(rtl_text(_("scan_complete")), rtl_text(summary)))
 
     def _to_form_result(self, result: dict[str, Any], path: Path) -> FormResult:
         return FormResult(

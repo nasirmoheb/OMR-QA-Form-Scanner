@@ -13,7 +13,7 @@ import customtkinter as ctk
 
 import icons as IC
 import theme as T
-from i18n import _, is_rtl, get_start, get_end, get_anchor, get_compound
+from i18n import _, is_rtl, get_start, get_end, get_anchor, get_compound, rtl_text
 from models import Survey
 from persistence import PersistenceManager
 from .base import BasePage, PageRouter
@@ -85,64 +85,19 @@ class SurveyFormPage(BasePage):
         content_wrap = T.transparent(self)
         content_wrap.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
-        left_col = ctk.CTkScrollableFrame(content_wrap, fg_color="transparent")
-        left_col.pack(side=self._start(), fill="both", expand=True, padx=(0, 16) if not is_rtl() else (16, 0))
+        # Actions panel is always on the left; form fields always expand to the right.
+        actions_col = T.transparent(content_wrap)
+        actions_col.pack(side="left", fill="y", padx=(0, 16))
 
-        right_col = T.transparent(content_wrap)
-        right_col.pack(side=self._end(), fill="y", padx=(16, 0) if not is_rtl() else (0, 16))
-
-        # -------------------------------------------------------------
-        # LEFT COLUMN
-        # -------------------------------------------------------------
-
-        # -- Institution Details Card ----
-        inst_card = T.card(left_col)
-        inst_card.pack(fill="x", pady=(0, 16))
-
-        inst_header = T.transparent(inst_card)
-        inst_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
-        ctk.CTkLabel(
-            inst_header, text="  " + _("university_branding"), image=IC.icon("school", size=18, color=T.ACCENT[1]),
-            font=T.h2(), text_color=T.TEXT_PRIMARY, compound=self._compound()
-        ).pack(anchor=self._anchor())
-
-        inst_grid = T.transparent(inst_card)
-        inst_grid.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
-        inst_grid.columnconfigure(0, weight=1)
-        inst_grid.columnconfigure(1, weight=1)
-
-        uni_name = self.persistence.get_setting("university_name", "Kabul University")
-        self._field(inst_grid, _("university"), "university", row=0, col=0, default=uni_name)
-        self._field(inst_grid, _("faculty"), "faculty", row=0, col=1)
-        self._field(inst_grid, _("department"), "department", row=1, col=0, colspan=2)
-
-        # -- Course Information Card ----
-        course_card = T.card(left_col)
-        course_card.pack(fill="x", pady=(0, 16))
-
-        course_header = T.transparent(course_card)
-        course_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
-        ctk.CTkLabel(
-            course_header, text="  " + _("course_information"), image=IC.icon("book", size=18, color=T.ACCENT[1]),
-            font=T.h2(), text_color=T.TEXT_PRIMARY, compound=self._compound()
-        ).pack(anchor=self._anchor())
-
-        course_grid = T.transparent(course_card)
-        course_grid.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
-        course_grid.columnconfigure(0, weight=1)
-        course_grid.columnconfigure(1, weight=1)
-
-        self._field(course_grid, _("subject"), "subject", row=0, col=0, colspan=2)
-        self._field(course_grid, _("professor_name"), "professor", row=1, col=0, colspan=2)
-        self._field(course_grid, _("semester"), "semester", row=2, col=0)
-        self._field(course_grid, _("academic_year"), "academic_year", row=2, col=1)
+        form_col = ctk.CTkScrollableFrame(content_wrap, fg_color="transparent")
+        form_col.pack(side="left", fill="both", expand=True)
 
         # -------------------------------------------------------------
-        # RIGHT COLUMN
+        # LEFT COLUMN — Actions
         # -------------------------------------------------------------
 
         # -- Survey Actions Card ----
-        action_card = T.card(right_col)
+        action_card = T.card(actions_col)
         action_card.pack(fill="x", ipadx=10)
 
         action_header = T.transparent(action_card)
@@ -157,26 +112,80 @@ class SurveyFormPage(BasePage):
 
         # Save Survey
         ctk.CTkButton(
-            action_body, text="  " + _("save_survey"), image=IC.icon("save", size=16, color="#000000"),
+            action_body, text=_("save_survey") + "  " if is_rtl() else "  " + _("save_survey"),
+            image=IC.icon("save", size=16, color="#000000"),
             height=44, corner_radius=T.RADIUS_MD, fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
             text_color="#000000", font=T.font(14, "bold"), command=self._on_save,
+            compound=self._compound(),
         ).pack(fill="x", pady=(0, 12))
 
         # Print Survey Form
         self.print_btn = ctk.CTkButton(
-            action_body, text="  " + _("print_form"), image=IC.icon("print_icon", size=16, color=T.TEXT_PRIMARY[1]),
+            action_body, text=_("print_form") + "  " if is_rtl() else "  " + _("print_form"),
+            image=IC.icon("print_icon", size=16, color=T.TEXT_PRIMARY[1]),
             height=44, corner_radius=T.RADIUS_MD, fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_PRIMARY, font=T.font(13), border_width=1, border_color=T.CARD_BORDER,
             state="disabled" if not self.survey_id else "normal", command=self._on_print,
+            compound=self._compound(),
         )
         self.print_btn.pack(fill="x", pady=(0, 16))
 
         # Discard Draft
         ctk.CTkButton(
-            action_body, text="  " + _("discard_draft"), image=IC.icon("trash", size=16, color=T.TEXT_SECONDARY[1]),
+            action_body, text=_("discard_draft") + "  " if is_rtl() else "  " + _("discard_draft"),
+            image=IC.icon("trash", size=16, color=T.TEXT_SECONDARY[1]),
             height=36, corner_radius=T.RADIUS_MD, fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_SECONDARY, font=T.font(13), command=lambda: self.go("dashboard"),
+            compound=self._compound(),
         ).pack(fill="x")
+
+        # -------------------------------------------------------------
+        # RIGHT COLUMN — Form fields
+        # -------------------------------------------------------------
+
+        # -- Institution Details Card ----
+        inst_card = T.card(form_col)
+        inst_card.pack(fill="x", pady=(0, 16))
+
+        inst_header = T.transparent(inst_card)
+        inst_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
+        ctk.CTkLabel(
+            inst_header, text=_("university_branding") + "  " if is_rtl() else "  " + _("university_branding"),
+            image=IC.icon("school", size=18, color=T.ACCENT[1]),
+            font=T.h2(), text_color=T.TEXT_PRIMARY, compound=self._compound()
+        ).pack(anchor=self._anchor())
+
+        inst_grid = T.transparent(inst_card)
+        inst_grid.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+        inst_grid.columnconfigure(0, weight=1)
+        inst_grid.columnconfigure(1, weight=1)
+
+        uni_name = self.persistence.get_setting("university_name", "Kabul University")
+        self._field(inst_grid, _("university"), "university", row=0, col=0 if not is_rtl() else 1, default=uni_name)
+        self._field(inst_grid, _("faculty"), "faculty", row=0, col=1 if not is_rtl() else 0)
+        self._field(inst_grid, _("department"), "department", row=1, col=0, colspan=2)
+
+        # -- Course Information Card ----
+        course_card = T.card(form_col)
+        course_card.pack(fill="x", pady=(0, 16))
+
+        course_header = T.transparent(course_card)
+        course_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
+        ctk.CTkLabel(
+            course_header, text=_("course_information") + "  " if is_rtl() else "  " + _("course_information"),
+            image=IC.icon("book", size=18, color=T.ACCENT[1]),
+            font=T.h2(), text_color=T.TEXT_PRIMARY, compound=self._compound()
+        ).pack(anchor=self._anchor())
+
+        course_grid = T.transparent(course_card)
+        course_grid.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+        course_grid.columnconfigure(0, weight=1)
+        course_grid.columnconfigure(1, weight=1)
+
+        self._field(course_grid, _("subject"), "subject", row=0, col=0, colspan=2)
+        self._field(course_grid, _("professor_name"), "professor", row=1, col=0, colspan=2)
+        self._field(course_grid, _("semester"), "semester", row=2, col=0)
+        self._field(course_grid, _("academic_year"), "academic_year", row=2, col=1)
 
     def _field(
         self,
@@ -191,18 +200,17 @@ class SurveyFormPage(BasePage):
     ) -> None:
         """Add a labelled entry to the grid."""
         wrap = T.transparent(grid)
-        # Handle padding for columns correctly.
-        # If it spans both columns, use regular padding
-        # If it's col 0, padding right. If col 1, padding left.
+        # Only add horizontal padding when two inputs share a row (colspan == 1).
+        # Add 8px padding on each side so there's a 16px gap between the two fields.
         px = (0, 0)
         if colspan == 1:
-            px = (0, 8) if col == 0 else (8, 0)
+            px = (4, 4)  # 4px on each side = 8px gap between fields
         
         wrap.grid(row=row, column=col, columnspan=colspan, padx=px, pady=8, sticky="ew")
 
-        T.muted_label(wrap, label).pack(anchor=self._anchor(), pady=(0, 4))
+        T.muted_label(wrap, label + " *").pack(anchor=self._anchor(), pady=(0, 4))
 
-        entry = T.text_input(wrap)
+        entry = T.text_input(wrap, justify="right" if is_rtl() else "left")
         if default:
             entry.insert(0, default)
         if readonly:
@@ -241,6 +249,29 @@ class SurveyFormPage(BasePage):
             e = self._entries.get(key)
             return e.get().strip() if e else ""
 
+        # Validate all required fields
+        required_fields = {
+            "faculty": _("faculty"),
+            "department": _("department"),
+            "subject": _("subject"),
+            "professor": _("professor_name"),
+            "semester": _("semester"),
+            "academic_year": _("academic_year"),
+        }
+        
+        missing_fields = []
+        for key, label in required_fields.items():
+            if not get(key):
+                missing_fields.append(label)
+        
+        if missing_fields:
+            fields_list = "\n• ".join(missing_fields)
+            messagebox.showwarning(
+                rtl_text(_("save_survey")),
+                rtl_text(f"{_('required_fields_missing')}\n\n• {fields_list}")
+            )
+            return
+
         uni = self.persistence.get_setting("university_name", "")
         survey = Survey(
             university=uni,
@@ -266,11 +297,17 @@ class SurveyFormPage(BasePage):
 
     def _on_print(self) -> None:
         if not self.survey_id:
-            messagebox.showwarning(_("print_form"), "Save the survey first.")
+            messagebox.showwarning(
+                rtl_text(_("print_form")),
+                rtl_text("Save the survey first.")
+            )
             return
         survey = self.persistence.get_survey(self.survey_id)
         if not survey:
-            messagebox.showerror(_("print_form"), "Survey not found.")
+            messagebox.showerror(
+                rtl_text(_("print_form")),
+                rtl_text("Survey not found.")
+            )
             return
         try:
             from pdf_generator import generate_prefilled_form, open_pdf
@@ -284,7 +321,10 @@ class SurveyFormPage(BasePage):
             generate_prefilled_form(survey, out, persistence=self.persistence)
             open_pdf(out)
         except RuntimeError as exc:
-            messagebox.showerror(_("print_form"), str(exc))
+            messagebox.showerror(rtl_text(_("print_form")), rtl_text(str(exc)))
         except Exception as exc:
             logger.exception("PDF generation failed")
-            messagebox.showerror(_("print_form"), f"Failed to generate PDF:\n{exc}")
+            messagebox.showerror(
+                rtl_text(_("print_form")),
+                rtl_text(f"Failed to generate PDF:\n{exc}")
+            )

@@ -12,7 +12,7 @@ import customtkinter as ctk
 
 import icons as IC
 import theme as T
-from i18n import _, is_rtl, I18n
+from i18n import _, is_rtl, I18n, rtl_text
 from models import Survey
 from persistence import PersistenceManager
 from .base import BasePage, PageRouter
@@ -517,13 +517,13 @@ class DashboardPage(BasePage):
         if not folder:
             return
         if not Path(folder).exists():
-            messagebox.showwarning(_("select_folder"), _("no_folder"))
+            messagebox.showwarning(rtl_text(_("select_folder")), rtl_text(_("no_folder")))
             return
         self.go("process", survey_id=survey_id, folder_path=folder)
 
     def _on_process(self, survey_id: int, folder_path: str) -> None:
         if not folder_path or not Path(folder_path).exists():
-            messagebox.showwarning(_("select_folder"), _("no_folder"))
+            messagebox.showwarning(rtl_text(_("select_folder")), rtl_text(_("no_folder")))
             return
         self.go("process", survey_id=survey_id, folder_path=folder_path)
 
@@ -531,13 +531,13 @@ class DashboardPage(BasePage):
         """Directly open the Official Dari Report for analyzed/processed surveys."""
         survey = self.persistence.get_survey(survey_id)
         if not survey:
-            messagebox.showerror(_("error"), "Survey not found.")
+            messagebox.showerror(rtl_text(_("error")), rtl_text("Survey not found."))
             return
 
         try:
             results = self.persistence.get_form_results(survey_id)
             if not results:
-                messagebox.showwarning(_("results"), "No processed forms found for this survey.")
+                messagebox.showwarning(rtl_text(_("results")), rtl_text("No processed forms found for this survey."))
                 return
 
             report_path = str(Config.PROJECT_ROOT / "assets" / "dari_qa_report.html")
@@ -554,12 +554,12 @@ class DashboardPage(BasePage):
             webbrowser.open(f"file:///{Path(report_path).resolve()}")
         except Exception as exc:
             logger.exception("Dari report generation failed")
-            messagebox.showerror(_("error_report"), f"Failed to generate report:\n{exc}")
+            messagebox.showerror(rtl_text(_("error_report")), rtl_text(f"Failed to generate report:\n{exc}"))
 
     def _on_print(self, survey_id: int) -> None:
         survey = self.persistence.get_survey(survey_id)
         if not survey:
-            messagebox.showerror(_("print_form"), "Survey not found.")
+            messagebox.showerror(rtl_text(_("print_form")), rtl_text("Survey not found."))
             return
         try:
             from pdf_generator import generate_prefilled_form, open_pdf
@@ -573,13 +573,13 @@ class DashboardPage(BasePage):
             generate_prefilled_form(survey, out, persistence=self.persistence)
             open_pdf(out)
         except RuntimeError as exc:
-            messagebox.showerror(_("print_form"), str(exc))
+            messagebox.showerror(rtl_text(_("print_form")), rtl_text(str(exc)))
         except Exception as exc:
             logger.exception("PDF generation failed")
-            messagebox.showerror(_("print_form"), f"Failed to generate PDF:\n{exc}")
+            messagebox.showerror(rtl_text(_("print_form")), rtl_text(f"Failed to generate PDF:\n{exc}"))
 
     def _on_delete(self, survey_id: int) -> None:
-        if messagebox.askyesno(_("delete"), _("confirm_delete")):
+        if messagebox.askyesno(rtl_text(_("delete")), rtl_text(_("confirm_delete"))):
             self.persistence.delete_survey(survey_id)
             if self.selected_survey_id == survey_id:
                 self.selected_survey_id = None

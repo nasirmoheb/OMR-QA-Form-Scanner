@@ -14,7 +14,7 @@ import customtkinter as ctk
 import icons as IC
 import theme as T
 from config import Config
-from i18n import I18n, _, get_start, get_end, get_anchor, get_compound
+from i18n import I18n, _, get_start, get_end, get_anchor, get_compound, rtl_text
 
 logger = logging.getLogger("omr_qa_scanner")
 
@@ -980,7 +980,7 @@ class SettingsFrame(ctk.CTkFrame):
         self._persistence.set_setting("university_name", self.uni_name_entry.get())
         if self._logo_path:
             self._persistence.set_setting("logo_path", self._logo_path)
-        messagebox.showinfo(_("university_branding"), _("branding_saved"))
+        messagebox.showinfo(rtl_text(_("university_branding")), rtl_text(_("branding_saved")))
 
     def _save_coords(self) -> None:
         if not self._persistence:
@@ -989,14 +989,14 @@ class SettingsFrame(ctk.CTkFrame):
         try:
             parsed = json.loads(raw)
         except json.JSONDecodeError as exc:
-            messagebox.showerror(_("pdf_coords"), f"{_('invalid_json')}\n{exc}")
+            messagebox.showerror(rtl_text(_("pdf_coords")), rtl_text(f"{_('invalid_json')}\n{exc}"))
             return
         self._persistence.set_setting("pdf_coords", parsed)
-        messagebox.showinfo(_("pdf_coords"), _("settings_saved"))
+        messagebox.showinfo(rtl_text(_("pdf_coords")), rtl_text(_("settings_saved")))
 
     def _save_questions(self) -> None:
         if not self._persistence:
             return
         texts = [e.get() for e in self._q_entries]
         self._persistence.set_setting("question_texts", texts)
-        messagebox.showinfo(_("survey_questions"), _("questions_saved"))
+        messagebox.showinfo(rtl_text(_("survey_questions")), rtl_text(_("questions_saved")))
