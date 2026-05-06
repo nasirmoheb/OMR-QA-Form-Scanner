@@ -31,6 +31,9 @@ SolidCompression=yes
 WizardStyle=modern
 ; Minimum Windows version: Windows 10
 MinVersion=10.0
+; Target 64-bit architecture
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 ; Uncomment once you have an icon:
 ; SetupIconFile=assets\icon.ico
 ; UninstallDisplayIcon={app}\{#AppExeName}
@@ -60,10 +63,10 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(
 ; Type: files; Name: "{app}\data\omr.db"
 
 [Code]
-// Show a warning if the user is on a 32-bit OS (app is 64-bit only)
+// Check if running on 64-bit Windows
 function InitializeSetup(): Boolean;
 begin
-  if not Is64BitInstallMode then
+  if not IsWin64 then
   begin
     MsgBox('This application requires a 64-bit version of Windows.', mbError, MB_OK);
     Result := False;
