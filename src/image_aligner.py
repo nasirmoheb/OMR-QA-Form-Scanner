@@ -47,9 +47,9 @@ class ImageAligner:
         # Binary invert so black markers become white blobs
         _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
 
-        # Find contours
+        # Use RETR_LIST so nested contours (inside a border frame) are found
         contours, _ = cv2.findContours(
-            thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
         )
 
         candidates: list[tuple[int, int, float, float]] = []
@@ -59,7 +59,9 @@ class ImageAligner:
         for cnt in contours:
             area = cv2.contourArea(cnt)
             # Reject tiny noise and huge background shapes
-            if area < 50 or area > img_area * 0.1:
+            # Upper bound tightened to 1% of image area to exclude large
+            # structural elements (borders, text blocks, checkbox grids)
+            if area < 50 or area > img_area * 0.01:
                 continue
 
             peri = cv2.arcLength(cnt, True)
@@ -86,6 +88,33 @@ class ImageAligner:
             cx = int(moments["m10"] / moments["m00"])
             cy = int(moments["m01"] / moments["m00"])
             candidates.append((cx, cy, area, solidity))
+
+        # Keep only the 4 candidates closest to the image corners.
+        # This filters out checkbox cells and other small rectangles that
+        # pass the shape test but are not fiducial markers.
+        if len(candidates) >= 4:
+            corners_ref = [
+                (0, 0),
+                (w - 1, 0),
+                (0, h - 1),
+                (w - 1, h - 1),
+            ]
+            corner_picks: list[tuple[int, int, float, float]] = []
+            used: set[int] = set()
+            for ref_x, ref_y in corners_ref:
+                best_idx = -1
+                best_dist = float("inf")
+                for i, (cx, cy, area, sol) in enumerate(candidates):
+                    if i in used:
+                        continue
+                    dist = (cx - ref_x) ** 2 + (cy - ref_y) ** 2
+                    if dist < best_dist:
+                        best_dist = dist
+                        best_idx = i
+                if best_idx >= 0:
+                    corner_picks.append(candidates[best_idx])
+                    used.add(best_idx)
+            candidates = corner_picks
 
         # Sort by area descending and keep top candidates
         candidates.sort(key=lambda x: x[2], reverse=True)

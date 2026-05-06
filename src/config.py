@@ -9,9 +9,9 @@ from typing import Any
 class Config:
     """Application-wide configuration constants."""
 
-    # Form geometry
-    FORM_WIDTH: int = 800
-    FORM_HEIGHT: int = 1000
+    # Form geometry — A4 portrait at 150 DPI (210 × 297 mm)
+    FORM_WIDTH: int = 1240
+    FORM_HEIGHT: int = 1754
 
     # Checkbox detection
     CHECKBOX_THRESHOLD: float = 0.20

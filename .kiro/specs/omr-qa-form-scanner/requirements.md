@@ -130,8 +130,8 @@ This document specifies the requirements for the OMR QA Form Scanner desktop app
 
 #### Acceptance Criteria
 
-1. THE Config class SHALL define FORM_WIDTH as 800 pixels
-2. THE Config class SHALL define FORM_HEIGHT as 1000 pixels
+1. THE Config class SHALL define FORM_WIDTH as 1240 pixels (A4 portrait at 150 DPI)
+2. THE Config class SHALL define FORM_HEIGHT as 1754 pixels (A4 portrait at 150 DPI)
 3. THE Config class SHALL define CHECKBOX_THRESHOLD as 0.15
 4. THE Config class SHALL define ROW_COUNT as 14
 5. THE Config class SHALL define COLUMN_COUNT as 3

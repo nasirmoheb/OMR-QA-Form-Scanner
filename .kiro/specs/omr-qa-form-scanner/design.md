@@ -74,9 +74,9 @@ Centralized configuration class defining all application constants.
 class Config:
     """Application configuration constants."""
     
-    # Form dimensions (pixels)
-    FORM_WIDTH: int = 800
-    FORM_HEIGHT: int = 1000
+    # Form dimensions (pixels) — A4 portrait at 150 DPI (210 × 297 mm)
+    FORM_WIDTH: int = 1240
+    FORM_HEIGHT: int = 1754
     
     # Checkbox detection threshold (15% dark pixels)
     CHECKBOX_THRESHOLD: float = 0.15
