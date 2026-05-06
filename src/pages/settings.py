@@ -1,4 +1,4 @@
-﻿"""Settings page - sidebar navigation with beautiful section panels."""
+"""Settings page - sidebar navigation with beautiful section panels."""
 
 
 from __future__ import annotations
@@ -41,20 +41,18 @@ def _tint(hex_color: str, factor: float = 0.15) -> str:
 # Sidebar nav items: (section_id, icon_name, label_key, accent_hex)
 # ---------------------------------------------------------------------------
 _NAV_ITEMS = [
-    ("general",    "globe",      "general",            "#4A9EFF"),
-    ("detection",  "eye",        "threshold",          "#00C896"),
-    ("scoring",    "bar_chart",  "score_yes",          "#F5A623"),
-    ("branding",   "building",   "university_branding","#A78BFA"),
+    ("general",    "globe",      "general",            T._D_BLUE),
+    ("detection",  "eye",        "threshold",          T._D_GREEN),
+    ("scoring",    "bar_chart",  "score_yes",          T._D_AMBER),
     ("questions",  "file_text",  "survey_questions",   "#38BDF8"),
-    ("advanced",   "cpu",        "pdf_coords",         "#FB7185"),
+    ("advanced",   "cpu",        "pdf_coords",         T._D_RED),
 ]
 
 # Section subtitles shown in the content panel header
 _SECTION_META = {
-    "general":   ("General",            "Language, appearance and display preferences"),
+    "general":   ("General",            "Branding, language and appearance preferences"),
     "detection": ("Detection",          "Checkbox recognition sensitivity settings"),
     "scoring":   ("Scoring",            "Likert scale weights for Yes / Somewhat / No"),
-    "branding":  ("University Branding","Institution name and logo for printed forms"),
     "questions": ("Survey Questions",   "Edit the 14 question texts shown on the form"),
     "advanced":  ("Advanced",           "PDF template coordinates and form geometry"),
 }
@@ -90,50 +88,37 @@ class SettingsFrame(ctk.CTkFrame):
 
     def _build(self) -> None:
         # ── Top header bar ────────────────────────────────────────────────
-        header = ctk.CTkFrame(self, fg_color=T.SURFACE, corner_radius=0, height=64)
-        header.pack(fill="x")
-        header.pack_propagate(False)
+        header = T.transparent(self)
+        header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
-        h_inner = T.transparent(header)
-        h_inner.pack(fill="both", expand=True, padx=T.PAGE_PADDING)
-
-        IC.icon_button(
-            h_inner, "arrow_left", text="  " + _("back"),
-            size=14, color=T._D_TEXT2, width=110, height=36,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
-            font=T.body(), command=self._on_back,
-        ).pack(side="left", pady=14)
-
-        title_col = T.transparent(h_inner)
-        title_col.pack(side="left", padx=20)
+        title_col = T.transparent(header)
+        title_col.pack(side="left")
+        
         ctk.CTkLabel(
             title_col, text=_("settings"),
-            font=T.h3(), text_color=T.TEXT_PRIMARY, anchor="w",
+            font=T.h1(), text_color=T.TEXT_PRIMARY, anchor="w",
         ).pack(anchor="w")
+        
         ctk.CTkLabel(
-            title_col, text="Manage your application preferences",
-            font=T.small(), text_color=T.TEXT_MUTED, anchor="w",
-        ).pack(anchor="w")
+            title_col, text="Configure your application preferences, detection levels, and branding.",
+            font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w",
+        ).pack(anchor="w", pady=(4, 0))
 
         IC.icon_button(
-            h_inner, "save", text="  " + _("save"),
-            size=14, color="#FFFFFF", width=130, height=38,
+            header, "save", text="  " + _("save_all"),
+            size=14, color="#000000", width=140, height=44,
             fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
-            text_color="#FFFFFF", font=T.font(13, "bold"),
+            text_color="#000000", font=T.font(13, "bold"),
             corner_radius=T.RADIUS_MD, command=self._save,
-        ).pack(side="right", pady=13)
+        ).pack(side="right")
 
         # ── Body: sidebar + content ───────────────────────────────────────
         body = T.transparent(self)
-        body.pack(fill="both", expand=True)
-
-        # Thin vertical separator between sidebar and content
-        T.divider(body, width=1).pack(side="left", fill="y")
+        body.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
         # Left sidebar
-        self._sidebar = ctk.CTkFrame(body, width=220, fg_color=T.SURFACE, corner_radius=0)
-        self._sidebar.pack(side="left", fill="y")
+        self._sidebar = ctk.CTkFrame(body, width=220, fg_color=T.SURFACE, corner_radius=T.RADIUS_LG)
+        self._sidebar.pack(side="left", fill="y", padx=(0, 16))
         self._sidebar.pack_propagate(False)
 
         self._nav_inner = T.transparent(self._sidebar)
@@ -170,7 +155,6 @@ class SettingsFrame(ctk.CTkFrame):
         self._panels["general"]   = self._build_general_panel(self._content_host)
         self._panels["detection"] = self._build_detection_panel(self._content_host)
         self._panels["scoring"]   = self._build_scoring_panel(self._content_host)
-        self._panels["branding"]  = self._build_branding_panel(self._content_host)
         self._panels["questions"] = self._build_questions_panel(self._content_host)
         self._panels["advanced"]  = self._build_advanced_panel(self._content_host)
 
@@ -509,6 +493,70 @@ class SettingsFrame(ctk.CTkFrame):
 
             opt.bind("<Button-1>", lambda _e, m=mode: _select_mode(m))
 
+        # ── Branding card ─────────────────────────────────────────────────
+        brand_card = self._field_card(
+            scroll, "Institution Branding", "Printed on survey forms and PDF reports", "building"
+        )
+        brand_body = T.transparent(brand_card)
+        brand_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+
+        ctk.CTkLabel(
+            brand_body, text="University Name",
+            font=T.body(), text_color=T.TEXT_PRIMARY, anchor="w",
+        ).pack(anchor="w", pady=(0, 6))
+        
+        uni_default = (
+            self._persistence.get_setting("university_name", "Kabul University")
+            if self._persistence else "Kabul University"
+        )
+        self.uni_name_entry = ctk.CTkEntry(
+            brand_body, height=42,
+            corner_radius=T.RADIUS_MD,
+            fg_color=T.INPUT_BG,
+            border_color=T.INPUT_BORDER,
+            border_width=1,
+            font=T.body(),
+            text_color=T.TEXT_PRIMARY,
+            placeholder_text="e.g. Kabul University",
+            placeholder_text_color=T.TEXT_MUTED,
+        )
+        if uni_default:
+            self.uni_name_entry.insert(0, uni_default)
+        self.uni_name_entry.pack(fill="x", pady=(0, 16))
+
+        # Logo upload
+        ctk.CTkLabel(
+            brand_body, text="Institution Logo",
+            font=T.body(), text_color=T.TEXT_PRIMARY, anchor="w",
+        ).pack(anchor="w", pady=(0, 4))
+
+        logo_zone = ctk.CTkFrame(
+            brand_body, corner_radius=T.RADIUS_LG,
+            fg_color=T.SURFACE_RAISED,
+            border_width=2, border_color=T.CARD_BORDER,
+            height=60,
+        )
+        logo_zone.pack(fill="x", pady=(0, 12))
+        logo_zone.pack_propagate(False)
+
+        self.logo_lbl = ctk.CTkLabel(
+            logo_zone,
+            image=IC.icon("upload", size=20, color=T._D_TEXT3),
+            text="  " + _("no_logo"),
+            font=T.body(), text_color=T.TEXT_MUTED,
+            compound="left",
+        )
+        self.logo_lbl.place(relx=0.5, rely=0.5, anchor="center")
+
+        IC.icon_button(
+            brand_body, "upload", text="  " + _("select_logo"),
+            size=14, color=T._D_TEXT2, height=36, width=180,
+            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
+            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
+            font=T.body(), corner_radius=T.RADIUS_MD,
+            command=self._select_logo,
+        ).pack(anchor="w")
+
         return outer
 
     # ------------------------------------------------------------------
@@ -636,81 +684,7 @@ class SettingsFrame(ctk.CTkFrame):
     # Panel: Branding
     # ------------------------------------------------------------------
 
-    def _build_branding_panel(self, parent: Any) -> ctk.CTkFrame:
-        outer, scroll = self._panel_scaffold(parent, "branding")
 
-        brand_card = self._field_card(
-            scroll, "Institution Details",
-            "Printed on survey forms and PDF reports", "building"
-        )
-        brand_body = T.transparent(brand_card)
-        brand_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
-
-        ctk.CTkLabel(
-            brand_body, text="University Name",
-            font=T.body(), text_color=T.TEXT_PRIMARY, anchor="w",
-        ).pack(anchor="w", pady=(0, 6))
-        uni_default = (
-            self._persistence.get_setting("university_name", "")
-            if self._persistence else ""
-        )
-        self.uni_name_entry = ctk.CTkEntry(
-            brand_body, height=42,
-            corner_radius=T.RADIUS_MD,
-            fg_color=T.INPUT_BG,
-            border_color=T.INPUT_BORDER,
-            border_width=1,
-            font=T.body(),
-            text_color=T.TEXT_PRIMARY,
-            placeholder_text="e.g. Kabul University",
-            placeholder_text_color=T.TEXT_MUTED,
-        )
-        if uni_default:
-            self.uni_name_entry.insert(0, uni_default)
-        self.uni_name_entry.pack(fill="x", pady=(0, 16))
-
-        T.divider(brand_body).pack(fill="x", pady=(0, 16))
-
-        # Logo upload
-        ctk.CTkLabel(
-            brand_body, text="Institution Logo",
-            font=T.body(), text_color=T.TEXT_PRIMARY, anchor="w",
-        ).pack(anchor="w", pady=(0, 4))
-        ctk.CTkLabel(
-            brand_body, text="PNG or JPG, recommended 200×200 px",
-            font=T.small(), text_color=T.TEXT_MUTED, anchor="w",
-        ).pack(anchor="w", pady=(0, 10))
-
-        logo_zone = ctk.CTkFrame(
-            brand_body, corner_radius=T.RADIUS_LG,
-            fg_color=T.SURFACE_RAISED,
-            border_width=2, border_color=T.CARD_BORDER,
-            height=90,
-        )
-        logo_zone.pack(fill="x", pady=(0, 12))
-        logo_zone.pack_propagate(False)
-
-        self.logo_lbl = ctk.CTkLabel(
-            logo_zone,
-            image=IC.icon("upload", size=24, color=T._D_TEXT3),
-            text="  " + _("no_logo"),
-            font=T.body(), text_color=T.TEXT_MUTED,
-            compound="left",
-        )
-        self.logo_lbl.place(relx=0.5, rely=0.5, anchor="center")
-
-        IC.icon_button(
-            brand_body, "upload", text="  " + _("select_logo"),
-            size=14, color=T._D_TEXT2, height=38, width=180,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
-            font=T.body(), corner_radius=T.RADIUS_MD,
-            command=self._select_logo,
-        ).pack(anchor="w", pady=(0, 4))
-
-        self._save_btn(brand_card, self._save_branding, _("save"))
-
-        return outer
 
     # ------------------------------------------------------------------
     # Panel: Questions
@@ -978,6 +952,9 @@ class SettingsFrame(ctk.CTkFrame):
 
         if self._persistence:
             self._config.save_to_persistence(self._persistence)
+            self._persistence.set_setting("university_name", self.uni_name_entry.get())
+            if self._logo_path:
+                self._persistence.set_setting("logo_path", self._logo_path)
 
         self._on_back()
 

@@ -28,8 +28,6 @@ logger = setup_logging()
 _NAV_ITEMS = [
     ("dashboard",   "dashboard",  "dashboard"),
     ("survey_form", "plus",       "new_survey"),
-    ("process",     "scan",       "process"),
-    ("results",     "bar_chart",  "results"),
     ("settings",    "settings",   "settings"),
 ]
 
@@ -88,33 +86,42 @@ class OMRGUI:
         logo_wrap = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         logo_wrap.pack(fill="x", padx=18, pady=(24, 0))
 
-        # Icon badge
-        icon_sq = ctk.CTkFrame(
-            logo_wrap, width=36, height=36,
-            corner_radius=9, fg_color=T.ACCENT,
-        )
-        icon_sq.pack(side="left")
-        icon_sq.pack_propagate(False)
+        title_row = ctk.CTkFrame(logo_wrap, fg_color="transparent")
+        title_row.pack(anchor="w")
         ctk.CTkLabel(
-            icon_sq,
-            image=IC.icon("omr", size=20, color="#FFFFFF"),
-            text="",
-        ).place(relx=0.5, rely=0.5, anchor="center")
+            title_row,
+            text="Obsidian",
+            font=T.font(16, "bold"),
+            text_color=T.TEXT_PRIMARY,
+        ).pack(side="left")
+        ctk.CTkLabel(
+            title_row,
+            text=" OMR",
+            font=T.font(16, "bold"),
+            text_color=T.ACCENT,
+        ).pack(side="left")
 
-        text_col = ctk.CTkFrame(logo_wrap, fg_color="transparent")
-        text_col.pack(side="left", padx=(10, 0))
         ctk.CTkLabel(
-            text_col,
-            text="OMR Scanner",
-            font=T.font(14, "bold"),
-            text_color=T.SIDEBAR_TEXT_ACTIVE,
-        ).pack(anchor="w")
-        ctk.CTkLabel(
-            text_col,
-            text="QA Form System",
-            font=T.tiny(),
-            text_color=T.SIDEBAR_TEXT,
-        ).pack(anchor="w")
+            logo_wrap,
+            text="QA Systems v2.4",
+            font=T.small(),
+            text_color=T.TEXT_SECONDARY,
+        ).pack(anchor="w", pady=(2, 0))
+
+        # -- New Survey Button ----
+        survey_btn_wrap = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        survey_btn_wrap.pack(fill="x", padx=18, pady=(24, 0))
+        
+        IC.icon_button(
+            survey_btn_wrap, "plus",
+            text="  New Survey",
+            size=16, color="#000000",
+            height=44, corner_radius=T.RADIUS_MD,
+            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#000000", font=T.font(14, "bold"),
+            compound="left",
+            command=lambda: self._navigate("survey_form"),
+        ).pack(fill="x")
 
         # -- Divider ----
         ctk.CTkFrame(
@@ -133,6 +140,14 @@ class OMRGUI:
             row = ctk.CTkFrame(nav_frame, fg_color="transparent")
             row.pack(fill="x", pady=(0, 2))
 
+            # Left-side active indicator pill
+            pill = ctk.CTkFrame(
+                row, width=4, height=28, corner_radius=2, fg_color="transparent",
+            )
+            pill.pack(side="left", padx=(0, 4))
+            pill.pack_propagate(False)
+            self._nav_pills[page_id] = pill
+
             btn = ctk.CTkButton(
                 row,
                 image=IC.icon(icon_name, size=16, color=_NAV_ICON_COLOR),
@@ -149,14 +164,6 @@ class OMRGUI:
             )
             btn.pack(side="left", fill="x", expand=True)
             self._nav_btns[page_id] = btn
-
-            # Right-side active indicator pill
-            pill = ctk.CTkFrame(
-                row, width=4, height=28, corner_radius=2, fg_color="transparent",
-            )
-            pill.pack(side="right", padx=(0, 4))
-            pill.pack_propagate(False)
-            self._nav_pills[page_id] = pill
 
         # -- Spacer ----
         ctk.CTkFrame(self.sidebar, fg_color="transparent").pack(expand=True)
@@ -247,7 +254,7 @@ class OMRGUI:
             self._navigate("dashboard")
             return
 
-        # Update sidebar highlight + right pill
+        # Update sidebar highlight + left pill
         for pid, btn in self._nav_btns.items():
             pill = self._nav_pills.get(pid)
             icon_name = next((ic for p, ic, _ in _NAV_ITEMS if p == pid), "dashboard")

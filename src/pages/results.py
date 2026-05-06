@@ -71,70 +71,34 @@ class ResultsPage(BasePage):
         header = T.transparent(self)
         header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
-        IC.icon_button(
-            header, "arrow_left", text="  " + _("back"),
-            size=14, color=T._D_TEXT2, width=110, height=36,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
-            font=T.body(), command=lambda: self.go("dashboard"),
-        ).pack(side="left")
+        # Title
+        ctk.CTkLabel(
+            header, text="Survey Results & Analytics", font=T.h1(), text_color=T.TEXT_PRIMARY
+        ).pack(anchor="w")
 
-        T.page_title(header, _("results")).pack(side="left", padx=16)
+        # Subtitle
+        ctk.CTkLabel(
+            header, text="View score distribution, raw form data, and advanced pedagogical insights.",
+            font=T.small(), text_color=T.TEXT_SECONDARY, justify="left"
+        ).pack(anchor="w", pady=(4, 0))
 
-        # -- Survey meta card ----
-        if self.survey:
-            meta = T.card(self)
-            meta.pack(fill="x", padx=T.PAGE_PADDING, pady=(16, 0))
+        # -- Main Content (2 Columns Layout) ----
+        content_wrap = T.transparent(self)
+        content_wrap.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
-            meta_inner = T.transparent(meta)
-            meta_inner.pack(fill="x", padx=T.CARD_PADDING, pady=14)
+        left_col = T.transparent(content_wrap)
+        left_col.pack(side="left", fill="both", expand=True, padx=(0, 16))
 
-            top_row = T.transparent(meta_inner)
-            top_row.pack(fill="x")
+        right_col = T.transparent(content_wrap)
+        right_col.pack(side="right", fill="y", padx=(16, 0))
 
-            ctk.CTkLabel(
-                top_row,
-                image=IC.icon("book", size=16, color=T._D_TEXT1),
-                text=f"  {self.survey.subject}",
-                font=T.h3(), text_color=T.TEXT_PRIMARY, anchor="w",
-                compound="left",
-            ).pack(side="left")
-
-            T.status_chip(top_row, self.survey.status).pack(side="left", padx=(12, 0))
-
-            ctk.CTkLabel(
-                meta_inner,
-                image=IC.icon("user", size=12, color=T._D_TEXT2),
-                text=f"  {self.survey.professor}   •   {self.survey.semester}   •   {self.survey.academic_year}",
-                font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w",
-                compound="left",
-            ).pack(anchor="w", pady=(6, 0))
-
-            # KPI chips
-            form_count = len(self.form_results)
-            batch_score = (
-                sum(fr.form_score for fr in self.form_results) / form_count
-                if form_count > 0 else 0.0
-            )
-            kpi_row = T.transparent(meta_inner)
-            kpi_row.pack(fill="x", pady=(10, 0))
-
-            for label, value in [
-                (_("forms_count", count=form_count), "forms"),
-                (_("batch_score_label", score=batch_score), "score"),
-            ]:
-                chip = T.inner_card(kpi_row, corner_radius=T.RADIUS_SM)
-                chip.pack(side="left", padx=(0, 10))
-                ctk.CTkLabel(
-                    chip,
-                    text=label,
-                    font=T.small(),
-                    text_color=T.TEXT_SECONDARY,
-                ).pack(padx=12, pady=6)
-
+        # -------------------------------------------------------------
+        # LEFT COLUMN: Tabs and Tables
+        # -------------------------------------------------------------
+        
         # -- Tab switcher ----
-        tab_card = T.card(self)
-        tab_card.pack(fill="x", padx=T.PAGE_PADDING, pady=(12, 0))
+        tab_card = T.card(left_col)
+        tab_card.pack(fill="x", pady=(0, 16))
 
         self.tab_var = tk.StringVar(value=_("summary_view"))
         seg = ctk.CTkSegmentedButton(
@@ -148,65 +112,132 @@ class ResultsPage(BasePage):
             command=self._on_tab,
             variable=self.tab_var,
             font=T.body(),
-            height=38,
+            height=40,
             corner_radius=T.RADIUS_MD,
             fg_color=T.SURFACE_RAISED,
             selected_color=T.ACCENT,
             selected_hover_color=T.ACCENT_HOVER,
             unselected_color=T.SURFACE_RAISED,
             unselected_hover_color=T.GHOST_HOVER,
+            text_color="#FFFFFF",
         )
-        seg.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+        seg.pack(fill="x", padx=8, pady=8)
 
         # -- Content area ----
         self.content = ctk.CTkScrollableFrame(
-            self, fg_color="transparent", corner_radius=0
+            left_col, fg_color="transparent", corner_radius=0
         )
-        self.content.pack(
-            fill="both", expand=True,
-            padx=T.PAGE_PADDING, pady=(12, 0),
-        )
+        self.content.pack(fill="both", expand=True)
 
-        # -- Export bar ----
-        export_bar = T.card(self)
-        export_bar.pack(fill="x", padx=T.PAGE_PADDING, pady=(12, T.PAGE_PADDING))
+        # -------------------------------------------------------------
+        # RIGHT COLUMN: Actions and Meta
+        # -------------------------------------------------------------
+        
+        # -- Survey Meta Details ----
+        if self.survey:
+            meta_card = T.card(right_col)
+            meta_card.pack(fill="x", pady=(0, 16), ipadx=10)
+            
+            meta_inner = T.transparent(meta_card)
+            meta_inner.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+            
+            ctk.CTkLabel(
+                meta_inner, text="SURVEY SUMMARY",
+                font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
+            ).pack(anchor="w", pady=(0, 12))
 
-        export_inner = T.transparent(export_bar)
-        export_inner.pack(fill="x", padx=T.CARD_PADDING, pady=12)
+            ctk.CTkLabel(
+                meta_inner, image=IC.icon("book", size=15, color=T.ACCENT[1]),
+                text=f"  {self.survey.subject}", font=T.h4(), text_color=T.TEXT_PRIMARY,
+                anchor="w", compound="left"
+            ).pack(anchor="w")
 
-        T.section_title(export_inner, _("export_csv")).pack(side="left")
+            ctk.CTkLabel(
+                meta_inner, text=f"{self.survey.professor}\n{self.survey.semester} • {self.survey.academic_year}",
+                font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w", justify="left"
+            ).pack(anchor="w", pady=(8, 0))
 
+            T.status_chip(meta_inner, self.survey.status).pack(anchor="w", pady=(12, 0))
+
+            # KPIs
+            form_count = len(self.form_results)
+            batch_score = (
+                sum(fr.form_score for fr in self.form_results) / form_count
+                if form_count > 0 else 0.0
+            )
+            
+            T.divider(meta_inner).pack(fill="x", pady=16)
+            
+            # Simple KPI display
+            def _kpi_row(label, value, icon):
+                r = T.transparent(meta_inner)
+                r.pack(fill="x", pady=2)
+                ctk.CTkLabel(r, text=label, font=T.tiny(), text_color=T.TEXT_MUTED).pack(side="left")
+                ctk.CTkLabel(r, text=value, font=T.font(12, "bold"), text_color=T.TEXT_PRIMARY).pack(side="right")
+
+            _kpi_row("Total Forms", str(form_count), "file_text")
+            _kpi_row("Avg Score", f"{batch_score:.1f}%", "trending_up")
+
+        # -- Export Card ----
+        export_card = T.card(right_col)
+        export_card.pack(fill="x", ipadx=10)
+
+        export_header = T.transparent(export_card)
+        export_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
+        ctk.CTkLabel(
+            export_header, text="EXPORT REPORTS",
+            font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
+        ).pack(anchor="w")
+
+        export_body = T.transparent(export_card)
+        export_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+
+        # HTML Dashboard
+        ctk.CTkButton(
+            export_body, text="  HTML Dashboard", image=IC.icon("globe", size=16, color="#000000"),
+            height=44, corner_radius=T.RADIUS_MD, fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#000000", font=T.font(13, "bold"), command=self._on_html,
+        ).pack(fill="x", pady=(0, 12))
+
+        # Advanced HTML
         IC.icon_button(
-            export_inner, "download", text="  " + _("export_csv"),
-            size=14, color="#FFFFFF", width=160,
-            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
-            text_color="#FFFFFF", font=T.font(13, "bold"),
-            corner_radius=T.RADIUS_MD, command=self._on_csv,
-        ).pack(side="right", padx=(8, 0))
+            export_body, "trending_up", text="  Advanced Analytics",
+            size=16, color=T.TEXT_PRIMARY[1], height=40,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            text_color=T.TEXT_PRIMARY, font=T.font(12),
+            border_width=1, border_color=T.CARD_BORDER,
+            command=self._on_advanced_html,
+        ).pack(fill="x", pady=(0, 12))
 
+        # PDF Report
         IC.icon_button(
-            export_inner, "file_text", text="  " + _("export_pdf_report"),
-            size=14, color=T._D_TEXT2, width=180,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
-            font=T.body(), corner_radius=T.RADIUS_MD, command=self._on_pdf,
-        ).pack(side="right", padx=(8, 0))
+            export_body, "file_text", text="  PDF Summary",
+            size=16, color=T.TEXT_PRIMARY[1], height=40,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            text_color=T.TEXT_PRIMARY, font=T.font(12),
+            border_width=1, border_color=T.CARD_BORDER,
+            command=self._on_pdf,
+        ).pack(fill="x", pady=(0, 12))
 
+        # CSV Data
         IC.icon_button(
-            export_inner, "globe", text="  " + _("view_html_report"),
-            size=14, color=T._D_TEXT2, width=180,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
-            font=T.body(), corner_radius=T.RADIUS_MD, command=self._on_html,
-        ).pack(side="right")
+            export_body, "download", text="  CSV Raw Data",
+            size=16, color=T.TEXT_PRIMARY[1], height=40,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            text_color=T.TEXT_PRIMARY, font=T.font(12),
+            border_width=1, border_color=T.CARD_BORDER,
+            command=self._on_csv,
+        ).pack(fill="x", pady=(0, 12))
 
-        IC.icon_button(
-            export_inner, "trending_up", text="  Advanced Report",
-            size=14, color=T._D_TEXT2, width=190,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
-            font=T.body(), corner_radius=T.RADIUS_MD, command=self._on_advanced_html,
-        ).pack(side="right", padx=(0, 8))
+        # Back Button
+        ctk.CTkButton(
+            export_body, text="  Back to Home", image=IC.icon("arrow_left", size=16, color=T.TEXT_SECONDARY[1]),
+            height=36, corner_radius=T.RADIUS_MD, fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            text_color=T.TEXT_SECONDARY, font=T.font(13), command=lambda: self.go("dashboard"),
+        ).pack(fill="x", pady=(20, 0))
+
+        # Content area removed from here, already packed in left_col above.
+        pass
 
         # Show default tab
         self._show_summary()
@@ -235,22 +266,22 @@ class ResultsPage(BasePage):
         style.theme_use("default")
         style.configure(
             "Modern.Treeview",
-            background="#FFFFFF",
-            foreground="#0F172A",
-            rowheight=32,
-            fieldbackground="#FFFFFF",
+            background=T.SURFACE[1],
+            foreground=T.TEXT_PRIMARY[1],
+            rowheight=36,
+            fieldbackground=T.SURFACE[1],
             borderwidth=0,
-            font=("Segoe UI", 11),
+            font=T.font(11),
         )
         style.configure(
             "Modern.Treeview.Heading",
-            background="#F1F5F9",
-            foreground="#475569",
-            font=("Segoe UI", 11, "bold"),
+            background=T.SURFACE_RAISED[1],
+            foreground=T.TEXT_SECONDARY[1],
+            font=T.font(11, "bold"),
             borderwidth=0,
             relief="flat",
         )
-        style.map("Modern.Treeview", background=[("selected", "#EFF6FF")])
+        style.map("Modern.Treeview", background=[("selected", T.ACCENT_SUBTLE[1])])
 
         tree = ttk.Treeview(
             self.content,
@@ -264,8 +295,8 @@ class ResultsPage(BasePage):
             tree.column(cid, width=w, anchor="center")
 
         # Alternating row tags
-        tree.tag_configure("odd",  background="#F8FAFC")
-        tree.tag_configure("even", background="#FFFFFF")
+        tree.tag_configure("odd",  background=T.SURFACE_RAISED[1])
+        tree.tag_configure("even", background=T.SURFACE[1])
 
         return tree
 

@@ -69,17 +69,53 @@ class ProcessPage(BasePage):
         header = T.transparent(self)
         header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
-        IC.icon_button(
-            header, "arrow_left", text="  " + _("back"),
-            size=14, color=T._D_TEXT2, width=110, height=36,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
-            font=T.body(), command=lambda: self.go("dashboard"),
+        # Title
+        ctk.CTkLabel(
+            header, text="Scan & Process Forms", font=T.h1(), text_color=T.TEXT_PRIMARY
+        ).pack(anchor="w")
+
+        # Subtitle
+        ctk.CTkLabel(
+            header, text="Upload scanned JPG/PNG forms and start the OMR processing engine.",
+            font=T.small(), text_color=T.TEXT_SECONDARY, justify="left"
+        ).pack(anchor="w", pady=(4, 0))
+
+        # -- Main Content (2 Columns) ----
+        content_wrap = T.transparent(self)
+        content_wrap.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
+
+        left_col = T.transparent(content_wrap)
+        left_col.pack(side="left", fill="both", expand=True, padx=(0, 16))
+
+        right_col = T.transparent(content_wrap)
+        right_col.pack(side="right", fill="y", padx=(16, 0))
+
+        # -------------------------------------------------------------
+        # LEFT COLUMN: Thumbnail Grid
+        # -------------------------------------------------------------
+        thumb_card = T.card(left_col)
+        thumb_card.pack(fill="both", expand=True)
+
+        thumb_header = T.transparent(thumb_card)
+        thumb_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
+        ctk.CTkLabel(
+            thumb_header, text="  Queued Images", image=IC.icon("image", size=18, color=T.ACCENT[1]),
+            font=T.h2(), text_color=T.TEXT_PRIMARY, compound="left"
         ).pack(side="left")
 
-        T.page_title(header, _("process")).pack(side="left", padx=16)
+        self.count_lbl = T.muted_label(thumb_header, "")
+        self.count_lbl.pack(side="right")
 
-        # -- Survey meta card ----
+        self.thumb_frame = ctk.CTkScrollableFrame(
+            thumb_card, fg_color="transparent", corner_radius=0
+        )
+        self.thumb_frame.pack(fill="both", expand=True, padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+
+        # -------------------------------------------------------------
+        # RIGHT COLUMN: Scanning Desk
+        # -------------------------------------------------------------
+        
+        # -- Survey Meta Details ----
         survey = None
         try:
             survey = self.persistence.get_survey(self.survey_id)
@@ -87,110 +123,82 @@ class ProcessPage(BasePage):
             logger.warning("Could not load survey id=%s", self.survey_id)
 
         if survey:
-            meta = T.card(self)
-            meta.pack(fill="x", padx=T.PAGE_PADDING, pady=(16, 0))
-
-            meta_inner = T.transparent(meta)
-            meta_inner.pack(fill="x", padx=T.CARD_PADDING, pady=14)
+            meta_card = T.card(right_col)
+            meta_card.pack(fill="x", pady=(0, 16), ipadx=10)
+            
+            meta_inner = T.transparent(meta_card)
+            meta_inner.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+            
+            ctk.CTkLabel(
+                meta_inner, text="SURVEY DETAILS",
+                font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
+            ).pack(anchor="w", pady=(0, 12))
 
             ctk.CTkLabel(
-                meta_inner,
-                image=IC.icon("book", size=15, color=T._D_TEXT1),
-                text=f"  {survey.subject}",
-                font=T.h4(), text_color=T.TEXT_PRIMARY, anchor="w",
-                compound="left",
+                meta_inner, image=IC.icon("book", size=15, color=T.ACCENT[1]),
+                text=f"  {survey.subject}", font=T.h4(), text_color=T.TEXT_PRIMARY,
+                anchor="w", compound="left"
             ).pack(anchor="w")
 
             ctk.CTkLabel(
-                meta_inner,
-                image=IC.icon("user", size=12, color=T._D_TEXT2),
-                text=f"  {survey.professor}   •   {survey.semester}   •   {survey.academic_year}",
-                font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w",
-                compound="left",
-            ).pack(anchor="w", pady=(4, 0))
+                meta_inner, text=f"{survey.professor}\n{survey.semester} • {survey.academic_year}",
+                font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w", justify="left"
+            ).pack(anchor="w", pady=(8, 0))
 
-        # -- Upload zone ----
-        upload_card = T.card(self)
-        upload_card.pack(fill="x", padx=T.PAGE_PADDING, pady=(16, 0))
+        # -- Actions Card ----
+        action_card = T.card(right_col)
+        action_card.pack(fill="x", ipadx=10)
 
-        upload_inner = T.transparent(upload_card)
-        upload_inner.pack(fill="x", padx=T.CARD_PADDING, pady=14)
+        action_header = T.transparent(action_card)
+        action_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
+        ctk.CTkLabel(
+            action_header, text="SCAN ACTIONS",
+            font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
+        ).pack(anchor="w")
 
-        T.section_title(upload_inner, _("add_images")).pack(anchor="w", pady=(0, 10))
+        action_body = T.transparent(action_card)
+        action_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
-        btn_row = T.transparent(upload_inner)
-        btn_row.pack(fill="x")
-
+        # Add Images
         IC.icon_button(
-            btn_row, "upload", text="  " + _("add_images"),
-            size=15, color="#FFFFFF", width=160,
-            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
-            text_color="#FFFFFF", font=T.font(13, "bold"),
-            corner_radius=T.RADIUS_MD,
+            action_body, "upload", text="  " + _("add_images"),
+            size=16, color=T.TEXT_PRIMARY[1], height=44,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            text_color=T.TEXT_PRIMARY, font=T.font(13),
+            border_width=1, border_color=T.CARD_BORDER,
             command=self._on_add,
-        ).pack(side="left")
+        ).pack(fill="x", pady=(0, 12))
 
-        self.folder_lbl = T.muted_label(
-            btn_row,
-            self.folder_path or _("no_folder"),
+        # Start Scanning
+        self.scan_btn = ctk.CTkButton(
+            action_body, text="  " + _("start_scanning"), image=IC.icon("scan", size=16, color="#000000"),
+            height=44, corner_radius=T.RADIUS_MD, fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#000000", font=T.font(14, "bold"),
+            state="disabled", command=self._on_scan,
         )
-        self.folder_lbl.pack(side="left", padx=12)
+        self.scan_btn.pack(fill="x", pady=(0, 20))
 
-        # -- Thumbnail grid ----
-        thumb_card = T.card(self)
-        thumb_card.pack(fill="x", padx=T.PAGE_PADDING, pady=(12, 0))
-
-        self.thumb_frame = ctk.CTkScrollableFrame(
-            thumb_card,
-            fg_color="transparent",
-            height=160,
-            corner_radius=0,
-        )
-        self.thumb_frame.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
-
-        # -- Progress ----
-        prog_card = T.card(self)
-        prog_card.pack(fill="x", padx=T.PAGE_PADDING, pady=(12, 0))
-
-        prog_inner = T.transparent(prog_card)
-        prog_inner.pack(fill="x", padx=T.CARD_PADDING, pady=14)
-
+        # -- Progress Bar ----
+        T.divider(action_body).pack(fill="x", pady=(0, 20))
+        
         self.progress_lbl = ctk.CTkLabel(
-            prog_inner,
-            text="",
-            font=T.body(),
-            text_color=T.TEXT_SECONDARY,
-            anchor="w",
+            action_body, text="Ready to scan", font=T.tiny(), text_color=T.TEXT_MUTED, anchor="w"
         )
-        self.progress_lbl.pack(fill="x", pady=(0, 8))
+        self.progress_lbl.pack(fill="x", pady=(0, 4))
 
         self.progress_bar = ctk.CTkProgressBar(
-            prog_inner,
-            height=10,
-            corner_radius=T.RADIUS_SM,
-            fg_color=T.CHIP_BG,
-            progress_color=T.ACCENT,
+            action_body, height=8, corner_radius=T.RADIUS_SM,
+            fg_color=T.CHIP_BG, progress_color=T.ACCENT,
         )
         self.progress_bar.set(0)
         self.progress_bar.pack(fill="x")
 
-        # -- Scan button ----
-        action_row = T.transparent(self)
-        action_row.pack(fill="x", padx=T.PAGE_PADDING, pady=(16, T.PAGE_PADDING))
-
-        self.scan_btn = IC.icon_button(
-            action_row, "scan", text="  " + _("start_scanning"),
-            size=16, color="#FFFFFF",
-            state="disabled", width=200, height=44,
-            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
-            text_color="#FFFFFF", font=T.font(13, "bold"),
-            corner_radius=T.RADIUS_MD,
-            command=self._on_scan,
-        )
-        self.scan_btn.pack(side="left")
-
-        self.count_lbl = T.muted_label(action_row, "")
-        self.count_lbl.pack(side="left", padx=16)
+        # Discard / Back
+        ctk.CTkButton(
+            action_body, text="  Discard & Exit", image=IC.icon("arrow_left", size=16, color=T.TEXT_SECONDARY[1]),
+            height=36, corner_radius=T.RADIUS_MD, fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            text_color=T.TEXT_SECONDARY, font=T.font(13), command=lambda: self.go("dashboard"),
+        ).pack(fill="x", pady=(20, 0))
 
     # ------------------------------------------------------------------
     # Image management

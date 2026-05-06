@@ -28,29 +28,31 @@ import customtkinter as ctk
 # Raw hex values (dark side of the palette)
 # ---------------------------------------------------------------------------
 
-_D_PAGE        = "#141C2E"
-_D_SIDEBAR     = "#1A2035"
-_D_CARD        = "#1E2A42"
-_D_CARD_RAISED = "#243352"
-_D_BORDER      = "#2A3A5C"
-_D_BORDER_SUB  = "#1E2A42"   # same as card — borderless look
+_D_PAGE        = "#0F0F13"
+_D_SIDEBAR     = "#0F0F13"
+_D_CARD        = "#1A1A21"
+_D_CARD_RAISED = "#22222A"
+_D_BORDER      = "#2A2A35"
+_D_BORDER_SUB  = "#1A1A21"
 
-_D_ACCENT      = "#4A9EFF"
-_D_ACCENT_HOV  = "#2E7FE8"
-_D_ACCENT_SUB  = "#0D1E38"   # very faint tint
+_D_ACCENT      = "#B49DF8"
+_D_ACCENT_HOV  = "#A086EB"
+_D_ACCENT_SUB  = "#1A1528"
 
-_D_GREEN       = "#00C896"
-_D_GREEN_BG    = "#0A2820"
+_D_GREEN       = "#00D287"
+_D_GREEN_BG    = "#0A281E"
 _D_AMBER       = "#F5A623"
 _D_AMBER_BG    = "#2A1A00"
 _D_RED         = "#FF4D6A"
 _D_RED_BG      = "#2A0A10"
 _D_BLUE        = "#4A9EFF"
 _D_BLUE_BG     = "#0D1E38"
+_D_PURPLE      = "#B49DF8"
+_D_PURPLE_BG   = "#1A1528"
 
-_D_TEXT1       = "#E8EDF5"
-_D_TEXT2       = "#8B9BB4"
-_D_TEXT3       = "#4A5A7A"
+_D_TEXT1       = "#FFFFFF"
+_D_TEXT2       = "#A0A0AB"
+_D_TEXT3       = "#6B6B78"
 
 # Light-mode fallbacks (clean white/slate)
 _L_PAGE        = "#F0F4FA"
@@ -111,9 +113,9 @@ STATUS_DRAFT            = (_L_AMBER,  _D_AMBER)
 STATUS_DRAFT_BG         = (_L_AMBER_BG, _D_AMBER_BG)
 STATUS_DRAFT_STRIPE     = (_L_AMBER,  _D_AMBER)
 
-STATUS_PROCESSED        = (_L_BLUE,   _D_BLUE)
-STATUS_PROCESSED_BG     = (_L_BLUE_BG, _D_BLUE_BG)
-STATUS_PROCESSED_STRIPE = (_L_BLUE,   _D_BLUE)
+STATUS_PROCESSED        = (_L_ACCENT, _D_PURPLE)
+STATUS_PROCESSED_BG     = (_L_ACCENT_SUB, _D_PURPLE_BG)
+STATUS_PROCESSED_STRIPE = (_L_ACCENT, _D_PURPLE)
 
 STATUS_ANALYZED         = (_L_GREEN,  _D_GREEN)
 STATUS_ANALYZED_BG      = (_L_GREEN_BG, _D_GREEN_BG)
@@ -150,8 +152,8 @@ KPI_TOTAL_BG        = (_L_BLUE_BG,  _D_BLUE_BG)
 KPI_TOTAL_NUM       = (_L_BLUE,     _D_BLUE)
 KPI_DRAFT_BG        = (_L_AMBER_BG, _D_AMBER_BG)
 KPI_DRAFT_NUM       = (_L_AMBER,    _D_AMBER)
-KPI_PROC_BG         = (_L_BLUE_BG,  _D_BLUE_BG)
-KPI_PROC_NUM        = (_L_BLUE,     _D_BLUE)
+KPI_PROC_BG         = (_L_ACCENT_SUB, _D_PURPLE_BG)
+KPI_PROC_NUM        = (_L_ACCENT,   _D_PURPLE)
 KPI_ANA_BG          = (_L_GREEN_BG, _D_GREEN_BG)
 KPI_ANA_NUM         = (_L_GREEN,    _D_GREEN)
 
@@ -257,12 +259,12 @@ def muted_label(parent, text: str, **kw) -> ctk.CTkLabel:
 def primary_btn(parent, text: str, **kw) -> ctk.CTkButton:
     defaults = dict(
         text=text,
-        font=font(13, "bold"),
-        height=40,
+        font=font(14, "bold"),
+        height=44,
         corner_radius=RADIUS_MD,
         fg_color=ACCENT,
         hover_color=ACCENT_HOVER,
-        text_color=("#FFFFFF", "#FFFFFF"),
+        text_color=("#000000", "#000000"), # Black text on light purple background
     )
     defaults.update(kw)
     return ctk.CTkButton(parent, **defaults)
@@ -376,51 +378,58 @@ def stat_card(
     icon_name: str = "",
     num_color=None,
     bg_color=None,
+    is_active: bool = False,
 ) -> ctk.CTkFrame:
-    """Tinted KPI card with Lucide icon badge."""
+    """Tinted KPI card matching the new UI design."""
     import icons as IC  # local import to avoid circular at module load
 
     c = ctk.CTkFrame(
         parent,
         corner_radius=RADIUS_LG,
-        fg_color=bg_color or SURFACE,
+        fg_color=SURFACE, # All cards have surface background
         border_width=0,
     )
+    
+    # Active indicator stripe
+    if is_active:
+        stripe = ctk.CTkFrame(c, width=4, corner_radius=0, fg_color=num_color)
+        stripe.pack(side="left", fill="y")
+        stripe.pack_propagate(False)
+
     inner = transparent(c)
     inner.pack(padx=CARD_PADDING, pady=CARD_PADDING, fill="both", expand=True)
 
-    # Icon badge (coloured rounded square)
+    top_row = transparent(inner)
+    top_row.pack(fill="x")
+
+    # Label (Top Left)
+    ctk.CTkLabel(
+        top_row,
+        text=label,
+        font=body(),
+        text_color=TEXT_SECONDARY,
+    ).pack(side="left", anchor="n")
+
+    # Icon badge (Top Right)
     if icon_name:
-        # Resolve the dark-side hex for the badge colour
-        nc = num_color
-        if isinstance(nc, tuple):
-            nc = nc[1]  # dark value
         badge = ctk.CTkFrame(
-            inner, width=36, height=36,
-            corner_radius=RADIUS_SM, fg_color=num_color or ACCENT,
+            top_row, width=32, height=32,
+            corner_radius=RADIUS_SM, fg_color=bg_color or ACCENT,
         )
-        badge.pack(anchor="w")
+        badge.pack(side="right", anchor="n")
         badge.pack_propagate(False)
         ctk.CTkLabel(
             badge,
-            image=IC.icon(icon_name, size=18, color="#FFFFFF"),
+            image=IC.icon(icon_name, size=16, color=num_color[1] if isinstance(num_color, tuple) else num_color),
             text="",
         ).place(relx=0.5, rely=0.5, anchor="center")
 
-    # Big number
+    # Big number (Bottom Left)
     ctk.CTkLabel(
         inner,
         text=value,
         font=font(30, "bold"),
-        text_color=num_color or TEXT_PRIMARY,
+        text_color=TEXT_PRIMARY,
     ).pack(anchor="w", pady=(8, 0))
-
-    # Label
-    ctk.CTkLabel(
-        inner,
-        text=label,
-        font=small(),
-        text_color=TEXT_SECONDARY,
-    ).pack(anchor="w", pady=(2, 0))
 
     return c

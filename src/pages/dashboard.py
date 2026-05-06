@@ -91,14 +91,35 @@ class DashboardPage(BasePage):
     def _build(self) -> None:
         self.configure(fg_color=T.PAGE_BG)
 
-        # 1 -- KPI row (rebuilt on every data load)
+        # 1 -- Toolbar
+        self._build_toolbar()
+
+        # 2 -- KPI row (rebuilt on every data load)
         self._kpi_row = T.transparent(self)
         self._kpi_row.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
-        # 2 -- Toolbar
-        self._build_toolbar()
+        # 3 -- Recent Surveys header
+        header_wrap = T.transparent(self)
+        header_wrap.pack(fill="x", padx=T.PAGE_PADDING, pady=(24, 0))
+        
+        ctk.CTkLabel(
+            header_wrap,
+            text="Recent Surveys",
+            font=T.h2(),
+            text_color=T.TEXT_PRIMARY
+        ).pack(side="left")
+        
+        ctk.CTkButton(
+            header_wrap,
+            text="View All ->",
+            font=T.body(),
+            text_color=T.ACCENT,
+            fg_color="transparent",
+            hover_color=T.SURFACE_RAISED,
+            width=0
+        ).pack(side="right")
 
-        # 3 -- Scrollable survey list
+        # 4 -- Scrollable survey list
         self.list_frame = ctk.CTkScrollableFrame(
             self,
             fg_color="transparent",
@@ -115,93 +136,45 @@ class DashboardPage(BasePage):
     # -- Toolbar ----
 
     def _build_toolbar(self) -> None:
-        bar = ctk.CTkFrame(
-            self,
-            corner_radius=T.RADIUS_LG,
-            fg_color=T.SURFACE,
-            border_width=0,
-        )
+        bar = T.transparent(self)
         bar.pack(fill="x", padx=T.PAGE_PADDING, pady=(14, 0))
-
-        inner = T.transparent(bar)
-        inner.pack(fill="x", padx=16, pady=10)
 
         S = self._start()   # "left" in LTR, "right" in RTL
         E = self._end()     # "right" in LTR, "left" in RTL
 
-        # Search (grows to fill remaining space, on the start side)
-        search_wrap = T.transparent(inner)
-        search_wrap.pack(side=S, fill="x", expand=True)
+        # Title
+        title_lbl = T.page_title(bar, text="OMR Dashboard")
+        title_lbl.pack(side=S)
 
+        # Right container for search and icons
+        right_wrap = T.transparent(bar)
+        right_wrap.pack(side=E)
+
+        # Search Entry
+        search_wrap = ctk.CTkFrame(
+            right_wrap, corner_radius=T.RADIUS_MD, fg_color=T.INPUT_BG, border_width=1, border_color=T.INPUT_BORDER
+        )
+        search_wrap.pack(side=E)
+        
         ctk.CTkLabel(
             search_wrap,
             image=IC.icon("search", size=16, color=T._D_TEXT3),
             text="",
-        ).pack(side=S, padx=(0, 8))
+        ).pack(side="left", padx=(10, 5))
 
         self.search_entry = ctk.CTkEntry(
             search_wrap,
-            placeholder_text=_("search"),
-            height=36,
+            placeholder_text="Search surveys, IDs...",
+            height=36, width=200,
             corner_radius=T.RADIUS_MD,
-            fg_color=T.INPUT_BG,
-            border_color=T.INPUT_BORDER,
-            border_width=1,
+            fg_color="transparent",
+            border_width=0,
             font=T.body(),
             text_color=T.TEXT_PRIMARY,
             placeholder_text_color=T.TEXT_MUTED,
-            justify="right" if is_rtl() else "left",
         )
-        self.search_entry.pack(side=S, fill="x", expand=True)
+        self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         self.search_entry.bind("<KeyRelease>", lambda _e: self._load_surveys())
-
-        # Count label (on the end side)
-        self._count_lbl = ctk.CTkLabel(
-            inner,
-            text="",
-            font=T.small(),
-            text_color=T.TEXT_MUTED,
-        )
-        self._count_lbl.pack(side=E, padx=(10, 0))
-
-        # Department filter
-        self.dept_filter = ctk.CTkOptionMenu(
-            inner,
-            values=[_("all_departments")],
-            command=lambda _v: self._load_surveys(),
-            width=180,
-            height=36,
-            corner_radius=T.RADIUS_MD,
-            fg_color=T.INPUT_BG,
-            button_color=T.INPUT_BORDER,
-            button_hover_color=T.ACCENT,
-            text_color=T.TEXT_PRIMARY,
-            dropdown_fg_color=T.SURFACE_RAISED,
-            dropdown_text_color=T.TEXT_PRIMARY,
-            dropdown_hover_color=T.SURFACE_OVERLAY,
-            font=T.body(),
-        )
-        self.dept_filter.pack(side=E, padx=(10, 0))
-
-        # Sort
-        self.sort_menu = ctk.CTkOptionMenu(
-            inner,
-            values=_SORT_OPTIONS,
-            command=self._on_sort,
-            width=150,
-            height=36,
-            corner_radius=T.RADIUS_MD,
-            fg_color=T.INPUT_BG,
-            button_color=T.INPUT_BORDER,
-            button_hover_color=T.ACCENT,
-            text_color=T.TEXT_PRIMARY,
-            dropdown_fg_color=T.SURFACE_RAISED,
-            dropdown_text_color=T.TEXT_PRIMARY,
-            dropdown_hover_color=T.SURFACE_OVERLAY,
-            font=T.body(),
-        )
-        self.sort_menu.set(_SORT_OPTIONS[0])
-        self.sort_menu.pack(side=E, padx=(10, 0))
 
     # ----
     # Data
@@ -209,9 +182,7 @@ class DashboardPage(BasePage):
 
     def _load_surveys(self) -> None:
         search = self.search_entry.get().strip() or None
-        dept   = self.dept_filter.get()
-        if dept == _("all_departments"):
-            dept = None
+        dept   = None
 
         surveys = self.persistence.list_surveys(search=search, department=dept)
         surveys = self._apply_sort(surveys)
@@ -219,10 +190,6 @@ class DashboardPage(BasePage):
 
         self._refresh_kpis()
         self._refresh_list()
-        self._refresh_dept_filter()
-
-        n = len(surveys)
-        self._count_lbl.configure(text=f"{n} survey{'s' if n != 1 else ''}")
 
     def _apply_sort(self, surveys: list[Survey]) -> list[Survey]:
         m = self._sort_mode
@@ -253,17 +220,18 @@ class DashboardPage(BasePage):
         analyzed = sum(1 for s in all_s if s.status == "Analyzed")
 
         kpis = [
-            ("Total Surveys", str(total),    "layers",      T.KPI_TOTAL_NUM, T.KPI_TOTAL_BG),
-            ("Draft",         str(draft),    "clock",       T.KPI_DRAFT_NUM, T.KPI_DRAFT_BG),
-            ("Processed",     str(proc),     "scan",        T.KPI_PROC_NUM,  T.KPI_PROC_BG),
-            ("Analyzed",      str(analyzed), "trending_up", T.KPI_ANA_NUM,   T.KPI_ANA_BG),
+            ("Total Surveys", str(total),    "folder",      T.KPI_TOTAL_NUM, T.KPI_TOTAL_BG, False),
+            ("Draft",         str(draft),    "file_text",   T.KPI_DRAFT_NUM, T.KPI_DRAFT_BG, False),
+            ("Processed",     str(proc),     "cpu",         T.KPI_PROC_NUM,  T.KPI_PROC_BG,  False),
+            ("Analyzed",      str(analyzed), "bar_chart",   T.KPI_ANA_NUM,   T.KPI_ANA_BG,   False),
         ]
 
-        for label, value, icon_name, num_color, bg_color in kpis:
+        for label, value, icon_name, num_color, bg_color, is_active in kpis:
             c = T.stat_card(
                 self._kpi_row,
                 label=label, value=value,
                 icon_name=icon_name, num_color=num_color, bg_color=bg_color,
+                is_active=is_active
             )
             c.pack(side=self._start(), fill="x", expand=True, padx=(0, 12))
 
@@ -283,10 +251,7 @@ class DashboardPage(BasePage):
             c.pack(fill="x", pady=(0, 10))
             self.survey_cards.append(c)
 
-    def _refresh_dept_filter(self) -> None:
-        all_s = self.persistence.list_surveys()
-        depts = sorted({s.department for s in all_s if s.department})
-        self.dept_filter.configure(values=[_("all_departments")] + depts)
+    # Removed _refresh_dept_filter as we removed the department filter
 
     def _empty_state(self) -> None:
         wrap = ctk.CTkFrame(
@@ -365,53 +330,73 @@ class DashboardPage(BasePage):
             cursor="hand2",
         )
 
-        # 4-px status stripe on the start side
-        stripe = ctk.CTkFrame(outer, width=4, corner_radius=0, fg_color=stripe_color)
-        stripe.pack(side=S, fill="y")
-        stripe.pack_propagate(False)
+        # Main wrapper
+        wrap = T.transparent(outer)
+        wrap.pack(fill="both", expand=True, padx=T.CARD_PADDING, pady=16)
 
-        # ── Main body ────────────────────────────────────────────────────────
-        body = T.transparent(outer)
-        # Padding: more on the stripe side, standard on the other
-        pad_s = (20, T.CARD_PADDING) if not is_rtl() else (T.CARD_PADDING, 20)
-        body.pack(side=S, fill="both", expand=True,
-                  padx=pad_s, pady=20)
-
-        # ── Top row: subject + status badge + actions ────────────────────────
-        top = T.transparent(body)
-        top.pack(fill="x")
-
-        # Subject (on the start side)
+        # Left section: Document icon
+        icon_box = ctk.CTkFrame(
+            wrap, width=44, height=44, corner_radius=T.RADIUS_MD, fg_color=T.SURFACE_RAISED
+        )
+        icon_box.pack(side=S, padx=(0, 16))
+        icon_box.pack_propagate(False)
         ctk.CTkLabel(
-            top,
+            icon_box, text="", image=IC.icon("file_text", size=20, color=T.TEXT_SECONDARY[1])
+        ).place(relx=0.5, rely=0.5, anchor="center")
+
+        # Center section: Subject + Status (top), Meta (bottom)
+        center = T.transparent(wrap)
+        center.pack(side=S, fill="both", expand=True)
+
+        top_row = T.transparent(center)
+        top_row.pack(anchor="w", pady=(0, 4))
+
+        # Subject
+        ctk.CTkLabel(
+            top_row,
             text=survey.subject or "—",
-            font=T.font(17, "bold"),
+            font=T.font(16, "bold"),
             text_color=T.TEXT_PRIMARY,
-            anchor=A,
         ).pack(side=S)
 
-        # Status badge (pill with icon, next to subject)
+        # Status badge
         badge_frame = ctk.CTkFrame(
-            top,
-            fg_color=(accent_bg_hex, accent_bg_hex),
-            corner_radius=T.RADIUS_SM,
+            top_row, fg_color=accent_bg_hex, corner_radius=T.RADIUS_SM,
         )
-        badge_frame.pack(side=S, padx=(12, 0) if not is_rtl() else (0, 12))
-
-        badge_inner = T.transparent(badge_frame)
-        badge_inner.pack(padx=10, pady=5)
-
+        badge_frame.pack(side=S, padx=(12, 0))
         ctk.CTkLabel(
-            badge_inner,
-            image=IC.icon(status_icon, size=12, color=accent_hex),
+            badge_frame,
             text=f"  {status}" if not is_rtl() else f"{status}  ",
             font=T.font(11, "bold"),
-            text_color=(accent_hex, accent_hex),
-            compound=C,
-        ).pack()
+            text_color=accent_hex,
+        ).pack(padx=8, pady=2)
+
+        # Meta row
+        meta_row = T.transparent(center)
+        meta_row.pack(anchor="w")
+
+        def _meta_chip(parent, icon_name: str, text: str) -> None:
+            w = T.transparent(parent)
+            w.pack(side=S, padx=(0, 16))
+            ctk.CTkLabel(
+                w, image=IC.icon(icon_name, size=14, color=T._D_TEXT3),
+                text=f"  {text}" if not is_rtl() else f"{text}  ",
+                font=T.small(), text_color=T.TEXT_SECONDARY, compound=C,
+            ).pack(side=S)
+
+        if survey.professor:
+            _meta_chip(meta_row, "user", survey.professor)
+        if survey.department:
+            _meta_chip(meta_row, "building", survey.department)
+        if survey.semester:
+            _meta_chip(meta_row, "calendar", survey.semester)
+        if survey.academic_year:
+            _meta_chip(meta_row, "clock", survey.academic_year)
+        if survey.faculty:
+            _meta_chip(meta_row, "book", survey.faculty)
 
         # ── Action buttons (on the end side) ─────────────────────────────────
-        actions = T.transparent(top)
+        actions = T.transparent(wrap)
         actions.pack(side=E)
 
         if status == "Draft":
@@ -419,42 +404,11 @@ class DashboardPage(BasePage):
         else:
             self._done_actions(actions, survey)
 
-        # ── Divider ──────────────────────────────────────────────────────────
-        T.divider(body).pack(fill="x", pady=(12, 12))
-
-        # ── Meta row ─────────────────────────────────────────────────────────
-        meta = T.transparent(body)
-        meta.pack(fill="x")
-
-        def _meta_chip(parent, icon_name: str, text: str) -> None:
-            wrap = T.transparent(parent)
-            wrap.pack(side=S, padx=self._pad_after(20))
-            ctk.CTkLabel(
-                wrap,
-                image=IC.icon(icon_name, size=14, color=T._D_TEXT3),
-                text=f"  {text}" if not is_rtl() else f"{text}  ",
-                font=T.font(12),
-                text_color=T.TEXT_SECONDARY,
-                compound=C,
-                anchor=A,
-            ).pack()
-
-        if survey.professor:
-            _meta_chip(meta, "user",     survey.professor)
-        if survey.department:
-            _meta_chip(meta, "building", survey.department)
-        if survey.semester:
-            _meta_chip(meta, "calendar", survey.semester)
-        if survey.academic_year:
-            _meta_chip(meta, "clock",    survey.academic_year)
-        if survey.faculty:
-            _meta_chip(meta, "book",     survey.faculty)
-
         # ── Hover effect ─────────────────────────────────────────────────────
         def _enter(_e):  outer.configure(fg_color=T.SURFACE_RAISED)
         def _leave(_e):  outer.configure(fg_color=T.SURFACE)
 
-        for w in (outer, stripe, body, top, meta):
+        for w in (outer, wrap, center, top_row, meta_row):
             w.bind("<Enter>",   _enter)
             w.bind("<Leave>",   _leave)
             w.bind("<Button-1>", lambda _e, sid=survey.id: self._select(sid))
@@ -466,85 +420,69 @@ class DashboardPage(BasePage):
     # ----
 
     def _draft_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
-        S = self._start()
-
-        # Process button — opens folder dialog on click (primary, on the end)
-        IC.icon_button(
-            parent, "scan", text="  " + _("process") if not is_rtl() else _("process") + "  ",
-            size=16, color="#FFFFFF",
-            height=38, corner_radius=T.RADIUS_MD,
-            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
-            text_color="#FFFFFF", font=T.font(13, "bold"),
-            compound=self._compound(),
-            command=lambda sid=survey.id: self._on_process_click(sid),
-        ).pack(side=S, padx=(0, 8) if not is_rtl() else (8, 0))
-
-        # Delete button
-        IC.icon_button(
-            parent, "trash", text="",
-            size=16, color=T._D_RED,
-            width=38, height=38, corner_radius=T.RADIUS_SM,
-            fg_color=T.DANGER_SUBTLE, hover_color=T.DANGER,
-            command=lambda sid=survey.id: self._on_delete(sid),
-        ).pack(side=S, padx=(0, 6) if not is_rtl() else (6, 0))
-
-        # Edit button (closest to the end edge)
+        # Edit/Process buttons
         IC.icon_button(
             parent, "edit", text="",
-            size=16, color=T._D_TEXT2,
+            size=16, color=T.TEXT_SECONDARY[1],
             width=38, height=38, corner_radius=T.RADIUS_SM,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            border_width=1, border_color=T.GHOST_BORDER,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
             command=lambda sid=survey.id: self._on_edit(sid),
-        ).pack(side=S, padx=(0, 6) if not is_rtl() else (6, 0))
-
-        # Print button
-        IC.icon_button(
-            parent, "print_icon", text="",
-            size=16, color=T._D_TEXT2,
-            width=38, height=38, corner_radius=T.RADIUS_SM,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            border_width=1, border_color=T.GHOST_BORDER,
-            command=lambda sid=survey.id: self._on_print(sid),
-        ).pack(side=S)
-
-    def _done_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
-        btn_color = T.STATUS_ANALYZED if survey.status == "Analyzed" else T.ACCENT
-        btn_hover = T.SUCCESS        if survey.status == "Analyzed" else T.ACCENT_HOVER
-        icon_name = "trending_up"    if survey.status == "Analyzed" else "bar_chart"
-
-        S = self._start()
-
-        # Results button (primary, on the start side so it reads first)
-        IC.icon_button(
-            parent, icon_name,
-            text="  " + _("results") if not is_rtl() else _("results") + "  ",
-            size=16, color="#FFFFFF",
-            height=38, corner_radius=T.RADIUS_MD,
-            fg_color=btn_color, hover_color=btn_hover,
-            text_color="#FFFFFF", font=T.font(13, "bold"),
-            compound=self._compound(),
-            command=lambda sid=survey.id: self._on_results(sid),
-        ).pack(side=S, padx=(0, 8) if not is_rtl() else (8, 0))
+        ).pack(side="left", padx=(0, 6))
 
         # Delete button
         IC.icon_button(
             parent, "trash", text="",
             size=16, color=T._D_RED,
             width=38, height=38, corner_radius=T.RADIUS_SM,
-            fg_color=T.DANGER_SUBTLE, hover_color=T.DANGER,
+            fg_color="transparent", hover_color=T.DANGER_SUBTLE,
             command=lambda sid=survey.id: self._on_delete(sid),
-        ).pack(side=S, padx=(0, 6) if not is_rtl() else (6, 0))
+        ).pack(side="left", padx=(0, 16))
+
+        # Process button (primary)
+        ctk.CTkButton(
+            parent,
+            text="  " + _("process"),
+            image=IC.icon("cpu", size=16, color="#000000"),
+            height=38, corner_radius=T.RADIUS_MD,
+            fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
+            text_color="#000000", font=T.font(13, "bold"),
+            command=lambda sid=survey.id: self._on_process_click(sid),
+        ).pack(side="left")
+
+    def _done_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
+        btn_color = T.STATUS_ANALYZED[1] if survey.status == "Analyzed" else T.ACCENT[1]
+        btn_hover = T.SUCCESS[1]        if survey.status == "Analyzed" else T.ACCENT_HOVER[1]
+        icon_name = "trending_up"    if survey.status == "Analyzed" else "bar_chart"
+        btn_text_color = "#000000"
 
         # Print button
         IC.icon_button(
-            parent, "print_icon", text="",
-            size=16, color=T._D_TEXT2,
+            parent, "printer", text="",
+            size=16, color=T.TEXT_SECONDARY[1],
             width=38, height=38, corner_radius=T.RADIUS_SM,
-            fg_color=T.GHOST_BG, hover_color=T.GHOST_HOVER,
-            border_width=1, border_color=T.GHOST_BORDER,
+            fg_color="transparent", hover_color=T.SURFACE_RAISED,
             command=lambda sid=survey.id: self._on_print(sid),
-        ).pack(side=S)
+        ).pack(side="left", padx=(0, 6))
+
+        # Delete button
+        IC.icon_button(
+            parent, "trash", text="",
+            size=16, color=T._D_RED,
+            width=38, height=38, corner_radius=T.RADIUS_SM,
+            fg_color="transparent", hover_color=T.DANGER_SUBTLE,
+            command=lambda sid=survey.id: self._on_delete(sid),
+        ).pack(side="left", padx=(0, 16))
+
+        # Results button (primary)
+        ctk.CTkButton(
+            parent,
+            text="  " + _("results"),
+            image=IC.icon(icon_name, size=16, color=btn_text_color),
+            height=38, corner_radius=T.RADIUS_MD,
+            fg_color=btn_color, hover_color=btn_hover,
+            text_color=btn_text_color, font=T.font(13, "bold"),
+            command=lambda sid=survey.id: self._on_results(sid),
+        ).pack(side="left")
 
     # ----
     # Interaction

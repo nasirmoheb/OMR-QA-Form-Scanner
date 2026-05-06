@@ -71,13 +71,6 @@ class TestDashboardPage:
         assert hasattr(page, "search_entry")
         app.root.destroy()
 
-    def test_dashboard_has_dept_filter(self):
-        app = OMRGUI()
-        app._navigate("dashboard")
-        page = app.router.current_page
-        assert hasattr(page, "dept_filter")
-        app.root.destroy()
-
     def test_dashboard_has_list_frame(self):
         app = OMRGUI()
         app._navigate("dashboard")
