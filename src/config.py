@@ -68,6 +68,9 @@ class Config:
     APPEARANCE_MODE: str = "Dark"   # dark-navy palette is the primary design
     LANGUAGE: str = "fa"             # en, fa (Dari), ps (Pashto)
 
+    # Default branding
+    DEFAULT_UNIVERSITY_NAME: str = "پوهنتون بدخشان"  # Badakhshan University
+
     # Survey question texts (14 items; empty list means use defaults from pdf_generator)
     QUESTION_TEXTS: list = []
 
@@ -136,7 +139,7 @@ def setup_logging(level: int = logging.INFO) -> logging.Logger:
     Returns:
         Configured root logger instance.
     """
-    logger = logging.getLogger("omr_qa_scanner")
+    logger = logging.getLogger("tadris_qa_system")
     logger.setLevel(level)
 
     if not logger.handlers:

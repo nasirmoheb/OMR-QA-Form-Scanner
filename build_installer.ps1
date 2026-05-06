@@ -44,7 +44,7 @@ Step "3/4  Running PyInstaller (this takes 1-3 minutes)"
 & "$Root\venv\Scripts\pyinstaller.exe" "$Root\build.spec" --noconfirm
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed" }
 
-$exePath = "$Root\dist\OMR_Scanner\OMR_Scanner.exe"
+$exePath = "$Root\dist\Tadris_QA\Tadris_QA.exe"
 if (-not (Test-Path $exePath)) {
     throw "Expected exe not found at: $exePath"
 }
@@ -65,7 +65,7 @@ if (-not (Test-Path $InnoSetup)) {
     Write-Host "  iscc installer.iss" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "  The PyInstaller output is ready at:" -ForegroundColor Green
-    Write-Host "  $Root\dist\OMR_Scanner\" -ForegroundColor Green
+    Write-Host "  $Root\dist\Tadris_QA\" -ForegroundColor Green
     exit 0
 }
 

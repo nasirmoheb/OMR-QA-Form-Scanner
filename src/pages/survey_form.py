@@ -13,6 +13,7 @@ import customtkinter as ctk
 
 import icons as IC
 import theme as T
+from config import Config
 from i18n import _, is_rtl, get_start, get_end, get_anchor, get_compound, rtl_text
 from models import Survey
 from persistence import PersistenceManager
@@ -160,7 +161,7 @@ class SurveyFormPage(BasePage):
         inst_grid.columnconfigure(0, weight=1)
         inst_grid.columnconfigure(1, weight=1)
 
-        uni_name = self.persistence.get_setting("university_name", "Kabul University")
+        uni_name = self.persistence.get_setting("university_name", Config.DEFAULT_UNIVERSITY_NAME)
         self._field(inst_grid, _("university"), "university", row=0, col=0 if not is_rtl() else 1, default=uni_name)
         self._field(inst_grid, _("faculty"), "faculty", row=0, col=1 if not is_rtl() else 0)
         self._field(inst_grid, _("department"), "department", row=1, col=0, colspan=2)
@@ -272,7 +273,7 @@ class SurveyFormPage(BasePage):
             )
             return
 
-        uni = self.persistence.get_setting("university_name", "")
+        uni = self.persistence.get_setting("university_name", Config.DEFAULT_UNIVERSITY_NAME)
         survey = Survey(
             university=uni,
             faculty=get("faculty"),

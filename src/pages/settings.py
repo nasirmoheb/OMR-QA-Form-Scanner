@@ -508,8 +508,8 @@ class SettingsFrame(ctk.CTkFrame):
         ).pack(anchor=get_anchor(), pady=(0, 6))
         
         uni_default = (
-            self._persistence.get_setting("university_name", "Kabul University")
-            if self._persistence else "Kabul University"
+            self._persistence.get_setting("university_name", Config.DEFAULT_UNIVERSITY_NAME)
+            if self._persistence else Config.DEFAULT_UNIVERSITY_NAME
         )
         self.uni_name_entry = ctk.CTkEntry(
             brand_body, height=42,
