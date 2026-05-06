@@ -20,6 +20,18 @@ class Config:
     ROW_COUNT: int = 14
     COLUMN_COUNT: int = 3
 
+    # Grid margins (pixels) — calibrated against the real A4 Persian form
+    MARGIN_LEFT: int = 310
+    MARGIN_RIGHT: int = 690
+    MARGIN_TOP: int = 355
+    MARGIN_BOTTOM: int = 430
+    COL_GAP: int = 15
+    ROW_GAP: int = 10
+
+    # Timing mark detection — set to False for forms that use only corner
+    # fiducial markers (no row-level timing marks)
+    USE_TIMING_MARKS: bool = False
+
     # Score weights (legacy 0/50/100 scale — used when LIKERT_MODE is False)
     SCORE_YES: int = 100
     SCORE_SOMEWHAT: int = 50

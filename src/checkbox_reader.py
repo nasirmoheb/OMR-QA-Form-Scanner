@@ -9,26 +9,27 @@ from config import Config, setup_logging
 
 logger = setup_logging()
 
-# Grid layout constants (tuned for the real-world Persian form)
-_MARGIN_LEFT: int = 210
-_MARGIN_RIGHT: int = 445
-_MARGIN_TOP: int = 280
-_MARGIN_BOTTOM: int = 210
-_COL_GAP: int = 10
-_ROW_GAP: int = 2
+# Grid layout constants (calibrated against the real A4 Persian form)
+# These are defaults — Config values take precedence when set.
+_MARGIN_LEFT: int = 310
+_MARGIN_RIGHT: int = 690
+_MARGIN_TOP: int = 355
+_MARGIN_BOTTOM: int = 430
+_COL_GAP: int = 15
+_ROW_GAP: int = 10
 
-# Special handling: wide rows (Q1, Q11, Q14) need vertical offset
-_WIDE_ROW_V_OFFSET: int = 13  # pixels to shift wide rows downward
+# Special handling: wide rows (Q1, Q11, Q14) — no offset needed for A4 form
+_WIDE_ROW_V_OFFSET: int = 0  # pixels to shift wide rows downward
 
 # Inner padding: ignore the outer border of each cell to focus on the mark
 _CELL_PAD_X: int = 8
 _CELL_PAD_Y: int = 4
 
-# Timing mark column (far-right edge in RTL forms)
-_TIMING_MARK_X_START: int = 720
-_TIMING_MARK_X_END: int = 790
+# Timing mark detection constants (calibrated against the real A4 form)
+_TIMING_MARK_X_START: int = 100
+_TIMING_MARK_X_END: int = 100
 _TIMING_MARK_MIN_AREA: int = 30
-_TIMING_MARK_MAX_AREA: int = 300
+_TIMING_MARK_MAX_AREA: int = 10
 _TIMING_MARK_FILL_RATIO: float = 0.5
 _TIMING_MARK_COUNT_TOLERANCE: int = 3
 
@@ -41,6 +42,12 @@ def _cell_box(
     rows: int,
     cols: int,
     row_y_positions: list[int] | None = None,
+    margin_left: int = _MARGIN_LEFT,
+    margin_right: int = _MARGIN_RIGHT,
+    margin_top: int = _MARGIN_TOP,
+    margin_bottom: int = _MARGIN_BOTTOM,
+    col_gap: int = _COL_GAP,
+    row_gap: int = _ROW_GAP,
 ) -> tuple[int, int, int, int]:
     """Return ``(x1, y1, x2, y2)`` for the checkbox at *row*, *col*.
 
@@ -51,29 +58,36 @@ def _cell_box(
         form_h: Form height in pixels.
         rows: Total number of rows.
         cols: Total number of columns.
+        row_y_positions: Optional calibrated y-centres from timing marks.
+        margin_left: Left margin in pixels.
+        margin_right: Right margin in pixels.
+        margin_top: Top margin in pixels.
+        margin_bottom: Bottom margin in pixels.
+        col_gap: Gap between columns in pixels.
+        row_gap: Gap between rows in pixels.
 
     Returns:
         Bounding-box tuple ``(x1, y1, x2, y2)``.
     """
-    usable_w = form_w - _MARGIN_LEFT - _MARGIN_RIGHT
-    usable_h = form_h - _MARGIN_TOP - _MARGIN_BOTTOM
+    usable_w = form_w - margin_left - margin_right
+    usable_h = form_h - margin_top - margin_bottom
 
-    cell_w = (usable_w - (cols - 1) * _COL_GAP) // cols
-    cell_h = (usable_h - (rows - 1) * _ROW_GAP) // rows
+    cell_w = (usable_w - (cols - 1) * col_gap) // cols
+    cell_h = (usable_h - (rows - 1) * row_gap) // rows
 
-    x1 = _MARGIN_LEFT + col * (cell_w + _COL_GAP)
+    x1 = margin_left + col * (cell_w + col_gap)
 
     if row_y_positions is not None and 0 <= row < len(row_y_positions):
         cy = row_y_positions[row]
         y1 = cy - cell_h // 2
     else:
-        y1 = _MARGIN_TOP + row * (cell_h + _ROW_GAP)
+        y1 = margin_top + row * (cell_h + row_gap)
         # Apply vertical offset for rows after wide Q1, Q11, and Q14
-        if row >= 1:  # After Q1
+        if row >= 1:
             y1 += _WIDE_ROW_V_OFFSET
-        if row >= 11:  # After Q10 comes Q11 (also wide)
+        if row >= 11:
             y1 += _WIDE_ROW_V_OFFSET
-        if row >= 13:  # After Q13 comes Q14 (also wide)
+        if row >= 13:
             y1 += _WIDE_ROW_V_OFFSET
 
     x2 = x1 + cell_w
@@ -158,6 +172,12 @@ class CheckboxReader:
             self.config.ROW_COUNT,
             self.config.COLUMN_COUNT,
             row_y_positions,
+            margin_left=getattr(self.config, "MARGIN_LEFT", _MARGIN_LEFT),
+            margin_right=getattr(self.config, "MARGIN_RIGHT", _MARGIN_RIGHT),
+            margin_top=getattr(self.config, "MARGIN_TOP", _MARGIN_TOP),
+            margin_bottom=getattr(self.config, "MARGIN_BOTTOM", _MARGIN_BOTTOM),
+            col_gap=getattr(self.config, "COL_GAP", _COL_GAP),
+            row_gap=getattr(self.config, "ROW_GAP", _ROW_GAP),
         )
 
     # ------------------------------------------------------------------ #
@@ -169,17 +189,18 @@ class CheckboxReader:
     ) -> list[int] | None:
         """Detect solid black timing marks on the far-right edge.
 
-        Scans a vertical strip on the right edge, finds dark blobs,
-        filters by size and fill ratio, and returns their centre
-        y-coordinates in top-to-bottom order.
+        Returns ``None`` immediately when ``config.USE_TIMING_MARKS`` is
+        ``False`` (forms that use only corner fiducial markers).
 
         Args:
             aligned_image: Perspective-corrected form image.
 
         Returns:
             List of y-centre integers (one per timing mark) or ``None``
-            if detection fails or the count is off.
+            if detection is disabled or fails.
         """
+        if not getattr(self.config, "USE_TIMING_MARKS", True):
+            return None
         if len(aligned_image.shape) == 3:
             gray = cv2.cvtColor(aligned_image, cv2.COLOR_BGR2GRAY)
         else:
