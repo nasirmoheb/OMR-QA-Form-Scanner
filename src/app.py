@@ -79,7 +79,7 @@ class OMRGUI:
             corner_radius=0,
             fg_color=T.SIDEBAR_BG,
         )
-        self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack(side="right", fill="y")
         self.sidebar.pack_propagate(False)
 
         # -- App logo block ----
@@ -144,7 +144,7 @@ class OMRGUI:
             pill = ctk.CTkFrame(
                 row, width=4, height=28, corner_radius=2, fg_color="transparent",
             )
-            pill.pack(side="left", padx=(0, 4))
+            pill.pack(side="right", padx=(4, 0))
             pill.pack_propagate(False)
             self._nav_pills[page_id] = pill
 
@@ -159,10 +159,10 @@ class OMRGUI:
                 hover_color=T.SIDEBAR_HOVER_BG,
                 text_color=T.SIDEBAR_TEXT,
                 anchor="w",
-                compound="left",
+                compound="right",
                 command=lambda pid=page_id: self._navigate(pid),
             )
-            btn.pack(side="left", fill="x", expand=True)
+            btn.pack(side="right", fill="x", expand=True)
             self._nav_btns[page_id] = btn
 
         # -- Spacer ----
@@ -190,7 +190,7 @@ class OMRGUI:
         self.content_frame = ctk.CTkFrame(
             parent, fg_color=T.PAGE_BG, corner_radius=0
         )
-        self.content_frame.pack(side="right", fill="both", expand=True)
+        self.content_frame.pack(side="left", fill="both", expand=True)
         self.router = PageRouter(self.root, self.content_frame)
 
     # -- Page registration ----
@@ -202,6 +202,7 @@ class OMRGUI:
                 router=self.router,
                 persistence=self.persistence,
                 navigate_callback=self._navigate,
+                analytics=self.analytics,
                 **kw,
             ),
         )

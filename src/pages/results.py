@@ -15,7 +15,7 @@ import customtkinter as ctk
 import icons as IC
 import theme as T
 from analytics_engine import AnalyticsEngine
-from i18n import _
+from i18n import _, get_start, get_end, get_anchor, get_compound
 from models import FormResult, Survey
 from persistence import PersistenceManager
 from .base import BasePage, PageRouter
@@ -74,23 +74,23 @@ class ResultsPage(BasePage):
         # Title
         ctk.CTkLabel(
             header, text="Survey Results & Analytics", font=T.h1(), text_color=T.TEXT_PRIMARY
-        ).pack(anchor="w")
+        ).pack(anchor=get_anchor())
 
         # Subtitle
         ctk.CTkLabel(
             header, text="View score distribution, raw form data, and advanced pedagogical insights.",
             font=T.small(), text_color=T.TEXT_SECONDARY, justify="left"
-        ).pack(anchor="w", pady=(4, 0))
+        ).pack(anchor=get_anchor(), pady=(4, 0))
 
         # -- Main Content (2 Columns Layout) ----
         content_wrap = T.transparent(self)
         content_wrap.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
         left_col = T.transparent(content_wrap)
-        left_col.pack(side="left", fill="both", expand=True, padx=(0, 16))
+        left_col.pack(side=get_start(), fill="both", expand=True, padx=(0, 16))
 
         right_col = T.transparent(content_wrap)
-        right_col.pack(side="right", fill="y", padx=(16, 0))
+        right_col.pack(side=get_end(), fill="y", padx=(16, 0))
 
         # -------------------------------------------------------------
         # LEFT COLUMN: Tabs and Tables
@@ -144,20 +144,20 @@ class ResultsPage(BasePage):
             ctk.CTkLabel(
                 meta_inner, text="SURVEY SUMMARY",
                 font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
-            ).pack(anchor="w", pady=(0, 12))
+            ).pack(anchor=get_anchor(), pady=(0, 12))
 
             ctk.CTkLabel(
                 meta_inner, image=IC.icon("book", size=15, color=T.ACCENT[1]),
                 text=f"  {self.survey.subject}", font=T.h4(), text_color=T.TEXT_PRIMARY,
-                anchor="w", compound="left"
-            ).pack(anchor="w")
+                anchor=get_anchor(), compound=get_compound()
+            ).pack(anchor=get_anchor())
 
             ctk.CTkLabel(
                 meta_inner, text=f"{self.survey.professor}\n{self.survey.semester} • {self.survey.academic_year}",
-                font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w", justify="left"
-            ).pack(anchor="w", pady=(8, 0))
+                font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor(), justify="left"
+            ).pack(anchor=get_anchor(), pady=(8, 0))
 
-            T.status_chip(meta_inner, self.survey.status).pack(anchor="w", pady=(12, 0))
+            T.status_chip(meta_inner, self.survey.status).pack(anchor=get_anchor(), pady=(12, 0))
 
             # KPIs
             form_count = len(self.form_results)
@@ -172,8 +172,8 @@ class ResultsPage(BasePage):
             def _kpi_row(label, value, icon):
                 r = T.transparent(meta_inner)
                 r.pack(fill="x", pady=2)
-                ctk.CTkLabel(r, text=label, font=T.tiny(), text_color=T.TEXT_MUTED).pack(side="left")
-                ctk.CTkLabel(r, text=value, font=T.font(12, "bold"), text_color=T.TEXT_PRIMARY).pack(side="right")
+                ctk.CTkLabel(r, text=label, font=T.tiny(), text_color=T.TEXT_MUTED).pack(side=get_start())
+                ctk.CTkLabel(r, text=value, font=T.font(12, "bold"), text_color=T.TEXT_PRIMARY).pack(side=get_end())
 
             _kpi_row("Total Forms", str(form_count), "file_text")
             _kpi_row("Avg Score", f"{batch_score:.1f}%", "trending_up")
@@ -187,7 +187,7 @@ class ResultsPage(BasePage):
         ctk.CTkLabel(
             export_header, text="EXPORT REPORTS",
             font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
-        ).pack(anchor="w")
+        ).pack(anchor=get_anchor())
 
         export_body = T.transparent(export_card)
         export_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
@@ -347,7 +347,7 @@ class ResultsPage(BasePage):
         tree.pack(fill="both", expand=True, pady=(0, 8))
         vsb = ttk.Scrollbar(self.content, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
-        vsb.pack(side="right", fill="y")
+        vsb.pack(side=get_end(), fill="y")
 
     def _show_raw(self) -> None:
         self._clear()
@@ -373,7 +373,7 @@ class ResultsPage(BasePage):
         tree.pack(fill="both", expand=True)
         vsb = ttk.Scrollbar(self.content, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
-        vsb.pack(side="right", fill="y")
+        vsb.pack(side=get_end(), fill="y")
         hsb = ttk.Scrollbar(self.content, orient="horizontal", command=tree.xview)
         tree.configure(xscrollcommand=hsb.set)
         hsb.pack(side="bottom", fill="x")
@@ -424,7 +424,7 @@ class ResultsPage(BasePage):
 
         # ── Section: Dimension KPI cards ──────────────────────────────────
         T.section_title(self.content, "Pedagogical Dimensions (KPIs)").pack(
-            anchor="w", pady=(0, 8)
+            anchor=get_anchor(), pady=(0, 8)
         )
         dim_row = T.transparent(self.content)
         dim_row.pack(fill="x", pady=(0, 16))
@@ -444,11 +444,11 @@ class ResultsPage(BasePage):
                 num_color=num_color,
                 bg_color=bg_color,
             )
-            card.pack(side="left", fill="x", expand=True, padx=(0, 10))
+            card.pack(side=get_start(), fill="x", expand=True, padx=(0, 10))
 
         # ── Section: QA Alerts ────────────────────────────────────────────
         T.section_title(self.content, f"QA Alerts ({len(alerts)})").pack(
-            anchor="w", pady=(8, 6)
+            anchor=get_anchor(), pady=(8, 6)
         )
         if not alerts:
             ok_card = T.card(self.content)
@@ -475,15 +475,15 @@ class ResultsPage(BasePage):
                     text=f"  {alert.message}",
                     font=T.body(),
                     text_color=color,
-                    anchor="w",
-                    compound="left",
+                    anchor=get_anchor(),
+                    compound=get_compound(),
                     wraplength=900,
-                ).pack(anchor="w")
+                ).pack(anchor=get_anchor())
 
         # ── Section: Polarized questions ──────────────────────────────────
         if polarized:
             T.section_title(self.content, "Polarized Questions (High Variance)").pack(
-                anchor="w", pady=(8, 6)
+                anchor=get_anchor(), pady=(8, 6)
             )
             p_card = T.card(self.content)
             p_card.pack(fill="x", pady=(0, 12))
@@ -493,14 +493,14 @@ class ResultsPage(BasePage):
                 text=f"⚠️  {qs_text} — Students are split. Possible comprehension gap or teaching level mismatch.",
                 font=T.body(),
                 text_color=T.WARNING,
-                anchor="w",
+                anchor=get_anchor(),
                 wraplength=900,
             ).pack(padx=T.CARD_PADDING, pady=12)
 
         # ── Section: Per-question stats table ─────────────────────────────
         if question_stats is not None and not question_stats.empty:
             T.section_title(self.content, "Per-Question Statistics").pack(
-                anchor="w", pady=(8, 6)
+                anchor=get_anchor(), pady=(8, 6)
             )
             col_ids   = ("q", "mean", "median", "std_dev", "min", "max", "count")
             col_names = ("Question", "Mean", "Median", "Std Dev", "Min", "Max", "Answered")
@@ -529,7 +529,7 @@ class ResultsPage(BasePage):
         # ── Section: Top correlations ─────────────────────────────────────
         if top_corr:
             T.section_title(self.content, "Top Question Correlations").pack(
-                anchor="w", pady=(8, 6)
+                anchor=get_anchor(), pady=(8, 6)
             )
             corr_card = T.card(self.content)
             corr_card.pack(fill="x", pady=(0, 12))
@@ -542,13 +542,13 @@ class ResultsPage(BasePage):
                     text=f"{p['q1']} ↔ {p['q2']}:  r = {p['correlation']:+.3f}",
                     font=T.body(),
                     text_color=color,
-                    anchor="w",
-                ).pack(anchor="w", pady=2)
+                    anchor=get_anchor(),
+                ).pack(anchor=get_anchor(), pady=2)
 
         # ── Section: Invalid forms ────────────────────────────────────────
         if invalid_forms:
             T.section_title(self.content, f"Invalid Forms ({len(invalid_forms)})").pack(
-                anchor="w", pady=(8, 6)
+                anchor=get_anchor(), pady=(8, 6)
             )
             inv_card = T.card(self.content)
             inv_card.pack(fill="x", pady=(0, 12))
@@ -558,7 +558,7 @@ class ResultsPage(BasePage):
                      + ("…" if len(invalid_forms) > 20 else ""),
                 font=T.small(),
                 text_color=T.TEXT_SECONDARY,
-                anchor="w",
+                anchor=get_anchor(),
                 wraplength=900,
             ).pack(padx=T.CARD_PADDING, pady=10)
 
@@ -567,7 +567,7 @@ class ResultsPage(BasePage):
         if total_comments > 0:
             T.section_title(
                 self.content, f"Comment Analysis ({total_comments} comments)"
-            ).pack(anchor="w", pady=(8, 6))
+            ).pack(anchor=get_anchor(), pady=(8, 6))
 
             sc = comment_analysis["sentiment_counts"]
             kw = comment_analysis["top_keywords"]
@@ -585,7 +585,7 @@ class ResultsPage(BasePage):
                 ("❌ Negative", sc["negative"], T.DANGER),
             ]:
                 chip = T.inner_card(sent_row, corner_radius=T.RADIUS_SM)
-                chip.pack(side="left", padx=(0, 10))
+                chip.pack(side=get_start(), padx=(0, 10))
                 ctk.CTkLabel(
                     chip,
                     text=f"{label}: {count}",
@@ -594,12 +594,12 @@ class ResultsPage(BasePage):
                 ).pack(padx=14, pady=8)
 
             if kw:
-                T.muted_label(c_inner, "Top Keywords:").pack(anchor="w", pady=(4, 4))
+                T.muted_label(c_inner, "Top Keywords:").pack(anchor=get_anchor(), pady=(4, 4))
                 kw_row = T.transparent(c_inner)
                 kw_row.pack(fill="x")
                 for word, count in kw[:12]:
                     chip = T.inner_card(kw_row, corner_radius=20)
-                    chip.pack(side="left", padx=(0, 6), pady=2)
+                    chip.pack(side=get_start(), padx=(0, 6), pady=2)
                     ctk.CTkLabel(
                         chip,
                         text=f"{word}  ({count})",

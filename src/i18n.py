@@ -247,6 +247,22 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "view_html_report": "مشاهده گزارش HTML",
         "analyzed_status_set": "نظرسنجی به عنوان تحلیل شده علامت‌گذاری شد.",
         "advanced_analytics": "تحلیل پیشرفته",
+        "recent_surveys": "نظرسنجی‌های اخیر",
+        "view_all": "مشاهده همه",
+        "total_surveys": "کل نظرسنجی‌ها",
+        "search_surveys": "جستجوی نظرسنجی‌ها...",
+        "create_first_survey": "برای شروع، اولین نظرسنجی خود را ایجاد کنید.",
+        "survey_form_subtitle": "اطلاعات متادیتا را برای نظرسنجی جدید تنظیم کنید. این اطلاعات در سربرگ فورم‌های فیزیکی چاپ خواهد شد.",
+        "course_information": "اطلاعات مضمون",
+        "survey_actions": "عملیات‌های نظرسنجی",
+        "scan_process_forms": "اسکن و پردازش فورم‌ها",
+        "scan_process_subtitle": "فورم‌های اسکن شده JPG/PNG را آپلود کنید و موتور پردازش OMR را شروع کنید.",
+        "queued_images": "تصاویر در صف",
+        "survey_details": "جزئیات نظرسنجی",
+        "scan_actions": "عملیات اسکن",
+        "ready_to_scan": "آماده برای اسکن",
+        "discard_exit": "لغو و خروج",
+        "images_queued": "تصویر در صف",
     },
     "ps": {
         "app_title": "OMR د کیفیت تضمین فورم سکینر",
@@ -437,3 +453,15 @@ def _(key: str, **kwargs: Any) -> str:
 
 def is_rtl() -> bool:
     return I18n.is_rtl()
+
+def get_start() -> str:
+    return "right" if is_rtl() else "left"
+
+def get_end() -> str:
+    return "left" if is_rtl() else "right"
+
+def get_anchor() -> str:
+    return "e" if is_rtl() else "w"
+
+def get_compound() -> str:
+    return "right" if is_rtl() else "left"

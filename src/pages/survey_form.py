@@ -13,7 +13,7 @@ import customtkinter as ctk
 
 import icons as IC
 import theme as T
-from i18n import _
+from i18n import _, is_rtl, get_start, get_end, get_anchor, get_compound
 from models import Survey
 from persistence import PersistenceManager
 from .base import BasePage, PageRouter
@@ -40,6 +40,24 @@ class SurveyFormPage(BasePage):
         if survey_id:
             self._load()
 
+    # RTL helpers ─────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _start() -> str:
+        return "right" if is_rtl() else "left"
+
+    @staticmethod
+    def _end() -> str:
+        return "left" if is_rtl() else "right"
+
+    @staticmethod
+    def _anchor() -> str:
+        return "e" if is_rtl() else "w"
+
+    @staticmethod
+    def _compound() -> str:
+        return "right" if is_rtl() else "left"
+
     # ------------------------------------------------------------------
     # Build
     # ------------------------------------------------------------------
@@ -55,23 +73,23 @@ class SurveyFormPage(BasePage):
         title_text = "Edit Evaluation Survey" if self.survey_id else "Create New Evaluation Survey"
         ctk.CTkLabel(
             header, text=title_text, font=T.h1(), text_color=T.TEXT_PRIMARY
-        ).pack(anchor="w")
+        ).pack(anchor=get_anchor())
 
         # Subtitle
-        subtitle_text = "Configure the metadata for the new optical mark recognition survey. This information will be printed on the\nheader of the physical forms."
+        subtitle_text = _("survey_form_subtitle")
         ctk.CTkLabel(
-            header, text=subtitle_text, font=T.small(), text_color=T.TEXT_SECONDARY, justify="left"
-        ).pack(anchor="w", pady=(4, 0))
+            header, text=subtitle_text, font=T.small(), text_color=T.TEXT_SECONDARY, justify=self._start()
+        ).pack(anchor=self._anchor(), pady=(4, 0))
 
         # -- Main Content (2 Columns) ----
         content_wrap = T.transparent(self)
         content_wrap.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
         left_col = ctk.CTkScrollableFrame(content_wrap, fg_color="transparent")
-        left_col.pack(side="left", fill="both", expand=True, padx=(0, 16))
+        left_col.pack(side=self._start(), fill="both", expand=True, padx=(0, 16) if not is_rtl() else (16, 0))
 
         right_col = T.transparent(content_wrap)
-        right_col.pack(side="right", fill="y", padx=(16, 0))
+        right_col.pack(side=self._end(), fill="y", padx=(16, 0) if not is_rtl() else (0, 16))
 
         # -------------------------------------------------------------
         # LEFT COLUMN
@@ -84,9 +102,9 @@ class SurveyFormPage(BasePage):
         inst_header = T.transparent(inst_card)
         inst_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
         ctk.CTkLabel(
-            inst_header, text="  Institution Details", image=IC.icon("school", size=18, color=T.ACCENT[1]),
-            font=T.h2(), text_color=T.TEXT_PRIMARY, compound="left"
-        ).pack(anchor="w")
+            inst_header, text="  " + _("university_branding"), image=IC.icon("school", size=18, color=T.ACCENT[1]),
+            font=T.h2(), text_color=T.TEXT_PRIMARY, compound=self._compound()
+        ).pack(anchor=self._anchor())
 
         inst_grid = T.transparent(inst_card)
         inst_grid.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
@@ -94,9 +112,9 @@ class SurveyFormPage(BasePage):
         inst_grid.columnconfigure(1, weight=1)
 
         uni_name = self.persistence.get_setting("university_name", "Kabul University")
-        self._field(inst_grid, "University", "university", row=0, col=0, default=uni_name)
-        self._field(inst_grid, "Faculty", "faculty", row=0, col=1)
-        self._field(inst_grid, "Department", "department", row=1, col=0, colspan=2)
+        self._field(inst_grid, _("university"), "university", row=0, col=0, default=uni_name)
+        self._field(inst_grid, _("faculty"), "faculty", row=0, col=1)
+        self._field(inst_grid, _("department"), "department", row=1, col=0, colspan=2)
 
         # -- Course Information Card ----
         course_card = T.card(left_col)
@@ -105,19 +123,19 @@ class SurveyFormPage(BasePage):
         course_header = T.transparent(course_card)
         course_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
         ctk.CTkLabel(
-            course_header, text="  Course Information", image=IC.icon("book", size=18, color=T.ACCENT[1]),
-            font=T.h2(), text_color=T.TEXT_PRIMARY, compound="left"
-        ).pack(anchor="w")
+            course_header, text="  " + _("course_information"), image=IC.icon("book", size=18, color=T.ACCENT[1]),
+            font=T.h2(), text_color=T.TEXT_PRIMARY, compound=self._compound()
+        ).pack(anchor=self._anchor())
 
         course_grid = T.transparent(course_card)
         course_grid.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
         course_grid.columnconfigure(0, weight=1)
         course_grid.columnconfigure(1, weight=1)
 
-        self._field(course_grid, "Subject", "subject", row=0, col=0, colspan=2)
-        self._field(course_grid, "Professor Name", "professor", row=1, col=0, colspan=2)
-        self._field(course_grid, "Semester", "semester", row=2, col=0)
-        self._field(course_grid, "Academic Year", "academic_year", row=2, col=1)
+        self._field(course_grid, _("subject"), "subject", row=0, col=0, colspan=2)
+        self._field(course_grid, _("professor_name"), "professor", row=1, col=0, colspan=2)
+        self._field(course_grid, _("semester"), "semester", row=2, col=0)
+        self._field(course_grid, _("academic_year"), "academic_year", row=2, col=1)
 
         # -------------------------------------------------------------
         # RIGHT COLUMN
@@ -130,9 +148,9 @@ class SurveyFormPage(BasePage):
         action_header = T.transparent(action_card)
         action_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
         ctk.CTkLabel(
-            action_header, text="SURVEY ACTIONS",
+            action_header, text=_("survey_actions"),
             font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
-        ).pack(anchor="w")
+        ).pack(anchor=self._anchor())
 
         action_body = T.transparent(action_card)
         action_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
@@ -182,7 +200,7 @@ class SurveyFormPage(BasePage):
         
         wrap.grid(row=row, column=col, columnspan=colspan, padx=px, pady=8, sticky="ew")
 
-        T.muted_label(wrap, label).pack(anchor="w", pady=(0, 4))
+        T.muted_label(wrap, label).pack(anchor=self._anchor(), pady=(0, 4))
 
         entry = T.text_input(wrap)
         if default:

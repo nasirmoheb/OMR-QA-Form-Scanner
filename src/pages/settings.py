@@ -14,7 +14,7 @@ import customtkinter as ctk
 import icons as IC
 import theme as T
 from config import Config
-from i18n import I18n, _
+from i18n import I18n, _, get_start, get_end, get_anchor, get_compound
 
 logger = logging.getLogger("omr_qa_scanner")
 
@@ -92,17 +92,17 @@ class SettingsFrame(ctk.CTkFrame):
         header.pack(fill="x", padx=T.PAGE_PADDING, pady=(T.PAGE_PADDING, 0))
 
         title_col = T.transparent(header)
-        title_col.pack(side="left")
+        title_col.pack(side=get_start())
         
         ctk.CTkLabel(
             title_col, text=_("settings"),
-            font=T.h1(), text_color=T.TEXT_PRIMARY, anchor="w",
-        ).pack(anchor="w")
+            font=T.h1(), text_color=T.TEXT_PRIMARY, anchor=get_anchor(),
+        ).pack(anchor=get_anchor())
         
         ctk.CTkLabel(
             title_col, text="Configure your application preferences, detection levels, and branding.",
-            font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w",
-        ).pack(anchor="w", pady=(4, 0))
+            font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor(),
+        ).pack(anchor=get_anchor(), pady=(4, 0))
 
         IC.icon_button(
             header, "save", text="  " + _("save_all"),
@@ -110,7 +110,7 @@ class SettingsFrame(ctk.CTkFrame):
             fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
             text_color="#000000", font=T.font(13, "bold"),
             corner_radius=T.RADIUS_MD, command=self._save,
-        ).pack(side="right")
+        ).pack(side=get_end())
 
         # ── Body: sidebar + content ───────────────────────────────────────
         body = T.transparent(self)
@@ -118,7 +118,7 @@ class SettingsFrame(ctk.CTkFrame):
 
         # Left sidebar
         self._sidebar = ctk.CTkFrame(body, width=220, fg_color=T.SURFACE, corner_radius=T.RADIUS_LG)
-        self._sidebar.pack(side="left", fill="y", padx=(0, 16))
+        self._sidebar.pack(side=get_start(), fill="y", padx=(0, 16))
         self._sidebar.pack_propagate(False)
 
         self._nav_inner = T.transparent(self._sidebar)
@@ -130,12 +130,12 @@ class SettingsFrame(ctk.CTkFrame):
             text="SECTIONS",
             font=T.font(9, "bold"),
             text_color=T.TEXT_MUTED,
-            anchor="w",
-        ).pack(anchor="w", padx=8, pady=(0, 8))
+            anchor=get_anchor(),
+        ).pack(anchor=get_anchor(), padx=8, pady=(0, 8))
 
         # Content area
         self._content_host = T.transparent(body)
-        self._content_host.pack(side="left", fill="both", expand=True)
+        self._content_host.pack(side=get_start(), fill="both", expand=True)
 
         # Build nav items
         for section_id, icon_name, label_key, accent in _NAV_ITEMS:
@@ -148,8 +148,8 @@ class SettingsFrame(ctk.CTkFrame):
             text="OMR QA Scanner",
             font=T.font(9),
             text_color=T.TEXT_MUTED,
-            anchor="w",
-        ).pack(anchor="w", padx=8, pady=(0, 4))
+            anchor=get_anchor(),
+        ).pack(anchor=get_anchor(), padx=8, pady=(0, 4))
 
         # Build all panels
         self._panels["general"]   = self._build_general_panel(self._content_host)
@@ -191,7 +191,7 @@ class SettingsFrame(ctk.CTkFrame):
             text="",
             width=20,
         )
-        icon_lbl.place(x=14, rely=0.5, anchor="w")
+        icon_lbl.place(x=14, rely=0.5, anchor=get_anchor())
 
         # Label
         text_lbl = ctk.CTkLabel(
@@ -199,9 +199,9 @@ class SettingsFrame(ctk.CTkFrame):
             text=_SECTION_META.get(section_id, (label_key, ""))[0],
             font=T.body(),
             text_color=T.TEXT_SECONDARY,
-            anchor="w",
+            anchor=get_anchor(),
         )
-        text_lbl.place(x=42, rely=0.5, anchor="w")
+        text_lbl.place(x=42, rely=0.5, anchor=get_anchor())
 
         # Store references for active-state toggling
         self._nav_buttons[section_id] = {
@@ -278,7 +278,7 @@ class SettingsFrame(ctk.CTkFrame):
             corner_radius=T.RADIUS_MD,
             fg_color=_tint(accent, 0.18),
         )
-        icon_badge.pack(side="left", pady=16)
+        icon_badge.pack(side=get_start(), pady=16)
         icon_badge.pack_propagate(False)
         ctk.CTkLabel(
             icon_badge,
@@ -287,15 +287,15 @@ class SettingsFrame(ctk.CTkFrame):
         ).place(relx=0.5, rely=0.5, anchor="center")
 
         title_col = T.transparent(ph_inner)
-        title_col.pack(side="left", padx=14)
+        title_col.pack(side=get_start(), padx=14)
         ctk.CTkLabel(
             title_col, text=title_text,
-            font=T.h3(), text_color=T.TEXT_PRIMARY, anchor="w",
-        ).pack(anchor="w")
+            font=T.h3(), text_color=T.TEXT_PRIMARY, anchor=get_anchor(),
+        ).pack(anchor=get_anchor())
         ctk.CTkLabel(
             title_col, text=subtitle_text,
-            font=T.small(), text_color=T.TEXT_MUTED, anchor="w",
-        ).pack(anchor="w")
+            font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor(),
+        ).pack(anchor=get_anchor())
 
         T.divider(outer).pack(fill="x")
 
@@ -324,17 +324,17 @@ class SettingsFrame(ctk.CTkFrame):
                 ch,
                 image=IC.icon(icon_name, size=15, color=T._D_TEXT2),
                 text=f"  {title}",
-                font=T.h4(), text_color=T.TEXT_PRIMARY, anchor="w",
-                compound="left",
-            ).pack(side="left")
+                font=T.h4(), text_color=T.TEXT_PRIMARY, anchor=get_anchor(),
+                compound=get_compound(),
+            ).pack(side=get_start())
         else:
-            ctk.CTkLabel(ch, text=title, font=T.h4(), text_color=T.TEXT_PRIMARY, anchor="w").pack(side="left")
+            ctk.CTkLabel(ch, text=title, font=T.h4(), text_color=T.TEXT_PRIMARY, anchor=get_anchor()).pack(side=get_start())
 
         if subtitle:
             ctk.CTkLabel(
                 card, text=subtitle,
-                font=T.small(), text_color=T.TEXT_MUTED, anchor="w",
-            ).pack(anchor="w", padx=T.CARD_PADDING, pady=(2, 0))
+                font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor(),
+            ).pack(anchor=get_anchor(), padx=T.CARD_PADDING, pady=(2, 0))
 
         T.divider(card).pack(fill="x", padx=T.CARD_PADDING, pady=(10, 0))
         return card
@@ -348,10 +348,10 @@ class SettingsFrame(ctk.CTkFrame):
         row.pack(fill="x", padx=T.CARD_PADDING, pady=(12, 0))
 
         left = T.transparent(row)
-        left.pack(side="left", fill="x", expand=True)
-        ctk.CTkLabel(left, text=label, font=T.body(), text_color=T.TEXT_PRIMARY, anchor="w").pack(anchor="w")
+        left.pack(side=get_start(), fill="x", expand=True)
+        ctk.CTkLabel(left, text=label, font=T.body(), text_color=T.TEXT_PRIMARY, anchor=get_anchor()).pack(anchor=get_anchor())
         if hint:
-            ctk.CTkLabel(left, text=hint, font=T.small(), text_color=T.TEXT_MUTED, anchor="w").pack(anchor="w")
+            ctk.CTkLabel(left, text=hint, font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor()).pack(anchor=get_anchor())
 
         entry = ctk.CTkEntry(
             row, width=width, height=38,
@@ -363,7 +363,7 @@ class SettingsFrame(ctk.CTkFrame):
             text_color=T.TEXT_PRIMARY,
             justify="center",
         )
-        entry.pack(side="right")
+        entry.pack(side=get_end())
         self._entries[key] = entry
         return entry
 
@@ -377,7 +377,7 @@ class SettingsFrame(ctk.CTkFrame):
             fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
             text_color="#FFFFFF", font=T.font(12, "bold"),
             corner_radius=T.RADIUS_MD, command=command,
-        ).pack(side="right")
+        ).pack(side=get_end())
 
     # ------------------------------------------------------------------
     # Panel: General
@@ -414,7 +414,7 @@ class SettingsFrame(ctk.CTkFrame):
                 cursor="hand2",
                 width=140, height=56,
             )
-            opt.pack(side="left", padx=(0, 10))
+            opt.pack(side=get_start(), padx=(0, 10))
             opt.pack_propagate(False)
 
             flag = {"en": "🇺🇸", "fa": "🇦🇫", "ps": "🇦🇫"}.get(code, "🌐")
@@ -467,7 +467,7 @@ class SettingsFrame(ctk.CTkFrame):
                 cursor="hand2",
                 width=110, height=72,
             )
-            opt.pack(side="left", padx=(0, 10))
+            opt.pack(side=get_start(), padx=(0, 10))
             opt.pack_propagate(False)
 
             ctk.CTkLabel(
@@ -502,8 +502,8 @@ class SettingsFrame(ctk.CTkFrame):
 
         ctk.CTkLabel(
             brand_body, text="University Name",
-            font=T.body(), text_color=T.TEXT_PRIMARY, anchor="w",
-        ).pack(anchor="w", pady=(0, 6))
+            font=T.body(), text_color=T.TEXT_PRIMARY, anchor=get_anchor(),
+        ).pack(anchor=get_anchor(), pady=(0, 6))
         
         uni_default = (
             self._persistence.get_setting("university_name", "Kabul University")
@@ -527,8 +527,8 @@ class SettingsFrame(ctk.CTkFrame):
         # Logo upload
         ctk.CTkLabel(
             brand_body, text="Institution Logo",
-            font=T.body(), text_color=T.TEXT_PRIMARY, anchor="w",
-        ).pack(anchor="w", pady=(0, 4))
+            font=T.body(), text_color=T.TEXT_PRIMARY, anchor=get_anchor(),
+        ).pack(anchor=get_anchor(), pady=(0, 4))
 
         logo_zone = ctk.CTkFrame(
             brand_body, corner_radius=T.RADIUS_LG,
@@ -544,7 +544,7 @@ class SettingsFrame(ctk.CTkFrame):
             image=IC.icon("upload", size=20, color=T._D_TEXT3),
             text="  " + _("no_logo"),
             font=T.body(), text_color=T.TEXT_MUTED,
-            compound="left",
+            compound=get_compound(),
         )
         self.logo_lbl.place(relx=0.5, rely=0.5, anchor="center")
 
@@ -555,7 +555,7 @@ class SettingsFrame(ctk.CTkFrame):
             text_color=T.GHOST_TEXT, border_width=1, border_color=T.GHOST_BORDER,
             font=T.body(), corner_radius=T.RADIUS_MD,
             command=self._select_logo,
-        ).pack(anchor="w")
+        ).pack(anchor=get_anchor())
 
         return outer
 
@@ -582,14 +582,14 @@ class SettingsFrame(ctk.CTkFrame):
         g_inner.pack(fill="x", padx=14, pady=10)
         ctk.CTkLabel(
             g_inner, text="Recommended range: 0.15 – 0.35",
-            font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w",
-        ).pack(anchor="w")
+            font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor(),
+        ).pack(anchor=get_anchor())
         ctk.CTkLabel(
             g_inner,
             text="• Too low (< 0.10): false positives on blank forms\n"
                  "• Too high (> 0.40): misses lightly filled bubbles",
-            font=T.small(), text_color=T.TEXT_MUTED, anchor="w", justify="left",
-        ).pack(anchor="w", pady=(4, 0))
+            font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor(), justify="left",
+        ).pack(anchor=get_anchor(), pady=(4, 0))
 
         # Form geometry card
         geom_card = self._field_card(
@@ -644,15 +644,15 @@ class SettingsFrame(ctk.CTkFrame):
             inner.pack(fill="both", expand=True, padx=(16, 14))
 
             left = T.transparent(inner)
-            left.pack(side="left", fill="y")
+            left.pack(side=get_start(), fill="y")
             ctk.CTkLabel(
                 left, text=answer, font=T.font(13, "bold"),
-                text_color=color, anchor="w",
-            ).pack(anchor="w", pady=(10, 0))
+                text_color=color, anchor=get_anchor(),
+            ).pack(anchor=get_anchor(), pady=(10, 0))
             ctk.CTkLabel(
                 left, text=desc, font=T.small(),
-                text_color=T.TEXT_MUTED, anchor="w",
-            ).pack(anchor="w")
+                text_color=T.TEXT_MUTED, anchor=get_anchor(),
+            ).pack(anchor=get_anchor())
 
             entry = ctk.CTkEntry(
                 inner, width=80, height=36,
@@ -664,7 +664,7 @@ class SettingsFrame(ctk.CTkFrame):
                 text_color=color,
                 justify="center",
             )
-            entry.pack(side="right", pady=14)
+            entry.pack(side=get_end(), pady=14)
             self._entries[key] = entry
 
         # Info note
@@ -675,7 +675,7 @@ class SettingsFrame(ctk.CTkFrame):
             text="ℹ️  These weights are used for Likert-scale analytics. "
                  "The legacy 0/50/100 scale is preserved for backward compatibility.",
             font=T.small(), text_color=T.TEXT_MUTED,
-            wraplength=560, justify="left", anchor="w",
+            wraplength=560, justify="left", anchor=get_anchor(),
         ).pack(padx=14, pady=10)
 
         return outer
@@ -710,8 +710,8 @@ class SettingsFrame(ctk.CTkFrame):
         # Column headers
         hdr = T.transparent(q_body)
         hdr.pack(fill="x", pady=(0, 8))
-        ctk.CTkLabel(hdr, text="#", font=T.font(10, "bold"), text_color=T.TEXT_MUTED, width=36, anchor="w").pack(side="left")
-        ctk.CTkLabel(hdr, text="Question Text", font=T.font(10, "bold"), text_color=T.TEXT_MUTED, anchor="w").pack(side="left", padx=(8, 0))
+        ctk.CTkLabel(hdr, text="#", font=T.font(10, "bold"), text_color=T.TEXT_MUTED, width=36, anchor=get_anchor()).pack(side=get_start())
+        ctk.CTkLabel(hdr, text="Question Text", font=T.font(10, "bold"), text_color=T.TEXT_MUTED, anchor=get_anchor()).pack(side=get_start(), padx=(8, 0))
 
         self._q_entries: list[ctk.CTkEntry] = []
 
@@ -755,11 +755,11 @@ class SettingsFrame(ctk.CTkFrame):
 
             # Dimension color stripe
             stripe = ctk.CTkFrame(row, width=4, corner_radius=0, fg_color=color)
-            stripe.pack(side="left", fill="y")
+            stripe.pack(side=get_start(), fill="y")
 
             # Q number badge
             badge = ctk.CTkFrame(row, width=36, fg_color="transparent")
-            badge.pack(side="left", fill="y")
+            badge.pack(side=get_start(), fill="y")
             badge.pack_propagate(False)
             ctk.CTkLabel(
                 badge, text=f"Q{q_num:02d}",
@@ -773,7 +773,7 @@ class SettingsFrame(ctk.CTkFrame):
                     corner_radius=4,
                     fg_color=_tint(color, 0.25),
                 )
-                dim_badge.pack(side="left", padx=(0, 6))
+                dim_badge.pack(side=get_start(), padx=(0, 6))
                 dim_badge.pack_propagate(False)
                 ctk.CTkLabel(
                     dim_badge, text=dim_lbl,
@@ -789,7 +789,7 @@ class SettingsFrame(ctk.CTkFrame):
                 text_color=T.TEXT_PRIMARY,
             )
             entry.insert(0, defaults[i] if i < len(defaults) else "")
-            entry.pack(side="left", fill="x", expand=True, padx=(4, 8))
+            entry.pack(side=get_start(), fill="x", expand=True, padx=(4, 8))
             self._q_entries.append(entry)
 
         # Dimension legend
@@ -797,7 +797,7 @@ class SettingsFrame(ctk.CTkFrame):
         legend.pack(fill="x", pady=(12, 0))
         leg_inner = T.transparent(legend)
         leg_inner.pack(fill="x", padx=14, pady=10)
-        ctk.CTkLabel(leg_inner, text="Dimension Groups:", font=T.font(10, "bold"), text_color=T.TEXT_SECONDARY, anchor="w").pack(anchor="w", pady=(0, 6))
+        ctk.CTkLabel(leg_inner, text="Dimension Groups:", font=T.font(10, "bold"), text_color=T.TEXT_SECONDARY, anchor=get_anchor()).pack(anchor=get_anchor(), pady=(0, 6))
         leg_row = T.transparent(leg_inner)
         leg_row.pack(fill="x")
         for lbl, color, desc in [
@@ -807,7 +807,7 @@ class SettingsFrame(ctk.CTkFrame):
             ("D", "#A78BFA", "Modern Teaching (Q6,13,14)"),
         ]:
             chip = ctk.CTkFrame(leg_row, corner_radius=T.RADIUS_SM, fg_color=_tint(color, 0.18))
-            chip.pack(side="left", padx=(0, 8))
+            chip.pack(side=get_start(), padx=(0, 8))
             ctk.CTkLabel(chip, text=f"{lbl}  {desc}", font=T.small(), text_color=color).pack(padx=10, pady=4)
 
         self._save_btn(q_card, self._save_questions, _("save_questions"))
@@ -852,8 +852,8 @@ class SettingsFrame(ctk.CTkFrame):
         ctk.CTkLabel(
             coords_body,
             text='Example: {"name_x": 120, "name_y": 45, "semester_x": 300}',
-            font=T.small(), text_color=T.TEXT_MUTED, anchor="w",
-        ).pack(anchor="w", pady=(0, 4))
+            font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor(),
+        ).pack(anchor=get_anchor(), pady=(0, 4))
 
         self._save_btn(coords_card, self._save_coords)
 
@@ -881,22 +881,22 @@ class SettingsFrame(ctk.CTkFrame):
             t_row.pack_propagate(False)
 
             dot = ctk.CTkFrame(t_row, width=4, corner_radius=0, fg_color=color)
-            dot.pack(side="left", fill="y")
+            dot.pack(side=get_start(), fill="y")
 
             inner = T.transparent(t_row)
             inner.pack(fill="both", expand=True, padx=14)
 
-            ctk.CTkLabel(inner, text=label, font=T.font(12, "bold"), text_color=T.TEXT_PRIMARY, anchor="w").pack(anchor="w", pady=(8, 0))
-            ctk.CTkLabel(inner, text=desc, font=T.small(), text_color=T.TEXT_MUTED, anchor="w").pack(anchor="w")
+            ctk.CTkLabel(inner, text=label, font=T.font(12, "bold"), text_color=T.TEXT_PRIMARY, anchor=get_anchor()).pack(anchor=get_anchor(), pady=(8, 0))
+            ctk.CTkLabel(inner, text=desc, font=T.small(), text_color=T.TEXT_MUTED, anchor=get_anchor()).pack(anchor=get_anchor())
 
-            ctk.CTkLabel(t_row, text=value, font=T.font(14, "bold"), text_color=color, width=60, anchor="center").pack(side="right", padx=14)
+            ctk.CTkLabel(t_row, text=value, font=T.font(14, "bold"), text_color=color, width=60, anchor="center").pack(side=get_end(), padx=14)
 
         ctk.CTkLabel(
             qa_body,
             text="ℹ️  To change these thresholds, edit DIMENSION_ALERT_THRESHOLD and related constants in src/config.py",
             font=T.small(), text_color=T.TEXT_MUTED,
-            wraplength=560, justify="left", anchor="w",
-        ).pack(anchor="w", pady=(8, 0))
+            wraplength=560, justify="left", anchor=get_anchor(),
+        ).pack(anchor=get_anchor(), pady=(8, 0))
 
         return outer
 

@@ -54,7 +54,7 @@ class Config:
 
     # UI preferences
     APPEARANCE_MODE: str = "Dark"   # dark-navy palette is the primary design
-    LANGUAGE: str = "en"             # en, fa (Dari), ps (Pashto)
+    LANGUAGE: str = "fa"             # en, fa (Dari), ps (Pashto)
 
     # Survey question texts (14 items; empty list means use defaults from pdf_generator)
     QUESTION_TEXTS: list = []

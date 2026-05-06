@@ -13,7 +13,7 @@ import customtkinter as ctk
 
 import icons as IC
 import theme as T
-from i18n import _
+from i18n import _, is_rtl
 from models import FormResult
 from persistence import PersistenceManager
 from vision_processor import VisionProcessor
@@ -58,6 +58,24 @@ class ProcessPage(BasePage):
         if self.folder_path and Path(self.folder_path).exists():
             self._load_folder(Path(self.folder_path))
 
+    # RTL helpers ─────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _start() -> str:
+        return "right" if is_rtl() else "left"
+
+    @staticmethod
+    def _end() -> str:
+        return "left" if is_rtl() else "right"
+
+    @staticmethod
+    def _anchor() -> str:
+        return "e" if is_rtl() else "w"
+
+    @staticmethod
+    def _compound() -> str:
+        return "right" if is_rtl() else "left"
+
     # ------------------------------------------------------------------
     # Build
     # ------------------------------------------------------------------
@@ -71,24 +89,24 @@ class ProcessPage(BasePage):
 
         # Title
         ctk.CTkLabel(
-            header, text="Scan & Process Forms", font=T.h1(), text_color=T.TEXT_PRIMARY
-        ).pack(anchor="w")
+            header, text=_("scan_process_forms"), font=T.h1(), text_color=T.TEXT_PRIMARY
+        ).pack(anchor=self._anchor())
 
         # Subtitle
         ctk.CTkLabel(
-            header, text="Upload scanned JPG/PNG forms and start the OMR processing engine.",
-            font=T.small(), text_color=T.TEXT_SECONDARY, justify="left"
-        ).pack(anchor="w", pady=(4, 0))
+            header, text=_("scan_process_subtitle"),
+            font=T.small(), text_color=T.TEXT_SECONDARY, justify=self._start()
+        ).pack(anchor=self._anchor(), pady=(4, 0))
 
         # -- Main Content (2 Columns) ----
         content_wrap = T.transparent(self)
         content_wrap.pack(fill="both", expand=True, padx=T.PAGE_PADDING, pady=16)
 
         left_col = T.transparent(content_wrap)
-        left_col.pack(side="left", fill="both", expand=True, padx=(0, 16))
+        left_col.pack(side=self._start(), fill="both", expand=True, padx=(0, 16) if not is_rtl() else (16, 0))
 
         right_col = T.transparent(content_wrap)
-        right_col.pack(side="right", fill="y", padx=(16, 0))
+        right_col.pack(side=self._end(), fill="y", padx=(16, 0) if not is_rtl() else (0, 16))
 
         # -------------------------------------------------------------
         # LEFT COLUMN: Thumbnail Grid
@@ -99,12 +117,12 @@ class ProcessPage(BasePage):
         thumb_header = T.transparent(thumb_card)
         thumb_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
         ctk.CTkLabel(
-            thumb_header, text="  Queued Images", image=IC.icon("image", size=18, color=T.ACCENT[1]),
-            font=T.h2(), text_color=T.TEXT_PRIMARY, compound="left"
-        ).pack(side="left")
+            thumb_header, text="  " + _("queued_images"), image=IC.icon("image", size=18, color=T.ACCENT[1]),
+            font=T.h2(), text_color=T.TEXT_PRIMARY, compound=self._compound()
+        ).pack(side=self._start())
 
         self.count_lbl = T.muted_label(thumb_header, "")
-        self.count_lbl.pack(side="right")
+        self.count_lbl.pack(side=self._end())
 
         self.thumb_frame = ctk.CTkScrollableFrame(
             thumb_card, fg_color="transparent", corner_radius=0
@@ -130,20 +148,20 @@ class ProcessPage(BasePage):
             meta_inner.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
             
             ctk.CTkLabel(
-                meta_inner, text="SURVEY DETAILS",
+                meta_inner, text=_("survey_details"),
                 font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
-            ).pack(anchor="w", pady=(0, 12))
+            ).pack(anchor=self._anchor(), pady=(0, 12))
 
             ctk.CTkLabel(
                 meta_inner, image=IC.icon("book", size=15, color=T.ACCENT[1]),
                 text=f"  {survey.subject}", font=T.h4(), text_color=T.TEXT_PRIMARY,
-                anchor="w", compound="left"
-            ).pack(anchor="w")
+                anchor=self._anchor(), compound=self._compound()
+            ).pack(anchor=self._anchor())
 
             ctk.CTkLabel(
                 meta_inner, text=f"{survey.professor}\n{survey.semester} • {survey.academic_year}",
-                font=T.small(), text_color=T.TEXT_SECONDARY, anchor="w", justify="left"
-            ).pack(anchor="w", pady=(8, 0))
+                font=T.small(), text_color=T.TEXT_SECONDARY, anchor=self._anchor(), justify=self._start()
+            ).pack(anchor=self._anchor(), pady=(8, 0))
 
         # -- Actions Card ----
         action_card = T.card(right_col)
@@ -152,9 +170,9 @@ class ProcessPage(BasePage):
         action_header = T.transparent(action_card)
         action_header.pack(fill="x", padx=T.CARD_PADDING, pady=(T.CARD_PADDING, 0))
         ctk.CTkLabel(
-            action_header, text="SCAN ACTIONS",
+            action_header, text=_("scan_actions"),
             font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
-        ).pack(anchor="w")
+        ).pack(anchor=self._anchor())
 
         action_body = T.transparent(action_card)
         action_body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
@@ -182,7 +200,7 @@ class ProcessPage(BasePage):
         T.divider(action_body).pack(fill="x", pady=(0, 20))
         
         self.progress_lbl = ctk.CTkLabel(
-            action_body, text="Ready to scan", font=T.tiny(), text_color=T.TEXT_MUTED, anchor="w"
+            action_body, text=_("ready_to_scan"), font=T.tiny(), text_color=T.TEXT_MUTED, anchor=self._anchor()
         )
         self.progress_lbl.pack(fill="x", pady=(0, 4))
 
@@ -195,7 +213,7 @@ class ProcessPage(BasePage):
 
         # Discard / Back
         ctk.CTkButton(
-            action_body, text="  Discard & Exit", image=IC.icon("arrow_left", size=16, color=T.TEXT_SECONDARY[1]),
+            action_body, text="  " + _("discard_exit"), image=IC.icon("arrow_left", size=16, color=T.TEXT_SECONDARY[1]),
             height=36, corner_radius=T.RADIUS_MD, fg_color="transparent", hover_color=T.SURFACE_RAISED,
             text_color=T.TEXT_SECONDARY, font=T.font(13), command=lambda: self.go("dashboard"),
         ).pack(fill="x", pady=(20, 0))
@@ -236,7 +254,7 @@ class ProcessPage(BasePage):
                 height=90,
                 corner_radius=T.RADIUS_MD,
             )
-            tile.pack(side="left", padx=(0, 8), pady=4)
+            tile.pack(side=self._start(), padx=(0, 8) if not is_rtl() else (8, 0), pady=4)
             tile.pack_propagate(False)
 
             name = path.name
@@ -259,7 +277,7 @@ class ProcessPage(BasePage):
             self.thumb_labels[path] = status_lbl
 
         self.count_lbl.configure(
-            text=f"{len(self.image_files)} image(s) queued" if self.image_files else ""
+            text=f"{len(self.image_files)} " + _("images_queued") if self.image_files else ""
         )
 
     def _update_thumb_status(self, path: Path, status: str) -> None:

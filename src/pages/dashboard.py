@@ -17,6 +17,9 @@ from models import Survey
 from persistence import PersistenceManager
 from .base import BasePage, PageRouter
 
+import webbrowser
+from config import Config
+import report_generator
 logger = logging.getLogger("omr_qa_scanner")
 
 _SORT_OPTIONS = ["Newest first", "Oldest first", "Subject A->Z", "Subject Z->A"]
@@ -29,10 +32,12 @@ class DashboardPage(BasePage):
         self,
         router: PageRouter,
         persistence: PersistenceManager,
+        analytics: Any = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(router, **kwargs)
         self.persistence = persistence
+        self.analytics = analytics
         self.current_surveys: list[Survey] = []
         self.selected_survey_id: int | None = None
         self.survey_cards: list[ctk.CTkFrame] = []
@@ -104,20 +109,20 @@ class DashboardPage(BasePage):
         
         ctk.CTkLabel(
             header_wrap,
-            text="Recent Surveys",
+            text=_("recent_surveys"),
             font=T.h2(),
             text_color=T.TEXT_PRIMARY
-        ).pack(side="left")
+        ).pack(side=self._start())
         
         ctk.CTkButton(
             header_wrap,
-            text="View All ->",
+            text=_("view_all") + " ->",
             font=T.body(),
             text_color=T.ACCENT,
             fg_color="transparent",
             hover_color=T.SURFACE_RAISED,
             width=0
-        ).pack(side="right")
+        ).pack(side=self._end())
 
         # 4 -- Scrollable survey list
         self.list_frame = ctk.CTkScrollableFrame(
@@ -143,7 +148,7 @@ class DashboardPage(BasePage):
         E = self._end()     # "right" in LTR, "left" in RTL
 
         # Title
-        title_lbl = T.page_title(bar, text="OMR Dashboard")
+        title_lbl = T.page_title(bar, text=_("dashboard"))
         title_lbl.pack(side=S)
 
         # Right container for search and icons
@@ -160,11 +165,11 @@ class DashboardPage(BasePage):
             search_wrap,
             image=IC.icon("search", size=16, color=T._D_TEXT3),
             text="",
-        ).pack(side="left", padx=(10, 5))
+        ).pack(side=self._start(), padx=(10, 5))
 
         self.search_entry = ctk.CTkEntry(
             search_wrap,
-            placeholder_text="Search surveys, IDs...",
+            placeholder_text=_("search_surveys"),
             height=36, width=200,
             corner_radius=T.RADIUS_MD,
             fg_color="transparent",
@@ -173,7 +178,7 @@ class DashboardPage(BasePage):
             text_color=T.TEXT_PRIMARY,
             placeholder_text_color=T.TEXT_MUTED,
         )
-        self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.search_entry.pack(side=self._start(), fill="x", expand=True, padx=(0, 10))
         self.search_entry.bind("<KeyRelease>", lambda _e: self._load_surveys())
 
     # ----
@@ -220,10 +225,10 @@ class DashboardPage(BasePage):
         analyzed = sum(1 for s in all_s if s.status == "Analyzed")
 
         kpis = [
-            ("Total Surveys", str(total),    "folder",      T.KPI_TOTAL_NUM, T.KPI_TOTAL_BG, False),
-            ("Draft",         str(draft),    "file_text",   T.KPI_DRAFT_NUM, T.KPI_DRAFT_BG, False),
-            ("Processed",     str(proc),     "cpu",         T.KPI_PROC_NUM,  T.KPI_PROC_BG,  False),
-            ("Analyzed",      str(analyzed), "bar_chart",   T.KPI_ANA_NUM,   T.KPI_ANA_BG,   False),
+            (_("total_surveys"), str(total),    "folder",      T.KPI_TOTAL_NUM, T.KPI_TOTAL_BG, False),
+            (_("draft"),         str(draft),    "clock",       T.KPI_DRAFT_NUM, T.KPI_DRAFT_BG, False),
+            (_("processed"),     str(proc),     "scan",        T.KPI_PROC_NUM,  T.KPI_PROC_BG,  False),
+            (_("analyzed"),      str(analyzed), "trending_up", T.KPI_ANA_NUM,   T.KPI_ANA_BG,   False),
         ]
 
         for label, value, icon_name, num_color, bg_color, is_active in kpis:
@@ -280,7 +285,7 @@ class DashboardPage(BasePage):
 
         ctk.CTkLabel(
             inner,
-            text="Create your first survey to get started.",
+            text=_("create_first_survey"),
             font=T.small(),
             text_color=T.TEXT_MUTED,
         ).pack()
@@ -349,7 +354,7 @@ class DashboardPage(BasePage):
         center.pack(side=S, fill="both", expand=True)
 
         top_row = T.transparent(center)
-        top_row.pack(anchor="w", pady=(0, 4))
+        top_row.pack(anchor=A, pady=(0, 4))
 
         # Subject
         ctk.CTkLabel(
@@ -366,14 +371,14 @@ class DashboardPage(BasePage):
         badge_frame.pack(side=S, padx=(12, 0))
         ctk.CTkLabel(
             badge_frame,
-            text=f"  {status}" if not is_rtl() else f"{status}  ",
+            text=f"  {_(status.lower())}" if not is_rtl() else f"{_(status.lower())}  ",
             font=T.font(11, "bold"),
             text_color=accent_hex,
         ).pack(padx=8, pady=2)
 
         # Meta row
         meta_row = T.transparent(center)
-        meta_row.pack(anchor="w")
+        meta_row.pack(anchor=A)
 
         def _meta_chip(parent, icon_name: str, text: str) -> None:
             w = T.transparent(parent)
@@ -427,7 +432,7 @@ class DashboardPage(BasePage):
             width=38, height=38, corner_radius=T.RADIUS_SM,
             fg_color="transparent", hover_color=T.SURFACE_RAISED,
             command=lambda sid=survey.id: self._on_edit(sid),
-        ).pack(side="left", padx=(0, 6))
+        ).pack(side=self._start(), padx=self._pad_after(6))
 
         # Delete button
         IC.icon_button(
@@ -436,7 +441,7 @@ class DashboardPage(BasePage):
             width=38, height=38, corner_radius=T.RADIUS_SM,
             fg_color="transparent", hover_color=T.DANGER_SUBTLE,
             command=lambda sid=survey.id: self._on_delete(sid),
-        ).pack(side="left", padx=(0, 16))
+        ).pack(side=self._start(), padx=self._pad_after(16))
 
         # Process button (primary)
         ctk.CTkButton(
@@ -447,7 +452,7 @@ class DashboardPage(BasePage):
             fg_color=T.ACCENT, hover_color=T.ACCENT_HOVER,
             text_color="#000000", font=T.font(13, "bold"),
             command=lambda sid=survey.id: self._on_process_click(sid),
-        ).pack(side="left")
+        ).pack(side=self._start())
 
     def _done_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
         btn_color = T.STATUS_ANALYZED[1] if survey.status == "Analyzed" else T.ACCENT[1]
@@ -462,7 +467,7 @@ class DashboardPage(BasePage):
             width=38, height=38, corner_radius=T.RADIUS_SM,
             fg_color="transparent", hover_color=T.SURFACE_RAISED,
             command=lambda sid=survey.id: self._on_print(sid),
-        ).pack(side="left", padx=(0, 6))
+        ).pack(side=self._start(), padx=self._pad_after(6))
 
         # Delete button
         IC.icon_button(
@@ -471,7 +476,7 @@ class DashboardPage(BasePage):
             width=38, height=38, corner_radius=T.RADIUS_SM,
             fg_color="transparent", hover_color=T.DANGER_SUBTLE,
             command=lambda sid=survey.id: self._on_delete(sid),
-        ).pack(side="left", padx=(0, 16))
+        ).pack(side=self._start(), padx=self._pad_after(16))
 
         # Results button (primary)
         ctk.CTkButton(
@@ -482,7 +487,7 @@ class DashboardPage(BasePage):
             fg_color=btn_color, hover_color=btn_hover,
             text_color=btn_text_color, font=T.font(13, "bold"),
             command=lambda sid=survey.id: self._on_results(sid),
-        ).pack(side="left")
+        ).pack(side=self._start())
 
     # ----
     # Interaction
@@ -523,7 +528,33 @@ class DashboardPage(BasePage):
         self.go("process", survey_id=survey_id, folder_path=folder_path)
 
     def _on_results(self, survey_id: int) -> None:
-        self.go("results", survey_id=survey_id)
+        """Directly open the Official Dari Report for analyzed/processed surveys."""
+        survey = self.persistence.get_survey(survey_id)
+        if not survey:
+            messagebox.showerror(_("error"), "Survey not found.")
+            return
+
+        try:
+            results = self.persistence.get_form_results(survey_id)
+            if not results:
+                messagebox.showwarning(_("results"), "No processed forms found for this survey.")
+                return
+
+            report_path = str(Config.PROJECT_ROOT / "assets" / "dari_qa_report.html")
+            
+            # Compute advanced analytics data
+            advanced_data = self.analytics.run_advanced_analytics(
+                survey_id,
+                results,
+                persistence=self.persistence,
+            )
+            
+            report_generator.generate_dari_qa_report(survey, results, report_path, advanced_data=advanced_data)
+            
+            webbrowser.open(f"file:///{Path(report_path).resolve()}")
+        except Exception as exc:
+            logger.exception("Dari report generation failed")
+            messagebox.showerror(_("error_report"), f"Failed to generate report:\n{exc}")
 
     def _on_print(self, survey_id: int) -> None:
         survey = self.persistence.get_survey(survey_id)
