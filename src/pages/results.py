@@ -658,7 +658,8 @@ class ResultsPage(BasePage):
             import report_generator
             
             report_path = str(Config.PROJECT_ROOT / "assets" / "dari_qa_report.html")
-            report_generator.generate_dari_qa_report(self.survey, self.form_results, report_path)
+            advanced_data = self._get_advanced_data()
+            report_generator.generate_dari_qa_report(self.survey, self.form_results, report_path, advanced_data=advanced_data)
             
             webbrowser.open(f"file:///{Path(report_path).resolve()}")
         except Exception as exc:

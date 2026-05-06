@@ -8,63 +8,60 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
-        /* Base Styles & Print Optimization */
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
         
         body { margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Vazirmatn', 'Tahoma', sans-serif; color: #1f2937; font-size: 9.5pt; }
-        
         @page { size: A4 portrait; margin: 0; }
-        
-        .a4-page {
-            width: 210mm; min-height: 297mm; background: white; margin: 10mm auto;
-            padding: 12mm 15mm; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
+        .a4-page { width: 210mm; min-height: 297mm; background: white; margin: 10mm auto; padding: 12mm 15mm; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
-        /* Header Layout */
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px; }
         .logo-box { width: 70px; height: 70px; border: 1px solid #94a3b8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8pt; text-align: center; background: #f8fafc; }
         .title-block { text-align: center; flex-grow: 1; }
         .title-block h1 { margin: 0 0 5px 0; font-size: 14pt; color: #1e3a8a; }
         .title-block h2 { margin: 0; font-size: 11pt; font-weight: normal; color: #475569; }
 
-        /* Metadata Grid */
         .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
         .meta-item { font-size: 9.5pt; }
         .meta-item strong { color: #0369a1; }
 
-        /* QA Note Box */
         .qa-note { background-color: #fef2f2; border-right: 4px solid #ef4444; padding: 10px; margin-bottom: 15px; font-size: 9pt; line-height: 1.5; color: #7f1d1d; }
 
-        /* Chart Section */
-        .chart-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 20px; height: 420px; }
+        .chart-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 20px; height: 350px; }
         .chart-title { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 11pt; color: #334155; }
+        
+        .charts-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .chart-half { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; height: 280px; }
 
-        /* Data Table */
+        .sw-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .sw-box { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; }
+        .sw-box h3 { margin: 0 0 10px 0; font-size: 10.5pt; text-align: center; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+        .sw-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 9pt; padding: 6px; background: #f8fafc; border-radius: 4px; }
+        .sw-item.strength { border-right: 3px solid #22c55e; }
+        .sw-item.weakness { border-right: 3px solid #ef4444; }
+        .sw-val { font-weight: bold; }
+
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 9pt; }
         th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; vertical-align: middle; }
         .text-right { text-align: right; }
         th { background-color: #1e40af; color: white; font-weight: bold; }
-        
-        /* Category Headers in Table */
         .cat-header td { background-color: #e2e8f0; color: #0f172a; font-weight: bold; text-align: right; font-size: 9.5pt; }
         
-        /* Highlight Cells */
         .bg-green { background-color: #dcfce7; color: #166534; font-weight: bold; }
         .bg-yellow { background-color: #fef9c3; color: #854d0e; }
         .bg-red { background-color: #fee2e2; color: #991b1b; font-weight: bold; }
 
-        /* Footer */
         .footer { display: flex; justify-content: space-around; margin-top: 30px; font-weight: bold; }
         .sign-box { text-align: center; width: 200px; padding-top: 40px; border-top: 1px dashed #94a3b8; }
+        .page-break { page-break-before: always; }
 
-        @media print { body { background: none; } .a4-page { margin: 0; box-shadow: none; } }
+        @media print { body { background: none; } .a4-page { margin: 0; box-shadow: none; border-bottom: none; } }
     </style>
 </head>
 <body>
 
+    <!-- PAGE 1: Core Table & Main Bar Chart -->
     <div class="a4-page">
-        <!-- Header -->
         <div class="header">
             <div class="logo-box">لوگوی<br>پوهنتون</div>
             <div class="title-block">
@@ -75,28 +72,24 @@
             <div class="logo-box">لوگوی<br>QA</div>
         </div>
 
-        <!-- Metadata -->
         <div class="meta-grid">
             <div class="meta-item"><strong>نام استاد:</strong> nasir</div>
             <div class="meta-item"><strong>مضمون:</strong> is</div>
             <div class="meta-item"><strong>دیپارتمنت:</strong> is</div>
             <div class="meta-item"><strong>سمستر / سال:</strong> 9 / 202</div>
-            <div class="meta-item"><strong>تعداد ارزیابی کنندگان:</strong> ۵ محصل (۱۰۰٪ صنف)</div>
+            <div class="meta-item"><strong>تعداد ارزیابی کنندگان:</strong> ۵ محصل</div>
             <div class="meta-item"><strong>نمره عمومی قناعت:</strong> ۳۷٪</div>
         </div>
 
-        <!-- Analytical Note -->
         <div class="qa-note">
-            <strong>نکته تحلیلی تضمین کیفیت:</strong> در این چارت، دیتای مربوط به سوال ۱۱ <em>(صحبت خارج از موضوع درس)</em> به صورت معکوس (Reverse-coded) تحلیل شده است. از آنجایی که پاسخ "نخیر" به این سوال نشانه عملکرد عالی استاد است، در گراف زیر رنگ سبز برای این سوال نمایانگر پاسخ "نخیر" محصلان میباشد. 
+            <strong>نکته تحلیلی تضمین کیفیت:</strong> در این گزارش، دیتای مربوط به سوال ۱۱ <em>(صحبت خارج از موضوع درس)</em> به صورت معکوس (Reverse-coded) تحلیل شده است. رنگ سبز برای این سوال نمایانگر پاسخ "نخیر" میباشد. 
         </div>
 
-        <!-- Visual Dashboard -->
         <div class="chart-container">
-            <div class="chart-title">گراف ارزیابی تفکیکی (توزیع عملکرد مثبت و منفی)</div>
+            <div class="chart-title">گراف ارزیابی تفکیکی سوالات (توزیع عملکرد مثبت و منفی)</div>
             <canvas id="qaChart"></canvas>
         </div>
 
-        <!-- Categorized Data Table -->
         <table>
             <thead>
                 <tr>
@@ -235,89 +228,208 @@
                 
             </tbody>
         </table>
+    </div>
 
-        <!-- Signatures -->
+    <!-- PAGE 2: Advanced Visual Analytics -->
+    <div class="a4-page page-break">
+        <div class="header" style="border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 20px;">
+            <div class="title-block">
+                <h2 style="font-weight: bold; color: #1e3a8a; font-size: 12pt;">بخش دوم: تحلیل گرافیکی و استنتاج ابعاد آکادمیک</h2>
+            </div>
+        </div>
+
+        <!-- Strengths and Weaknesses -->
+        <div class="sw-row">
+            <div class="sw-box">
+                <h3 style="color: #166534;">🏆 سه نقطه قوت برتر استاد (بالاترین رضایت)</h3>
+                
+                <div class="sw-item strength">
+                    <span>آیا در آغاز سمستر کورس پالیسی تشریح گردیده است؟</span>
+                    <span class="sw-val" style="color: #166534;">۱۰۰٪</span>
+                </div>
+                
+                <div class="sw-item strength">
+                    <span>آیا تدریس استاد قابل فهم است؟</span>
+                    <span class="sw-val" style="color: #166534;">۱۰۰٪</span>
+                </div>
+                
+                <div class="sw-item strength">
+                    <span>آیا استاد با پلان درسی منظم داخل صنف میشود؟</span>
+                    <span class="sw-val" style="color: #166534;">۴۰٪</span>
+                </div>
+                
+            </div>
+            <div class="sw-box">
+                <h3 style="color: #991b1b;">⚠️ سه نقطه نیازمند بهبود (پایینترین رضایت)</h3>
+                
+                <div class="sw-item weakness">
+                    <span>آیا استاد محصلان را در تدریس سهم میسازد؟</span>
+                    <span class="sw-val" style="color: #991b1b;">۰٪</span>
+                </div>
+                
+                <div class="sw-item weakness">
+                    <span>آیا از میتود تدریس استاد راضی هستید؟</span>
+                    <span class="sw-val" style="color: #991b1b;">۰٪</span>
+                </div>
+                
+                <div class="sw-item weakness">
+                    <span>آیا مواد درسی برای شما معرفی شده و موجود است؟</span>
+                    <span class="sw-val" style="color: #991b1b;">۰٪</span>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Secondary Charts -->
+        <div class="charts-row">
+            <div class="chart-half">
+                <div class="chart-title">گراف رادار (نمرات ابعاد چهارگانه تدریس)</div>
+                <canvas id="radarChart"></canvas>
+            </div>
+            <div class="chart-half">
+                <div class="chart-title">وضعیت عمومی صنف (مجموع تمام پاسخها)</div>
+                <canvas id="doughnutChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="charts-row" style="height: 150px; justify-content: center; margin-top: -10px;">
+            <div class="chart-half" style="flex: 0 0 50%; height: 160px; display: flex; align-items: center; justify-content: space-around;">
+                 <div style="text-align: center;">
+                    <div style="font-size: 11pt; color: #475569; margin-bottom: 5px;">فورم‌های معتبر پردازش شده</div>
+                    <div style="font-size: 20pt; color: #0284c7; font-weight: bold;">۵</div>
+                 </div>
+                 <div style="width: 1px; height: 60px; background: #e2e8f0;"></div>
+                 <div style="text-align: center;">
+                    <div style="font-size: 11pt; color: #475569; margin-bottom: 5px;">فورم‌های باطله / مخدوش</div>
+                    <div style="font-size: 20pt; color: #ef4444; font-weight: bold;">۰</div>
+                 </div>
+            </div>
+        </div>
+
         <div class="footer">
             <div class="sign-box">امضای استاد مضمون<br>(nasir)</div>
             <div class="sign-box">امضای آمر دیپارتمنت</div>
             <div class="sign-box">امضای مسئول تضمین کیفیت</div>
         </div>
-
     </div>
 
     <script>
-        // Disable animation for perfect PDF printing
         Chart.defaults.animation = false;
         Chart.defaults.font.family = "'Vazirmatn', 'Tahoma', sans-serif";
 
-        const ctx = document.getElementById('qaChart').getContext('2d');
-        
-        const labels = ['Q1: تشریح پالیسی', 'Q2: تطبیق پالیسی', 'Q3: معرفی مواد', 'Q4: قابل فهم بودن*', 'Q5: رضایت از میتود', 'Q6: سهم دادن محصل', 'Q7: سلوک اکادمیک', 'Q8: پلان منظم', 'Q9: جواب به سوالات', 'Q10: پابندی به وقت', 'Q11: تمرکز بر درس (معکوس)', 'Q12: حل مشکلات*', 'Q13: شیوه ارزیابی', 'Q14: استفاده از تکنالوژی'];
+        function toPersianNum(num) {
+            const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            return num.toString().replace(/\d/g, x => persianDigits[x]);
+        }
 
-        // Green Data
-        const positiveData = [100, 0, 0, 100, 0, 0, 40, 40, 40, 40, 40, 40, 40, 40];
-        
-        // Yellow Data
-        const neutralData = [0, 0, 100, 0, 0, 100, 20, 20, 20, 20, 20, 20, 20, 20];
-        
-        // Red Data
-        const negativeData = [0, 100, 0, 0, 100, 0, 40, 40, 40, 40, 40, 40, 40, 40];
+        // 1. Main Bar Chart
+        const ctxBar = document.getElementById('qaChart').getContext('2d');
+        const labelsBar = ['Q1: تشریح پالیسی', 'Q2: تطبیق پالیسی', 'Q3: معرفی مواد', 'Q4: قابل فهم بودن*', 'Q5: رضایت از میتود', 'Q6: سهم دادن محصل', 'Q7: سلوک اکادمیک', 'Q8: پلان منظم', 'Q9: جواب به سوالات', 'Q10: پابندی به وقت', 'Q11: تمرکز (معکوس)', 'Q12: حل مشکلات*', 'Q13: شیوه ارزیابی', 'Q14: استفاده از تکنالوژی'];
 
-        new Chart(ctx, {
+        new Chart(ctxBar, {
             type: 'bar',
             plugins: [ChartDataLabels],
             data: {
-                labels: labels,
+                labels: labelsBar,
                 datasets: [
-                    {
-                        label: 'عملکرد مطلوب (مثبت)',
-                        data: positiveData,
-                        backgroundColor: '#22c55e', // Semantic Green
-                        datalabels: { color: '#fff', font: {weight: 'bold'} }
-                    },
-                    {
-                        label: 'نسبتاً (متوسط)',
-                        data: neutralData,
-                        backgroundColor: '#facc15', // Semantic Yellow
-                        datalabels: { color: '#854d0e', font: {weight: 'bold'}, display: function(context) { return context.dataset.data[context.dataIndex] > 0; } } // Only show if > 0
-                    },
-                    {
-                        label: 'نیاز به بهبود (منفی)',
-                        data: negativeData,
-                        backgroundColor: '#ef4444', // Semantic Red
-                        datalabels: { color: '#fff', font: {weight: 'bold'}, display: function(context) { return context.dataset.data[context.dataIndex] > 0; } }
-                    }
+                    { label: 'مطلوب', data: [100, 0, 0, 100, 0, 0, 40, 40, 40, 40, 40, 40, 40, 40], backgroundColor: '#22c55e', datalabels: { color: '#fff', font: {weight: 'bold'} } },
+                    { label: 'متوسط', data: [0, 0, 100, 0, 0, 100, 20, 20, 20, 20, 20, 20, 20, 20], backgroundColor: '#facc15', datalabels: { color: '#854d0e', font: {weight: 'bold'}, display: c => c.dataset.data[c.dataIndex] > 0 } },
+                    { label: 'منفی', data: [0, 100, 0, 0, 100, 0, 40, 40, 40, 40, 40, 40, 40, 40], backgroundColor: '#ef4444', datalabels: { color: '#fff', font: {weight: 'bold'}, display: c => c.dataset.data[c.dataIndex] > 0 } }
                 ]
             },
             options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        stacked: true,
-                        max: 100,
-                        ticks: { callback: function(value) { return value + '٪'; } }
-                    },
-                    y: { 
-                        stacked: true,
-                        ticks: { font: {size: 11} }
-                    }
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                scales: { 
+                    x: { stacked: true, max: 100, ticks: { callback: v => toPersianNum(v) + '٪' } }, 
+                    y: { stacked: true, ticks: { font: {size: 11} } } 
                 },
-                plugins: {
-                    legend: { position: 'top' },
+                plugins: { 
+                    legend: { position: 'top' }, 
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': ' + context.raw + '٪';
+                                return context.dataset.label + ': ' + toPersianNum(context.raw) + '٪';
+                            }
+                        }
+                    },
+                    datalabels: { formatter: v => v > 0 ? toPersianNum(v) + '٪' : '' } 
+                }
+            }
+        });
+
+        // 2. Radar Chart
+        const ctxRadar = document.getElementById('radarChart').getContext('2d');
+        new Chart(ctxRadar, {
+            type: 'radar',
+            plugins: [ChartDataLabels],
+            data: {
+                labels: ["\u0646\u0635\u0627\u0628\u060c \u067e\u0644\u0627\u0646\u06af\u0630\u0627\u0631\u06cc \u0648 \u0645\u0648\u0627\u062f \u062f\u0631\u0633\u06cc", "\u0645\u06cc\u062a\u0648\u062f\u0648\u0644\u0648\u0698\u06cc \u062a\u062f\u0631\u06cc\u0633 \u0648 \u062a\u0639\u0627\u0645\u0644 \u0635\u0646\u0641", "\u0645\u062f\u06cc\u0631\u06cc\u062a \u0635\u0646\u0641 \u0648 \u0645\u0633\u0644\u06a9\u06cc \u0628\u0648\u062f\u0646", "\u0627\u0631\u0632\u06cc\u0627\u0628\u06cc\u060c \u062a\u06a9\u0646\u0627\u0644\u0648\u0698\u06cc \u0648 \u062d\u0644 \u0645\u0634\u06a9\u0644\u0627\u062a"],
+                datasets: [{
+                    label: 'امتیاز بُعد (٪)',
+                    data: [35, 35, 40, 40],
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 2,
+                    datalabels: {
+                        color: '#1e3a8a',
+                        font: {weight: 'bold', size: 11},
+                        formatter: v => toPersianNum(v) + '٪',
+                        anchor: 'end',
+                        align: 'end'
+                    }
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { r: { min: 0, max: 100, ticks: { display: false, stepSize: 20 } } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + toPersianNum(context.raw) + '٪';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Doughnut Chart
+        const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+        new Chart(ctxDoughnut, {
+            type: 'doughnut',
+            plugins: [ChartDataLabels],
+            data: {
+                labels: ['مجموع پاسخ‌های مطلوب', 'مجموع پاسخ‌های متوسط', 'مجموع پاسخ‌های منفی'],
+                datasets: [{
+                    data: [26, 18, 26],
+                    backgroundColor: ['#22c55e', '#facc15', '#ef4444'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: { position: 'right', labels: { font: { size: 10 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + toPersianNum(context.raw) + ' رای';
                             }
                         }
                     },
                     datalabels: {
-                        formatter: function(value, context) {
-                            if(value > 0) return value + '٪';
-                            return '';
-                        }
+                        formatter: (value, ctx) => {
+                            let sum = 0;
+                            let dataArr = ctx.chart.data.datasets[0].data;
+                            dataArr.map(data => { sum += data; });
+                            let percentage = (value*100 / sum).toFixed(0);
+                            return value > 0 ? toPersianNum(percentage) + "٪\n(" + toPersianNum(value) + ")" : '';
+                        },
+                        color: '#fff', font: {weight: 'bold', size: 11}, textAlign: 'center'
                     }
                 }
             }
