@@ -71,8 +71,8 @@
         <div class="header">
             <div class="logo-box"><img src="{{ uni_logo_data if uni_logo_data else 'uni_logo.png' }}" alt="University Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
             <div class="title-block">
-                <h1>وزارت تحصیلات عالی - پوهنتون بدخشان</h1>
-                <h2>پوهنحی کمپیوتر ساینس | کمیته ارتقای کیفیت</h2>
+                <h1>وزارت تحصیلات عالی - {{ meta.university }}</h1>
+                <h2>پوهنحی {{ meta.faculty }} | کمیته ارتقای کیفیت</h2>
                 <h2 style="font-weight: bold; color: #000; margin-top: 5px;">گزارش تحلیل پیشرفته ارزیابی استاد توسط محصلان</h2>
             </div>
             <div class="logo-box"><img src="{{ mohe_logo_data if mohe_logo_data else 'mohe_logo.png' }}" alt="QA Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>

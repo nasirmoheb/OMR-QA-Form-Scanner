@@ -52,6 +52,8 @@ def test_html_report():
     
     # Create mock objects
     class MockSurvey:
+        university = "پوهنتون بدخشان"
+        faculty = "پوهنحی کمپیوتر ساینس"
         professor = "محمد احمد"
         subject = "ریاضیات"
         department = "علوم کمپیوتر"

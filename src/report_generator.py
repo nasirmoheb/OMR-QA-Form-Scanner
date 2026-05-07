@@ -24,6 +24,8 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
     total_students = len(form_results)
     
     metadata = {
+        "university": survey.university or "پوهنتون بدخشان",
+        "faculty": survey.faculty or "پوهنحی کمپیوتر ساینس",
         "teacher_name": survey.professor or "نامعلوم",
         "subject": survey.subject or "نامعلوم",
         "department": survey.department or "نامعلوم",

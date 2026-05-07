@@ -14,6 +14,8 @@ def generate_test_report():
     
     # Create mock survey
     class MockSurvey:
+        university = "پوهنتون کابل"
+        faculty = "پوهنحی کمپیوتر ساینس"
         professor = "پوهاند محمد احمد رحیمی"
         subject = "ریاضیات گسسته"
         department = "دیپارتمنت نرم افزار"

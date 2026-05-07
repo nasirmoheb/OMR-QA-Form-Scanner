@@ -21,6 +21,8 @@ def test_dari_qa_report():
     from report_generator import generate_dari_qa_report
     
     class MockSurvey:
+        university = "پوهنتون بدخشان"
+        faculty = "پوهنحی کمپیوتر ساینس"
         professor = "Test"
         subject = "Test"
         department = "Test"

@@ -34,6 +34,8 @@ def test_report_generation():
     
     # Create a mock survey object
     class MockSurvey:
+        university = "پوهنتون بدخشان"
+        faculty = "پوهنحی کمپیوتر ساینس"
         professor = "Test Professor"
         subject = "Test Subject"
         department = "Test Department"

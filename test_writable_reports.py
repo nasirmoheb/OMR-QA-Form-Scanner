@@ -44,6 +44,8 @@ def test_report_generation_to_writable_location():
     
     # Create mock objects
     class MockSurvey:
+        university = "پوهنتون بدخشان"
+        faculty = "پوهنحی کمپیوتر ساینس"
         professor = "Test Professor"
         subject = "Test Subject"
         department = "Test Department"
