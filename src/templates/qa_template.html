@@ -63,13 +63,13 @@
     <!-- PAGE 1: Core Table & Main Bar Chart -->
     <div class="a4-page">
         <div class="header">
-            <div class="logo-box"><img src="uni_logo.png" alt="University Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
+            <div class="logo-box"><img src="{{ uni_logo_data if uni_logo_data else 'uni_logo.png' }}" alt="University Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
             <div class="title-block">
                 <h1>وزارت تحصیلات عالی - پوهنتون بدخشان</h1>
                 <h2>پوهنحی کمپیوتر ساینس | کمیته ارتقای کیفیت</h2>
                 <h2 style="font-weight: bold; color: #000; margin-top: 5px;">گزارش تحلیل پیشرفته ارزیابی استاد توسط محصلان</h2>
             </div>
-            <div class="logo-box"><img src="mohe_logo.png" alt="QA Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
+            <div class="logo-box"><img src="{{ mohe_logo_data if mohe_logo_data else 'mohe_logo.png' }}" alt="QA Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
         </div>
 
         <div class="meta-grid">
@@ -120,11 +120,11 @@
     <!-- PAGE 2: Advanced Visual Analytics -->
     <div class="a4-page page-break">
         <div class="header" style="border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 20px;">
-            <div class="logo-box" style="width: 50px; height: 50px;"><img src="uni_logo.png" alt="University Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
+            <div class="logo-box" style="width: 50px; height: 50px;"><img src="{{ uni_logo_data if uni_logo_data else 'uni_logo.png' }}" alt="University Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
             <div class="title-block">
                 <h2 style="font-weight: bold; color: #1e3a8a; font-size: 12pt;">بخش دوم: تحلیل گرافیکی و استنتاج ابعاد آکادمیک</h2>
             </div>
-            <div class="logo-box" style="width: 50px; height: 50px;"><img src="mohe_logo.png" alt="QA Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
+            <div class="logo-box" style="width: 50px; height: 50px;"><img src="{{ mohe_logo_data if mohe_logo_data else 'mohe_logo.png' }}" alt="QA Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
         </div>
 
         <!-- Strengths and Weaknesses -->

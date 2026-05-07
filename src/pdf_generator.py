@@ -212,13 +212,13 @@ def generate_prefilled_form(
             if stored_logo and Path(stored_logo).exists():
                 resolved_logo = str(stored_logo)
 
+    # Import Config at the top of the function to ensure paths are resolved correctly
+    from config import Config
+    
     if logo_path is not None and Path(str(logo_path)).exists():
         resolved_logo = str(logo_path)
-
-    if resolved_logo is None:
-        from config import Config
-        if Config.DEFAULT_LOGO_PATH.exists():
-            resolved_logo = str(Config.DEFAULT_LOGO_PATH)
+    elif resolved_logo is None and Config.DEFAULT_LOGO_PATH.exists():
+        resolved_logo = str(Config.DEFAULT_LOGO_PATH)
 
     _draw_form(survey, output_path, questions, coords, resolved_logo)
     logger.info("PDF generated: %s", output_path)
@@ -336,11 +336,12 @@ def _draw_header(
     # Right logo (QA)
     qa_logo_drawn = False
     from config import Config
-    qa_path = str(Config.QA_LOGO_PATH)
-    if os.path.exists(qa_path):
+    
+    # Use Config.QA_LOGO_PATH which handles PyInstaller bundles correctly
+    if Config.QA_LOGO_PATH.exists():
         try:
             c.drawImage(
-                qa_path,
+                str(Config.QA_LOGO_PATH),
                 right_logo_cx - logo_r,
                 logo_cy - logo_r,
                 width=logo_d,

@@ -657,7 +657,9 @@ class ResultsPage(BasePage):
             from config import Config
             import report_generator
             
-            report_path = str(Config.PROJECT_ROOT / "assets" / "dari_qa_report.html")
+            # Use writable reports directory instead of Program Files
+            reports_dir = Config.get_reports_dir()
+            report_path = str(reports_dir / "dari_qa_report.html")
             advanced_data = self._get_advanced_data()
             report_generator.generate_dari_qa_report(self.survey, self.form_results, report_path, advanced_data=advanced_data)
             
@@ -701,7 +703,14 @@ class ResultsPage(BasePage):
             df = pd.DataFrame(rows) if rows else pd.DataFrame(
                 columns=["Form_ID"] + [f"Q{i}" for i in range(1, 15)] + ["Form_Score", "Valid"]
             )
-            report_path = self.analytics.generate_report(df, question_texts=self.question_texts)
+            
+            # Use writable reports directory
+            reports_dir = Config.get_reports_dir()
+            report_path = self.analytics.generate_report(
+                df, 
+                output_path=str(reports_dir / "report.html"),
+                question_texts=self.question_texts
+            )
             webbrowser.open(f"file:///{Path(report_path).resolve()}")
         except Exception as exc:
             logger.exception("HTML report failed")
@@ -744,8 +753,9 @@ class ResultsPage(BasePage):
                 advanced_data=advanced_data,
             )
 
-            from config import Config
-            report_path = str(Config.PROJECT_ROOT / "assets" / "report_advanced.html")
+            # Use writable reports directory instead of Program Files
+            reports_dir = Config.get_reports_dir()
+            report_path = str(reports_dir / "report_advanced.html")
             with open(report_path, "w", encoding="utf-8") as fh:
                 fh.write(html)
 

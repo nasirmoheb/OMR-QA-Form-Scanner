@@ -84,6 +84,8 @@ datas = [
     (str(CTK_PATH), "customtkinter"),
     # App assets (survey template PDF, report HTML)
     (str(ASSETS), "assets"),
+    # Templates directory for Jinja2
+    (str(SRC / "templates"), "src/templates"),
     # Pre-create the data directory so SQLite can write there
     (str(DATA_DIR), "data"),
 ]

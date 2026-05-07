@@ -137,9 +137,9 @@ class AnalyticsEngine:
         html = PlotlyGenerator.generate_dashboard_html(df, batch_score, question_texts=question_texts)
 
         if output_path is None:
-            output_path = str(
-                self.config.PROJECT_ROOT / "assets" / "report.html"
-            )
+            # Use writable reports directory instead of Program Files
+            reports_dir = self.config.get_reports_dir()
+            output_path = str(reports_dir / "report.html")
 
         with open(output_path, "w", encoding="utf-8") as fh:
             fh.write(html)

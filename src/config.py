@@ -75,10 +75,43 @@ class Config:
     QUESTION_TEXTS: list = []
 
     # Derived paths
-    PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
+    @staticmethod
+    def _get_base_path() -> Path:
+        """Get the base path for resources, handling PyInstaller bundled apps."""
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            # Running in PyInstaller bundle
+            return Path(sys._MEIPASS)
+        else:
+            # Running in normal Python environment
+            return Path(__file__).resolve().parent.parent
+    
+    PROJECT_ROOT: Path = _get_base_path.__func__()
     ASSETS_DIR: Path = PROJECT_ROOT / "assets"
+    TEMPLATES_DIR: Path = PROJECT_ROOT / "src" / "templates"
     DEFAULT_LOGO_PATH: Path = ASSETS_DIR / "uni_logo.png"
     QA_LOGO_PATH: Path = ASSETS_DIR / "mohe_logo.png"
+    
+    @staticmethod
+    def get_reports_dir() -> Path:
+        """Get the directory for generated reports (writable location).
+        
+        In production (PyInstaller bundle), uses user's Documents folder.
+        In development, uses project's assets folder.
+        """
+        if getattr(sys, 'frozen', False):
+            # Running as compiled executable - use Documents folder
+            if sys.platform == 'win32':
+                import os
+                documents = Path(os.path.expanduser("~")) / "Documents" / "Tadris_QA" / "Reports"
+            else:
+                documents = Path.home() / "Tadris_QA" / "Reports"
+            
+            # Create directory if it doesn't exist
+            documents.mkdir(parents=True, exist_ok=True)
+            return documents
+        else:
+            # Development mode - use assets folder (writable)
+            return Config.ASSETS_DIR
 
     @classmethod
     def from_persistence(cls, persistence: Any) -> "Config":

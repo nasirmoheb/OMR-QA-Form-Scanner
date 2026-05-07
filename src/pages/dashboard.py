@@ -558,7 +558,9 @@ class DashboardPage(BasePage):
                 messagebox.showwarning(rtl_text(_("results")), rtl_text("No processed forms found for this survey."))
                 return
 
-            report_path = str(Config.PROJECT_ROOT / "assets" / "dari_qa_report.html")
+            # Use writable reports directory instead of Program Files
+            reports_dir = Config.get_reports_dir()
+            report_path = str(reports_dir / "dari_qa_report.html")
             
             # Compute advanced analytics data
             advanced_data = self.analytics.run_advanced_analytics(

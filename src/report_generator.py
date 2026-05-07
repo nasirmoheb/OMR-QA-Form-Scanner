@@ -1,10 +1,23 @@
 import json
+import base64
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 def to_persian_num(number):
     persian_digits = "۰۱۲۳۴۵۶۷۸۹"
     return "".join(persian_digits[int(d)] if d.isdigit() else d for d in str(number))
+
+def _image_to_base64(image_path):
+    """Convert an image file to base64 data URI for embedding in HTML."""
+    try:
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+        ext = Path(image_path).suffix.lower()
+        mime_type = 'image/png' if ext == '.png' else 'image/jpeg'
+        b64_data = base64.b64encode(image_data).decode('utf-8')
+        return f"data:{mime_type};base64,{b64_data}"
+    except Exception:
+        return ""
 
 def generate_dari_qa_report(survey, form_results, output_html_path, advanced_data=None):
     """Generates the official Dari HTML QA report based on Jinja2 template."""
@@ -164,11 +177,22 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
     top_3 = sorted_qs[:3]
     bottom_3 = sorted_qs[-3:][::-1] # Reverse so the absolute lowest is first
 
-    template_dir = Path(__file__).parent / "templates"
+    # Get template directory from Config
+    from config import Config
+    template_dir = Config.TEMPLATES_DIR
+    
+    # Ensure template directory exists
+    if not template_dir.exists():
+        raise FileNotFoundError(f"Template directory not found: {template_dir}")
+    
     env = Environment(loader=FileSystemLoader(str(template_dir)))
     env.filters['persian_num'] = to_persian_num
     
     template = env.get_template('qa_template.html')
+    
+    # Convert logos to base64 for embedding
+    uni_logo_data = _image_to_base64(Config.DEFAULT_LOGO_PATH) if Config.DEFAULT_LOGO_PATH.exists() else ""
+    mohe_logo_data = _image_to_base64(Config.QA_LOGO_PATH) if Config.QA_LOGO_PATH.exists() else ""
 
     html_output = template.render(
         meta=metadata,
@@ -185,7 +209,9 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
         valid_forms=to_persian_num(valid_forms),
         invalid_forms=to_persian_num(invalid_forms),
         valid_forms_raw=valid_forms,
-        invalid_forms_raw=invalid_forms
+        invalid_forms_raw=invalid_forms,
+        uni_logo_data=uni_logo_data,
+        mohe_logo_data=mohe_logo_data
     )
 
     with open(output_html_path, 'w', encoding='utf-8') as f:
