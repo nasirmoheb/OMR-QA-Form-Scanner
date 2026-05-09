@@ -21,6 +21,7 @@ def _image_to_base64(image_path):
 
 def generate_dari_qa_report(survey, form_results, output_html_path, advanced_data=None):
     """Generates the official Dari HTML QA report based on Jinja2 template."""
+    from config import Config
     total_students = len(form_results)
     
     metadata = {
@@ -64,7 +65,7 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
     chart_data_neutral = []
     chart_data_negative = []
 
-    questions_info = {
+    _default_questions = {
         1: "آیا در آغاز سمستر کورس پالیسی تشریح گردیده است؟",
         2: "آیا تدریس مطابق کورس پالیسی صورت گرفته است؟",
         3: "آیا مواد درسی برای شما معرفی شده و موجود است؟",
@@ -80,12 +81,19 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
         13: "آیا از شیوههای ارزیابی استاد راضی هستید؟",
         14: "آیا استاد از تکنالوژی معلوماتی استفاده مینماید؟",
     }
+
+    # Use user-configured question texts when available (14 items)
+    cfg_texts = Config.QUESTION_TEXTS
+    if isinstance(cfg_texts, list) and len(cfg_texts) == 14:
+        questions_info = {i + 1: cfg_texts[i] for i in range(14)}
+    else:
+        questions_info = _default_questions
     
     categories = [
-        {"name": "۱. نصاب، پلانگذاری و مواد درسی", "q_nums": [1, 2, 3, 8]},
-        {"name": "۲. میتودولوژی تدریس و تعامل صنف", "q_nums": [4, 5, 6, 9]},
-        {"name": "۳. مدیریت صنف و مسلکی بودن", "q_nums": [7, 10, 11]},
-        {"name": "۴. ارزیابی، تکنالوژی و حل مشکلات", "q_nums": [12, 13, 14]},
+        {"name": "۱. نصاب و منابع درسی", "q_nums": [1, 2, 3]},
+        {"name": "۲. میتودولوژی تدریس", "q_nums": [4, 5, 9, 12]},
+        {"name": "۳. مدیریت صنف", "q_nums": [7, 8, 10, 11]},
+        {"name": "۴. تدریس مدرن و محصل‌محور", "q_nums": [6, 13, 14]},
     ]
     
     table_data = []
@@ -180,7 +188,6 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
     bottom_3 = sorted_qs[-3:][::-1] # Reverse so the absolute lowest is first
 
     # Get template directory from Config
-    from config import Config
     template_dir = Config.TEMPLATES_DIR
     
     # Ensure template directory exists

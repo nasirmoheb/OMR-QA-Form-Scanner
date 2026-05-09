@@ -28,8 +28,8 @@ _CELL_PAD_Y: int = 4
 # Timing mark detection constants (calibrated against the real A4 form)
 _TIMING_MARK_X_START: int = 100
 _TIMING_MARK_X_END: int = 100
-_TIMING_MARK_MIN_AREA: int = 30
-_TIMING_MARK_MAX_AREA: int = 10
+_TIMING_MARK_MIN_AREA: int = 10   # minimum contour area to consider
+_TIMING_MARK_MAX_AREA: int = 300  # maximum contour area to consider
 _TIMING_MARK_FILL_RATIO: float = 0.5
 _TIMING_MARK_COUNT_TOLERANCE: int = 3
 

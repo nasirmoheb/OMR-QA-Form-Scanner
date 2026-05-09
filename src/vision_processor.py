@@ -190,12 +190,11 @@ class VisionProcessor:
     #  Score helper (preliminary; AnalyticsEngine will refine later)
     # ------------------------------------------------------------------ #
 
-    @staticmethod
-    def _compute_form_score(answers: list[str]) -> float:
+    def _compute_form_score(self, answers: list[str]) -> float:
         """Return a simple score: valid answers only.
 
-        This is a preliminary score used for validity flagging.
-        The analytics layer recalculates the official score.
+        Uses config.SCORE_YES/SOMEWHAT/NO so that user-configured weights
+        are respected even at scan time.
 
         Args:
             answers: 14 answer strings.
@@ -203,7 +202,11 @@ class VisionProcessor:
         Returns:
             Percentage-like score (0..100) based on valid selections.
         """
-        weights = {"Yes": 100, "Somewhat": 50, "No": 0}
+        weights = {
+            "Yes": self.config.SCORE_YES,
+            "Somewhat": self.config.SCORE_SOMEWHAT,
+            "No": self.config.SCORE_NO,
+        }
         valid = [a for a in answers if a in weights]
         if not valid:
             return 0.0
