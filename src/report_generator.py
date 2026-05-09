@@ -93,7 +93,7 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
         {"name": "۱. نصاب و منابع درسی", "q_nums": [1, 2, 3]},
         {"name": "۲. میتودولوژی تدریس", "q_nums": [4, 5, 9, 12]},
         {"name": "۳. مدیریت صنف", "q_nums": [7, 8, 10, 11]},
-        {"name": "۴. تدریس مدرن و محصل‌محور", "q_nums": [6, 13, 14]},
+        {"name": "۴. تدریس فعال و محصل‌محور", "q_nums": [6, 13, 14]},
     ]
     
     table_data = []
