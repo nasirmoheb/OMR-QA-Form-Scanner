@@ -33,6 +33,7 @@ class DashboardPage(BasePage):
         router: PageRouter,
         persistence: PersistenceManager,
         analytics: Any = None,
+        _open_report: int | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(router, **kwargs)
@@ -46,6 +47,10 @@ class DashboardPage(BasePage):
         self._build()
         self._load_surveys()
         I18n.register_listener(self._on_language_change)
+
+        # If we arrived here after a scan completed, open the report automatically
+        if _open_report is not None:
+            self.after(200, lambda sid=_open_report: self._on_results(sid))
 
     def destroy(self) -> None:
         I18n.unregister_listener(self._on_language_change)
@@ -425,16 +430,21 @@ class DashboardPage(BasePage):
     # ----
 
     def _draft_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
-        # Print button
+        C = self._compound()
+
+        # Print button — icon + text
         IC.icon_button(
-            parent, "printer", text="",
-            size=16, color=T.TEXT_SECONDARY[1],
-            width=38, height=38, corner_radius=T.RADIUS_SM,
-            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            parent, "printer",
+            text=f"  {_('print_form')}" if not is_rtl() else f"{_('print_form')}  ",
+            size=14, color=T.TEXT_SECONDARY[1],
+            height=38, corner_radius=T.RADIUS_SM,
+            fg_color=T.SURFACE_RAISED, hover_color=T.GHOST_HOVER,
+            text_color=T.TEXT_SECONDARY, font=T.font(12),
+            border_width=1, border_color=T.CARD_BORDER,
             command=lambda sid=survey.id: self._on_print(sid),
         ).pack(side=self._start(), padx=self._pad_after(6))
 
-        # Edit/Process buttons
+        # Edit button
         IC.icon_button(
             parent, "edit", text="",
             size=16, color=T.TEXT_SECONDARY[1],
@@ -464,21 +474,36 @@ class DashboardPage(BasePage):
         ).pack(side=self._start())
 
     def _done_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
-        btn_color = T.STATUS_ANALYZED[1] if survey.status == "Analyzed" else T.ACCENT[1]
-        btn_hover = T.SUCCESS[1]        if survey.status == "Analyzed" else T.ACCENT_HOVER[1]
-        icon_name = "trending_up"    if survey.status == "Analyzed" else "bar_chart"
+        btn_color      = T.STATUS_ANALYZED[1] if survey.status == "Analyzed" else T.ACCENT[1]
+        btn_hover      = T.SUCCESS[1]          if survey.status == "Analyzed" else T.ACCENT_HOVER[1]
+        icon_name      = "trending_up"         if survey.status == "Analyzed" else "bar_chart"
         btn_text_color = "#000000"
 
-        # Print button
+        # Print button — icon + text
         IC.icon_button(
-            parent, "printer", text="",
-            size=16, color=T.TEXT_SECONDARY[1],
-            width=38, height=38, corner_radius=T.RADIUS_SM,
-            fg_color="transparent", hover_color=T.SURFACE_RAISED,
+            parent, "printer",
+            text=f"  {_('print_form')}" if not is_rtl() else f"{_('print_form')}  ",
+            size=14, color=T.TEXT_SECONDARY[1],
+            height=38, corner_radius=T.RADIUS_SM,
+            fg_color=T.SURFACE_RAISED, hover_color=T.GHOST_HOVER,
+            text_color=T.TEXT_SECONDARY, font=T.font(12),
+            border_width=1, border_color=T.CARD_BORDER,
             command=lambda sid=survey.id: self._on_print(sid),
         ).pack(side=self._start(), padx=self._pad_after(6))
 
-        # Reprocess button
+        # Excel export button — icon + text, green tint
+        IC.icon_button(
+            parent, "file_text",
+            text=f"  {_('export_excel')}" if not is_rtl() else f"{_('export_excel')}  ",
+            size=14, color="#1D6F42",
+            height=38, corner_radius=T.RADIUS_SM,
+            fg_color=T.SURFACE_RAISED, hover_color="#0D2B1A",
+            text_color="#1D6F42", font=T.font(12),
+            border_width=1, border_color="#1D6F42",
+            command=lambda sid=survey.id: self._on_export_excel(sid),
+        ).pack(side=self._start(), padx=self._pad_after(6))
+
+        # Reprocess button (icon only)
         IC.icon_button(
             parent, "cpu", text="",
             size=16, color=T.TEXT_SECONDARY[1],
@@ -487,7 +512,7 @@ class DashboardPage(BasePage):
             command=lambda sid=survey.id: self._on_process_click(sid),
         ).pack(side=self._start(), padx=self._pad_after(6))
 
-        # Delete button
+        # Delete button (icon only)
         IC.icon_button(
             parent, "trash", text="",
             size=16, color=T._D_RED,
@@ -604,3 +629,137 @@ class DashboardPage(BasePage):
             if self.selected_survey_id == survey_id:
                 self.selected_survey_id = None
             self._load_surveys()
+
+    def _on_export_excel(self, survey_id: int) -> None:
+        """Export all form results for a survey to an Excel (.xlsx) file."""
+        survey = self.persistence.get_survey(survey_id)
+        if not survey:
+            messagebox.showerror(rtl_text(_("error")), rtl_text("Survey not found."))
+            return
+
+        results = self.persistence.get_form_results(survey_id)
+        if not results:
+            messagebox.showwarning(rtl_text(_("export_excel")), rtl_text("No processed forms found for this survey."))
+            return
+
+        # Ask user where to save
+        default_name = (
+            f"{survey.subject or 'survey'}_{survey.professor or ''}"
+            .replace(" ", "_").replace("/", "-")[:50]
+        )
+        save_path = filedialog.asksaveasfilename(
+            defaultextension=".xlsx",
+            filetypes=[("Excel Workbook", "*.xlsx")],
+            initialfile=f"{default_name}.xlsx",
+            title=_("export_excel"),
+        )
+        if not save_path:
+            return
+
+        try:
+            import openpyxl
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
+
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Results"
+
+            # ── Styles ────────────────────────────────────────────────────
+            header_font  = Font(bold=True, color="FFFFFF", size=11)
+            header_fill  = PatternFill("solid", fgColor="1E3A5F")
+            meta_fill    = PatternFill("solid", fgColor="2D4A6E")
+            yes_fill     = PatternFill("solid", fgColor="D4EDDA")
+            no_fill      = PatternFill("solid", fgColor="F8D7DA")
+            sw_fill      = PatternFill("solid", fgColor="FFF3CD")
+            inv_fill     = PatternFill("solid", fgColor="E2E3E5")
+            center_align = Alignment(horizontal="center", vertical="center")
+            left_align   = Alignment(horizontal="left",   vertical="center")
+            thin_border  = Border(
+                left=Side(style="thin"), right=Side(style="thin"),
+                top=Side(style="thin"), bottom=Side(style="thin"),
+            )
+
+            def _cell(row, col, value, font=None, fill=None, align=None):
+                c = ws.cell(row=row, column=col, value=value)
+                if font:  c.font = font
+                if fill:  c.fill = fill
+                if align: c.alignment = align
+                c.border = thin_border
+                return c
+
+            # ── Survey metadata block (rows 1-5) ──────────────────────────
+            meta_rows = [
+                ("University",    survey.university or ""),
+                ("Faculty",       survey.faculty or ""),
+                ("Subject",       survey.subject or ""),
+                ("Professor",     survey.professor or ""),
+                ("Semester",      f"{survey.semester} / {survey.academic_year}"),
+            ]
+            for r, (label, value) in enumerate(meta_rows, start=1):
+                _cell(r, 1, label,  font=Font(bold=True, color="FFFFFF"), fill=meta_fill, align=left_align)
+                _cell(r, 2, value,  fill=PatternFill("solid", fgColor="EBF2FA"), align=left_align)
+                ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=16)
+
+            # ── Column headers (row 7) ────────────────────────────────────
+            headers = ["Form ID"] + [f"Q{i}" for i in range(1, 15)] + ["Score", "Valid", "Confidence"]
+            for col, h in enumerate(headers, start=1):
+                _cell(7, col, h, font=header_font, fill=header_fill, align=center_align)
+
+            # ── Data rows ─────────────────────────────────────────────────
+            answer_fills = {"Yes": yes_fill, "No": no_fill, "Somewhat": sw_fill, "Invalid": inv_fill}
+            for row_idx, fr in enumerate(results, start=8):
+                _cell(row_idx, 1, fr.form_id, align=left_align)
+                for q_idx, ans in enumerate(fr.answers(), start=1):
+                    c = _cell(row_idx, q_idx + 1, ans, align=center_align)
+                    c.fill = answer_fills.get(ans, inv_fill)
+                _cell(row_idx, 16, round(fr.form_score, 1), align=center_align)
+                _cell(row_idx, 17, "✓" if fr.valid else "✗",  align=center_align)
+                _cell(row_idx, 18, round(fr.confidence, 3),   align=center_align)
+
+            # ── Summary sheet ─────────────────────────────────────────────
+            ws2 = wb.create_sheet("Summary")
+            ws2.cell(1, 1, "Question").font = Font(bold=True)
+            ws2.cell(1, 2, "Yes").font      = Font(bold=True)
+            ws2.cell(1, 3, "Somewhat").font = Font(bold=True)
+            ws2.cell(1, 4, "No").font       = Font(bold=True)
+            ws2.cell(1, 5, "Invalid").font  = Font(bold=True)
+            ws2.cell(1, 6, "Total").font    = Font(bold=True)
+            ws2.cell(1, 7, "% Yes").font    = Font(bold=True)
+
+            for q in range(1, 15):
+                answers = [fr.answers()[q - 1] for fr in results]
+                yes_c  = answers.count("Yes")
+                sw_c   = answers.count("Somewhat")
+                no_c   = answers.count("No")
+                inv_c  = answers.count("Invalid")
+                total  = len(answers)
+                pct    = round(yes_c / total * 100, 1) if total else 0
+                r = q + 1
+                ws2.cell(r, 1, f"Q{q}")
+                ws2.cell(r, 2, yes_c)
+                ws2.cell(r, 3, sw_c)
+                ws2.cell(r, 4, no_c)
+                ws2.cell(r, 5, inv_c)
+                ws2.cell(r, 6, total)
+                ws2.cell(r, 7, pct)
+
+            # ── Column widths ─────────────────────────────────────────────
+            ws.column_dimensions["A"].width = 28
+            for col in range(2, 16):
+                ws.column_dimensions[get_column_letter(col)].width = 11
+            ws.column_dimensions[get_column_letter(16)].width = 9
+            ws.column_dimensions[get_column_letter(17)].width = 7
+            ws.column_dimensions[get_column_letter(18)].width = 12
+
+            wb.save(save_path)
+            messagebox.showinfo(rtl_text(_("export_excel")), rtl_text(f"{_('excel_saved')}\n{save_path}"))
+
+        except ImportError:
+            messagebox.showerror(
+                rtl_text(_("export_excel")),
+                rtl_text("openpyxl is required for Excel export.\nInstall it with: pip install openpyxl"),
+            )
+        except Exception as exc:
+            logger.exception("Excel export failed")
+            messagebox.showerror(rtl_text(_("excel_error")), rtl_text(str(exc)))

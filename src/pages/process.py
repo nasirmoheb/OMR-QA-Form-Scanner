@@ -359,7 +359,8 @@ class ProcessPage(BasePage):
             f"{_('forms_warning')}: {counts['warning']}\n"
             f"{_('forms_error')}: {counts['error']}"
         )
-        self.after(0, lambda: messagebox.showinfo(rtl_text(_("scan_complete")), rtl_text(summary)))
+        # Show summary dialog then navigate to dashboard and open the report
+        self.after(0, lambda: self._finish(summary))
 
     def _to_form_result(self, result: dict[str, Any], path: Path) -> FormResult:
         return FormResult(
@@ -378,3 +379,9 @@ class ProcessPage(BasePage):
             confidence=result.get("form_confidence", 0.0),
             manually_corrected=False,
         )
+
+    def _finish(self, summary: str) -> None:
+        """Show the completion dialog, then navigate to dashboard and open the report."""
+        messagebox.showinfo(rtl_text(_("scan_complete")), rtl_text(summary))
+        # Navigate to dashboard first (this destroys the current page)
+        self.go("dashboard", _open_report=self.survey_id)

@@ -53,6 +53,8 @@ class OMRGUI:
         self.root.title(_("app_title"))
         self.root.geometry("1340x800")
         self.root.minsize(1100, 660)
+        # Open maximized / fullscreen on startup
+        self.root.after(0, lambda: self.root.state("zoomed"))
 
         self._build()
         I18n.register_listener(self._on_lang_change)

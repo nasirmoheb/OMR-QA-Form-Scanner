@@ -133,25 +133,64 @@
             <div class="logo-box" style="width: 50px; height: 50px;"><img src="{{ mohe_logo_data if mohe_logo_data else 'mohe_logo.png' }}" alt="QA Logo" style="max-width: 100%; max-height: 100%; border-radius: 50%;"></div>
         </div>
 
-        <!-- Strengths and Weaknesses -->
-        <div class="sw-row no-page-break">
-            <div class="sw-box">
-                <h3 style="color: #166534;">🏆 سه نقطه قوت برتر استاد (بالاترین رضایت)</h3>
-                {% for q in top_3 %}
-                <div class="sw-item strength">
-                    <span>{{ q.short_text }}</span>
-                    <span class="sw-val" style="color: #166534;">{{ q.raw_green_pct | persian_num }}٪</span>
-                </div>
-                {% endfor %}
+        <!-- Performance Classification — compact 3-column layout -->
+        <div class="no-page-break" style="margin-bottom:14px;">
+            <div style="text-align:center; font-size:9.5pt; font-weight:bold; color:#1e3a8a; border-bottom:1.5px solid #1e3a8a; padding-bottom:4px; margin-bottom:8px;">
+                📊 طبقه‌بندی عملکرد سوالات بر اساس سطح رضایت
             </div>
-            <div class="sw-box">
-                <h3 style="color: #991b1b;">⚠️ سه نقطه نیازمند بهبود (پایینترین رضایت)</h3>
-                {% for q in bottom_3 %}
-                <div class="sw-item weakness">
-                    <span>{{ q.short_text }}</span>
-                    <span class="sw-val" style="color: #991b1b;">{{ q.raw_green_pct | persian_num }}٪</span>
+            <div style="display:flex; gap:8px; align-items:flex-start;">
+
+                <!-- Excellent: 90-100 -->
+                <div style="flex:1; border:1px solid #166534; border-radius:4px; overflow:hidden; font-size:8pt;">
+                    <div style="background:#166534; color:#fff; padding:3px 8px; font-weight:bold; display:flex; justify-content:space-between;">
+                        <span> عالی</span><span style="opacity:.85;">۹۰–۱۰۰٪</span>
+                    </div>
+                    {% if excellent_qs %}
+                        {% for q in excellent_qs %}
+                        <div style="display:flex; justify-content:space-between; padding:3px 7px; background:{% if loop.index is odd %}#f0fdf4{% else %}#fff{% endif %}; border-top:1px solid #dcfce7;">
+                            <span style="flex:1; padding-left:4px;">{{ q.short_text }}</span>
+                            <span style="font-weight:bold; color:#166534; white-space:nowrap;">{{ q.raw_green_pct | persian_num }}٪</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding:4px 8px; color:#6b7280; text-align:center;">—</div>
+                    {% endif %}
                 </div>
-                {% endfor %}
+
+                <!-- Good: 80-89 -->
+                <div style="flex:1; border:1px solid #b45309; border-radius:4px; overflow:hidden; font-size:8pt;">
+                    <div style="background:#b45309; color:#fff; padding:3px 8px; font-weight:bold; display:flex; justify-content:space-between;">
+                        <span> خوب</span><span style="opacity:.85;">۸۰–۸۹٪</span>
+                    </div>
+                    {% if good_qs %}
+                        {% for q in good_qs %}
+                        <div style="display:flex; justify-content:space-between; padding:3px 7px; background:{% if loop.index is odd %}#fffbeb{% else %}#fff{% endif %}; border-top:1px solid #fef3c7;">
+                            <span style="flex:1; padding-left:4px;">{{ q.short_text }}</span>
+                            <span style="font-weight:bold; color:#b45309; white-space:nowrap;">{{ q.raw_green_pct | persian_num }}٪</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding:4px 8px; color:#6b7280; text-align:center;">—</div>
+                    {% endif %}
+                </div>
+
+                <!-- Needs improvement: <80 -->
+                <div style="flex:1; border:1px solid #991b1b; border-radius:4px; overflow:hidden; font-size:8pt;">
+                    <div style="background:#991b1b; color:#fff; padding:3px 8px; font-weight:bold; display:flex; justify-content:space-between;">
+                        <span> نیاز به بهبود</span><span style="opacity:.85;">زیر ۸۰٪</span>
+                    </div>
+                    {% if needs_improve_qs %}
+                        {% for q in needs_improve_qs %}
+                        <div style="display:flex; justify-content:space-between; padding:3px 7px; background:{% if loop.index is odd %}#fff1f2{% else %}#fff{% endif %}; border-top:1px solid #fee2e2;">
+                            <span style="flex:1; padding-left:4px;">{{ q.short_text }}</span>
+                            <span style="font-weight:bold; color:#991b1b; white-space:nowrap;">{{ q.raw_green_pct | persian_num }}٪</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding:4px 8px; color:#166534; text-align:center;"> همه سوالات قابل قبول</div>
+                    {% endif %}
+                </div>
+
             </div>
         </div>
 
@@ -168,8 +207,8 @@
         </div>
         
         <!-- Form Statistics - Merged from third page -->
-        <div class="charts-row no-page-break" style="height: 150px; justify-content: center; margin-top: -10px;">
-            <div class="chart-half" style="flex: 0 0 50%; height: 160px; display: flex; align-items: center; justify-content: space-around;">
+        <div class="charts-row no-page-break" style="height: 100px; justify-content: center; margin-top: -10px;">
+            <div class="chart-half" style="flex: 0 0 50%; height: 100px; display: flex; align-items: center; justify-content: space-around;">
                  <div style="text-align: center;">
                     <div style="font-size: 11pt; color: #475569; margin-bottom: 5px;">فورم‌های معتبر پردازش شده</div>
                     <div style="font-size: 20pt; color: #0284c7; font-weight: bold;">{{ valid_forms }}</div>
@@ -190,7 +229,7 @@
         </div>
 
         <!-- System Credit -->
-        <div style="text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #64748b;">
+        <div style="text-align: center; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #64748b;">
             <span style="font-weight: normal;">سیستم تحلیل تضمین کیفیت</span>
             <span style="margin: 0 5px;">•</span>
             <span style="font-weight: bold; color: #0369a1;">طراحی و توسعه: نصیر احمد محب</span>

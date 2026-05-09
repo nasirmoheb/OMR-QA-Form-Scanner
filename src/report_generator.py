@@ -182,10 +182,16 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
     total_yellow = sum(q["raw_yellow_c"] for q in all_questions_flat)
     total_red = sum(q["raw_red_c"] for q in all_questions_flat)
 
-    # 3. Strengths and Weaknesses
-    sorted_qs = sorted(all_questions_flat, key=lambda x: x["raw_green_pct"], reverse=True)
-    top_3 = sorted_qs[:3]
-    bottom_3 = sorted_qs[-3:][::-1] # Reverse so the absolute lowest is first
+    # 3. Performance classification by range (replaces top_3 / bottom_3)
+    # Excellent: 90-100, Good: 80-89, Needs Improvement: below 80
+    excellent_qs     = [q for q in all_questions_flat if q["raw_green_pct"] >= 90]
+    good_qs          = [q for q in all_questions_flat if 80 <= q["raw_green_pct"] < 90]
+    needs_improve_qs = [q for q in all_questions_flat if q["raw_green_pct"] < 80]
+
+    # Sort each tier descending by score
+    excellent_qs.sort(    key=lambda x: x["raw_green_pct"], reverse=True)
+    good_qs.sort(         key=lambda x: x["raw_green_pct"], reverse=True)
+    needs_improve_qs.sort(key=lambda x: x["raw_green_pct"], reverse=True)
 
     # Get template directory from Config
     template_dir = Config.TEMPLATES_DIR
@@ -213,8 +219,9 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
         radar_labels=json.dumps(radar_labels),
         radar_data=json.dumps(radar_data),
         doughnut_data=json.dumps([total_green, total_yellow, total_red]),
-        top_3=top_3,
-        bottom_3=bottom_3,
+        excellent_qs=excellent_qs,
+        good_qs=good_qs,
+        needs_improve_qs=needs_improve_qs,
         valid_forms=to_persian_num(valid_forms),
         invalid_forms=to_persian_num(invalid_forms),
         valid_forms_raw=valid_forms,

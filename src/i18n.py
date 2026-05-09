@@ -271,6 +271,9 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "reset_defaults_desc": "This will reset detection threshold, score weights, appearance, language, university name, and question texts back to their default values.",
         "reset_confirm": "Are you sure you want to reset all settings to defaults? This cannot be undone.",
         "reset_done": "All settings have been reset to their default values.",
+        "export_excel": "Export to Excel",
+        "excel_saved": "Excel file saved successfully:",
+        "excel_error": "Excel export failed",
     },
     "fa": {
         "app_title": "سیستم تضمین کیفیت تدریس",
@@ -520,6 +523,9 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "reset_defaults_desc": "این عمل آستانه تشخیص، وزن‌های نمره، ظاهر، زبان، نام دانشگاه و متن‌های سوال را به مقادیر پیش‌فرض بازمی‌گرداند.",
         "reset_confirm": "آیا مطمئن هستید که می‌خواهید همه تنظیمات را به پیش‌فرض بازنشانی کنید؟ این عمل قابل بازگشت نیست.",
         "reset_done": "همه تنظیمات به مقادیر پیش‌فرض بازنشانی شدند.",
+        "export_excel": "صادر کردن به Excel",
+        "excel_saved": "فایل Excel با موفقیت ذخیره شد:",
+        "excel_error": "صادرات Excel ناموفق بود",
     },
     "ps": {
         "app_title": "د تدریس د کیفیت تضمین سیسټم",
@@ -769,6 +775,9 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "reset_defaults_desc": "دا عمل د کشف حد، د نمرو وزنونه، ښکاره‌دهنه، ژبه، د پوهنتون نوم او د پوښتنو متنونه د ډیفالټ ارزښتونو ته بیرته راوستل کوي.",
         "reset_confirm": "آیا تاسو ډاډه یاست چې غواړئ ټول ترتیبات ډیفالټ ته بیرته وټاکئ؟ دا عمل بیرته نه شي اخیستل کیدای.",
         "reset_done": "ټول ترتیبات د ډیفالټ ارزښتونو ته بیرته وټاکل شول.",
+        "export_excel": "Excel ته صادرول",
+        "excel_saved": "د Excel فایل بریالیتوب سره خوندي شو:",
+        "excel_error": "د Excel صادرول ناکام شول",
     },
 }
 
