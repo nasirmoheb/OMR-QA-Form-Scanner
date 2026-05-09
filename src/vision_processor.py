@@ -127,7 +127,11 @@ class VisionProcessor:
         }
 
         # --- load ------------------------------------------------------ #
-        image = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
+        # Use IMREAD_COLOR (not IMREAD_UNCHANGED) so OpenCV always returns
+        # a 3-channel BGR image with EXIF orientation applied.
+        # IMREAD_UNCHANGED skips EXIF auto-rotation, causing phone photos
+        # to load in the wrong orientation and producing wrong densities.
+        image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is None:
             logger.error("Failed to load image: %s", path)
             result["status"] = "load_error"
