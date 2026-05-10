@@ -101,9 +101,9 @@
                 <tr>
                     <th style="width: 5%;">#</th>
                     <th style="width: 50%;">موارد ارزیابی (دستهبندی شده)</th>
-                    <th style="width: 15%;">عملکرد مطلوب (سبز)</th>
-                    <th style="width: 15%;">متوسط (زرد)</th>
-                    <th style="width: 15%;">نیاز به بهبود (سرخ)</th>
+                    <th style="width: 15%;">بلی (سبز)</th>
+                    <th style="width: 15%;">نسبتا (زرد)</th>
+                    <th style="width: 15%;">نخیر (سرخ)</th>
                 </tr>
             </thead>
             <tbody>
@@ -136,7 +136,7 @@
         <!-- Performance Classification — compact 3-column layout -->
         <div class="no-page-break" style="margin-bottom:14px;">
             <div style="text-align:center; font-size:9.5pt; font-weight:bold; color:#1e3a8a; border-bottom:1.5px solid #1e3a8a; padding-bottom:4px; margin-bottom:8px;">
-                📊 طبقه‌بندی عملکرد سوالات بر اساس سطح رضایت
+                 طبقه‌بندی عملکرد سوالات بر اساس سطح رضایت
             </div>
             <div style="display:flex; gap:8px; align-items:flex-start;">
 
@@ -257,9 +257,9 @@
             data: {
                 labels: labelsBar,
                 datasets: [
-                    { label: 'مطلوب', data: {{ positive_data }}, backgroundColor: '#22c55e', datalabels: { color: '#fff', font: {weight: 'bold'} } },
-                    { label: 'متوسط', data: {{ neutral_data }}, backgroundColor: '#facc15', datalabels: { color: '#854d0e', font: {weight: 'bold'}, display: c => c.dataset.data[c.dataIndex] > 0 } },
-                    { label: 'منفی', data: {{ negative_data }}, backgroundColor: '#ef4444', datalabels: { color: '#fff', font: {weight: 'bold'}, display: c => c.dataset.data[c.dataIndex] > 0 } }
+                    { label: 'بلی', data: {{ positive_data }}, backgroundColor: '#22c55e', datalabels: { color: '#fff', font: {weight: 'bold'} } },
+                    { label: 'نسبتا', data: {{ neutral_data }}, backgroundColor: '#facc15', datalabels: { color: '#854d0e', font: {weight: 'bold'}, display: c => c.dataset.data[c.dataIndex] > 0 } },
+                    { label: 'نخیر', data: {{ negative_data }}, backgroundColor: '#ef4444', datalabels: { color: '#fff', font: {weight: 'bold'}, display: c => c.dataset.data[c.dataIndex] > 0 } }
                 ]
             },
             options: {

@@ -11,6 +11,7 @@ sqlalchemy>=2.0.0
 pikepdf>=8.0.0
 arabic-reshaper>=3.0.0
 python-bidi>=0.4.2
+openpyxl>=3.1.0
 hypothesis>=6.0.0
 pytest>=7.0.0
 # Icon library - Tabler Icons (5237 high-quality SVG icons)

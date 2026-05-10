@@ -273,7 +273,9 @@ class OMRGUI:
                 self.config,
                 back_command=lambda: self._navigate("dashboard"),
                 persistence=self.persistence,
+                router=self.router,
             ),
+            cacheable=True,
         )
 
     # ----

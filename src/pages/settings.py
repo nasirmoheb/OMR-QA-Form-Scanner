@@ -26,11 +26,13 @@ class SettingsFrame(ctk.CTkFrame):
         config: Config,
         back_command: Any = None,
         persistence: Any = None,
+        router: Any = None,
     ) -> None:
         super().__init__(master, fg_color=T.PAGE_BG)
         self._config = config
         self._back = back_command
         self._persistence = persistence
+        self._router = router
         self._logo_path: str = ""
 
         self._build()
@@ -325,6 +327,10 @@ class SettingsFrame(ctk.CTkFrame):
                 self._persistence.set_setting("logo_path", self._logo_path)
             self._config.save_to_persistence(self._persistence)
 
+        # Invalidate the settings cache so next visit reflects saved values
+        if self._router is not None:
+            self._router.invalidate("settings")
+
         self._on_back()
 
     def _select_logo(self) -> None:
@@ -394,6 +400,12 @@ class SettingsFrame(ctk.CTkFrame):
             self._persistence.set_setting("pdf_coords", {})
 
         messagebox.showinfo(rtl_text(_("reset_defaults")), rtl_text(_("reset_done")))
+
+        # Invalidate cache so next visit rebuilds with reset values
+        if self._router is not None:
+            self._router.invalidate("settings")
+
+        self._on_back()
 
     def _on_back(self) -> None:
         if self._back:

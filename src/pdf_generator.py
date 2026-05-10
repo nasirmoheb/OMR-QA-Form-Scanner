@@ -362,13 +362,29 @@ def _draw_header(
     line_h = 5.5 * mm
 
     lines = [
-        (_rtl("وزارت تحصیلات عالی"), _FONT_BOLD_NAME, 13),
-        (_rtl("معینیت علمی"), _FONT_BOLD_NAME, 11),
-        (_rtl("ریاست تضمین کیفیت و اعتباردهی"), _FONT_NAME, 10),
+        (_rtl("معاونیت علمی"), _FONT_BOLD_NAME, 11),
+        (_rtl("آمریت ارتقای کیفیت و اعتباردهی"), _FONT_NAME, 10),
         (_rtl("پرسشنامه ارزیابی خودی استادان"), _FONT_BOLD_NAME, 13),
     ]
 
     text_top = y - 2 * mm
+
+    # First line: وزارت تحصیلات عالی  |  university name (same row, separated by " - ")
+    first_font = _FONT_BOLD_NAME
+    first_size = 13
+    ministry_text = _rtl("وزارت تحصیلات عالی")
+    uni_name = survey.university.strip() if survey.university else ""
+    if uni_name:
+        # Combine: university name on the left side, ministry on the right side of centre
+        separator = _rtl(" - ")
+        first_line = _rtl(uni_name) + separator + ministry_text
+    else:
+        first_line = ministry_text
+    c.setFont(first_font, first_size)
+    c.setFillColor(colors.black)
+    c.drawCentredString(text_cx, text_top - first_size * 0.35, first_line)
+    text_top -= line_h
+
     for text, font, size in lines:
         c.setFont(font, size)
         c.setFillColor(colors.black)
