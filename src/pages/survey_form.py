@@ -187,6 +187,7 @@ class SurveyFormPage(BasePage):
         self._field(course_grid, _("professor_name"), "professor", row=1, col=0, colspan=2)
         self._field(course_grid, _("semester"), "semester", row=2, col=0)
         self._field(course_grid, _("academic_year"), "academic_year", row=2, col=1)
+        self._field(course_grid, _("date"), "date", row=3, col=0, colspan=2)
 
     def _field(
         self,
@@ -238,6 +239,7 @@ class SurveyFormPage(BasePage):
             "professor":     survey.professor,
             "semester":      survey.semester,
             "academic_year": survey.academic_year,
+            "date":          survey.date,
         }
         for key, val in mapping.items():
             e = self._entries.get(key)
@@ -258,6 +260,7 @@ class SurveyFormPage(BasePage):
             "professor": _("professor_name"),
             "semester": _("semester"),
             "academic_year": _("academic_year"),
+            "date": _("date"),
         }
         
         missing_fields = []
@@ -282,6 +285,7 @@ class SurveyFormPage(BasePage):
             professor=get("professor"),
             semester=get("semester"),
             academic_year=get("academic_year"),
+            date=get("date"),
             status="Draft",
         )
 

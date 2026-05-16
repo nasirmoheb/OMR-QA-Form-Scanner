@@ -153,7 +153,7 @@ class ResultsPage(BasePage):
             ).pack(anchor=get_anchor())
 
             ctk.CTkLabel(
-                meta_inner, text=f"{self.survey.professor}\n{self.survey.semester} • {self.survey.academic_year}",
+                meta_inner, text=f"{self.survey.professor}\n{self.survey.semester} • {self.survey.academic_year}\n{_('date')}: {self.survey.date}",
                 font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor(), justify=get_start()
             ).pack(anchor=get_anchor(), pady=(8, 0))
 

@@ -42,7 +42,7 @@ DEFAULT_DB_PATH: Path = _get_default_db_path()
 
 _SURVEY_COLS = [
     "university", "faculty", "department", "subject",
-    "professor", "semester", "academic_year", "status",
+    "professor", "semester", "academic_year", "date", "status",
     "created_at", "updated_at",
 ]
 
@@ -85,6 +85,7 @@ class PersistenceManager:
                     professor TEXT NOT NULL DEFAULT '',
                     semester TEXT NOT NULL DEFAULT '',
                     academic_year TEXT NOT NULL DEFAULT '',
+                    date TEXT NOT NULL DEFAULT '',
                     status TEXT NOT NULL DEFAULT 'Draft',
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
@@ -149,6 +150,7 @@ class PersistenceManager:
         """Apply safe ALTER TABLE migrations for schema evolution."""
         migrations = [
             ("form_results", "comment", "TEXT NOT NULL DEFAULT ''"),
+            ("surveys", "date", "TEXT NOT NULL DEFAULT ''"),
         ]
         for table, column, col_def in migrations:
             try:
@@ -192,7 +194,7 @@ class PersistenceManager:
             row = conn.execute(
                 "SELECT * FROM surveys WHERE id=?", (survey_id,)
             ).fetchone()
-        return Survey.from_row(tuple(row)) if row else None
+        return Survey.from_row(row) if row else None
 
     def list_surveys(
         self,
@@ -219,7 +221,7 @@ class PersistenceManager:
         sql = f"SELECT * FROM surveys {where} ORDER BY {order_by}"
         with self._connect() as conn:
             rows = conn.execute(sql, params).fetchall()
-        return [Survey.from_row(tuple(r)) for r in rows]
+        return [Survey.from_row(r) for r in rows]
 
     def delete_survey(self, survey_id: int) -> bool:
         """Delete a survey (cascades to form_results)."""
@@ -257,7 +259,7 @@ class PersistenceManager:
             rows = conn.execute(
                 "SELECT * FROM form_results WHERE survey_id=?", (survey_id,)
             ).fetchall()
-        return [FormResult.from_row(tuple(r)) for r in rows]
+        return [FormResult.from_row(r) for r in rows]
 
     def update_form_result(self, result: FormResult) -> FormResult:
         """Update an existing form result by id."""

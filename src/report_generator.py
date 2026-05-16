@@ -32,6 +32,7 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
         "subject": survey.subject or "نامعلوم",
         "department": survey.department or "نامعلوم",
         "semester": f"{survey.semester} / {survey.academic_year}",
+        "date": to_persian_num(survey.date) if survey.date else "نامعلوم",
         "total_students": to_persian_num(total_students),
         "total_students_raw": total_students
     }

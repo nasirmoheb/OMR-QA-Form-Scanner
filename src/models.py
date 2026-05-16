@@ -18,6 +18,7 @@ class Survey:
     professor: str = ""
     semester: str = ""
     academic_year: str = ""
+    date: str = ""
     status: str = "Draft"
     id: int | None = None
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
@@ -33,31 +34,30 @@ class Survey:
             "professor": self.professor,
             "semester": self.semester,
             "academic_year": self.academic_year,
+            "date": self.date,
             "status": self.status,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
 
     @classmethod
-    def from_row(cls, row: tuple) -> Survey:
-        """Construct from an sqlite3 row tuple.
-
-        Expected column order:
-        id, university, faculty, department, subject, professor,
-        semester, academic_year, status, created_at, updated_at
-        """
+    def from_row(cls, row: Any) -> Survey:
+        """Construct from an sqlite3.Row or similar mapping object."""
+        # Safer access in case migrations haven't run yet
+        cols = row.keys() if hasattr(row, "keys") else []
         return cls(
-            id=row[0],
-            university=row[1],
-            faculty=row[2],
-            department=row[3],
-            subject=row[4],
-            professor=row[5],
-            semester=row[6],
-            academic_year=row[7],
-            status=row[8],
-            created_at=row[9],
-            updated_at=row[10],
+            id=row["id"],
+            university=row["university"],
+            faculty=row["faculty"],
+            department=row["department"],
+            subject=row["subject"],
+            professor=row["professor"],
+            semester=row["semester"],
+            academic_year=row["academic_year"],
+            date=row["date"] if "date" in cols else "",
+            status=row["status"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
         )
 
 
@@ -103,27 +103,23 @@ class FormResult:
         return asdict(self)
 
     @classmethod
-    def from_row(cls, row: tuple) -> FormResult:
-        """Construct from an sqlite3 row tuple.
-
-        Expected column order:
-        id, survey_id, form_id, image_path,
-        q1..q14, form_score, valid, confidence, manually_corrected[, comment]
-        """
+    def from_row(cls, row: Any) -> FormResult:
+        """Construct from an sqlite3.Row or similar mapping object."""
+        cols = row.keys() if hasattr(row, "keys") else []
         return cls(
-            id=row[0],
-            survey_id=row[1],
-            form_id=row[2],
-            image_path=row[3],
-            q1=row[4], q2=row[5], q3=row[6], q4=row[7],
-            q5=row[8], q6=row[9], q7=row[10], q8=row[11],
-            q9=row[12], q10=row[13], q11=row[14], q12=row[15],
-            q13=row[16], q14=row[17],
-            form_score=row[18],
-            valid=bool(row[19]),
-            confidence=row[20],
-            manually_corrected=bool(row[21]),
-            comment=row[22] if len(row) > 22 else "",
+            id=row["id"],
+            survey_id=row["survey_id"],
+            form_id=row["form_id"],
+            image_path=row["image_path"],
+            q1=row["q1"], q2=row["q2"], q3=row["q3"], q4=row["q4"],
+            q5=row["q5"], q6=row["q6"], q7=row["q7"], q8=row["q8"],
+            q9=row["q9"], q10=row["q10"], q11=row["q11"], q12=row["q12"],
+            q13=row["q13"], q14=row["q14"],
+            form_score=row["form_score"],
+            valid=bool(row["valid"]),
+            confidence=row["confidence"],
+            manually_corrected=bool(row["manually_corrected"]),
+            comment=row["comment"] if "comment" in cols else "",
         )
 
 

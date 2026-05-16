@@ -266,6 +266,7 @@ class AnalyticsEngine:
             f"<b>Professor:</b> {getattr(survey, 'professor', '')}",
             f"<b>Semester:</b> {getattr(survey, 'semester', '')}",
             f"<b>Academic Year:</b> {getattr(survey, 'academic_year', '')}",
+            f"<b>Date:</b> {getattr(survey, 'date', '')}",
             f"<b>University:</b> {getattr(survey, 'university', '')}",
         ]
         for line in meta_lines:
