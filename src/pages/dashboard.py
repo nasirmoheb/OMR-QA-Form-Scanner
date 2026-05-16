@@ -594,7 +594,7 @@ class DashboardPage(BasePage):
                 persistence=self.persistence,
             )
             
-            report_generator.generate_dari_qa_report(survey, results, report_path, advanced_data=advanced_data)
+            report_generator.generate_dari_qa_report(survey, results, report_path, advanced_data=advanced_data, persistence=self.persistence)
             
             webbrowser.open(f"file:///{Path(report_path).resolve()}")
         except Exception as exc:

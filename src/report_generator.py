@@ -19,9 +19,10 @@ def _image_to_base64(image_path):
     except Exception:
         return ""
 
-def generate_dari_qa_report(survey, form_results, output_html_path, advanced_data=None):
+def generate_dari_qa_report(survey, form_results, output_html_path, advanced_data=None, persistence=None):
     """Generates the official Dari HTML QA report based on Jinja2 template."""
     from config import Config
+    from pathlib import Path
     total_students = len(form_results)
     
     metadata = {
@@ -206,7 +207,14 @@ def generate_dari_qa_report(survey, form_results, output_html_path, advanced_dat
     template = env.get_template('qa_template.html')
     
     # Convert logos to base64 for embedding
-    uni_logo_data = _image_to_base64(Config.DEFAULT_LOGO_PATH) if Config.DEFAULT_LOGO_PATH.exists() else ""
+    # Use custom logo from persistence if available, otherwise use default
+    uni_logo_path = Config.DEFAULT_LOGO_PATH
+    if persistence:
+        stored_logo = persistence.get_setting("logo_path")
+        if stored_logo and Path(stored_logo).exists():
+            uni_logo_path = Path(stored_logo)
+    
+    uni_logo_data = _image_to_base64(uni_logo_path) if uni_logo_path.exists() else ""
     mohe_logo_data = _image_to_base64(Config.QA_LOGO_PATH) if Config.QA_LOGO_PATH.exists() else ""
 
     html_output = template.render(
