@@ -6,6 +6,7 @@ from .survey_form import SurveyFormPage
 from .process import ProcessPage
 from .results import ResultsPage
 from .settings import SettingsFrame
+from .manual_entry import ManualEntryPage
 
 __all__ = [
     "PageRouter",
@@ -15,4 +16,5 @@ __all__ = [
     "ProcessPage",
     "ResultsPage",
     "SettingsFrame",
+    "ManualEntryPage",
 ]

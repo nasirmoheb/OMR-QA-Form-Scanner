@@ -403,7 +403,7 @@ def _draw_metadata(c: Any, survey: Any, lx: float, cw: float, y: float) -> float
         # Use a single RTL call for the combined string to ensure correct layout
         date_display = _rtl(f"تاریخ: {survey.date}")
         c.drawString(lx, y - 1 * mm, date_display)
-        y -= 4 * mm
+        y -= 0 * mm
 
     row_h = 7 * mm
     y -= 2 * mm

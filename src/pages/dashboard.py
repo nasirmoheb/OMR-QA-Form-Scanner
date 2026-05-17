@@ -428,7 +428,6 @@ class DashboardPage(BasePage):
     # ----
     # Action panels
     # ----
-
     def _draft_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
         C = self._compound()
 
@@ -462,6 +461,18 @@ class DashboardPage(BasePage):
             command=lambda sid=survey.id: self._on_delete(sid),
         ).pack(side=self._start(), padx=self._pad_after(16))
 
+        # Manual Entry button
+        IC.icon_button(
+            parent, "file_text",
+            text=f"  {_('manual_data_entry')}" if not is_rtl() else f"{_('manual_data_entry')}  ",
+            size=14, color=T.TEXT_SECONDARY[1],
+            height=38, corner_radius=T.RADIUS_SM,
+            fg_color=T.SURFACE_RAISED, hover_color=T.GHOST_HOVER,
+            text_color=T.TEXT_SECONDARY, font=T.font(12),
+            border_width=1, border_color=T.CARD_BORDER,
+            command=lambda sid=survey.id: self.go("manual_entry", survey_id=sid),
+        ).pack(side=self._start(), padx=self._pad_after(6))
+
         # Process button (primary)
         ctk.CTkButton(
             parent,
@@ -472,7 +483,6 @@ class DashboardPage(BasePage):
             text_color="#000000", font=T.font(13, "bold"),
             command=lambda sid=survey.id: self._on_process_click(sid),
         ).pack(side=self._start())
-
     def _done_actions(self, parent: ctk.CTkFrame, survey: Survey) -> None:
         btn_color      = T.STATUS_ANALYZED[1] if survey.status == "Analyzed" else T.ACCENT[1]
         btn_hover      = T.SUCCESS[1]          if survey.status == "Analyzed" else T.ACCENT_HOVER[1]
@@ -520,6 +530,18 @@ class DashboardPage(BasePage):
             fg_color="transparent", hover_color=T.DANGER_SUBTLE,
             command=lambda sid=survey.id: self._on_delete(sid),
         ).pack(side=self._start(), padx=self._pad_after(16))
+
+        # Manual Entry button
+        IC.icon_button(
+            parent, "file_text",
+            text=f"  {_('manual_data_entry')}" if not is_rtl() else f"{_('manual_data_entry')}  ",
+            size=14, color=T.TEXT_SECONDARY[1],
+            height=38, corner_radius=T.RADIUS_SM,
+            fg_color=T.SURFACE_RAISED, hover_color=T.GHOST_HOVER,
+            text_color=T.TEXT_SECONDARY, font=T.font(12),
+            border_width=1, border_color=T.CARD_BORDER,
+            command=lambda sid=survey.id: self.go("manual_entry", survey_id=sid),
+        ).pack(side=self._start(), padx=self._pad_after(6))
 
         # Results button (primary)
         ctk.CTkButton(

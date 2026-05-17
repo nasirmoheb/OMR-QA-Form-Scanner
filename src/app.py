@@ -18,6 +18,7 @@ from pages import (
     ProcessPage,
     ResultsPage,
     SettingsFrame,
+    ManualEntryPage,
 )
 from persistence import PersistenceManager
 from vision_processor import VisionProcessor
@@ -267,6 +268,16 @@ class OMRGUI:
             ),
         )
         self.router.register_page(
+            "manual_entry",
+            lambda **kw: ManualEntryPage(
+                router=self.router,
+                persistence=self.persistence,
+                navigate_callback=self._navigate,
+                analytics=self.analytics,
+                **kw,
+            ),
+        )
+        self.router.register_page(
             "settings",
             lambda master=None, **kw: SettingsFrame(
                 master or self.content_frame,
@@ -284,7 +295,7 @@ class OMRGUI:
 
     def _navigate(self, page_id: str, **kwargs: Any) -> None:
         # Guard pages that need a survey_id
-        if page_id in ("process", "results") and "survey_id" not in kwargs:
+        if page_id in ("process", "results", "manual_entry") and "survey_id" not in kwargs:
             self._navigate("dashboard")
             return
 
