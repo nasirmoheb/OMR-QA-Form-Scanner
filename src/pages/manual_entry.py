@@ -98,12 +98,12 @@ class ManualEntryPage(BasePage):
 
         # Title
         ctk.CTkLabel(
-            header, text=(_("manual_data_entry") if not is_rtl() else "فورم ثبت دستی معلومات ارزیابی"), font=T.h1(), text_color=T.TEXT_PRIMARY
+            header, text=_("manual_data_entry"), font=T.h1(), text_color=T.TEXT_PRIMARY
         ).pack(anchor=self._anchor())
 
         # Subtitle
         ctk.CTkLabel(
-            header, text=(_("survey_details") if not is_rtl() else "جزئیات ارزیابی"),
+            header, text=(_("survey_details") if not is_rtl() else "جزئیات نظرسنجی"),
             font=T.small(), text_color=T.TEXT_SECONDARY, justify=self._start()
         ).pack(anchor=self._anchor(), pady=(4, 0))
 
@@ -261,7 +261,7 @@ class ManualEntryPage(BasePage):
             meta_inner.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
             ctk.CTkLabel(
-                meta_inner, text=(_("survey_details") if not is_rtl() else "مشخصات ارزیابی"),
+                meta_inner, text=(_("survey_details") if not is_rtl() else "جزئیات نظرسنجی"),
                 font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
             ).pack(anchor=self._anchor(), pady=(0, 12))
 
@@ -345,8 +345,8 @@ class ManualEntryPage(BasePage):
                 no_counts.append(int(val_no) if val_no else 0)
         except ValueError:
             messagebox.showerror(
-                rtl_text(_("error") if not is_rtl() else "خطا"),
-                rtl_text("Please enter valid numbers." if not is_rtl() else "لطفاً اعداد معتبر وارد کنید.")
+                rtl_text(_("error")),
+                rtl_text(_("invalid_number") if "invalid_number" in _TRANSLATIONS.get(T.LANGUAGE, {}) else "Please enter valid numbers.")
             )
             return
 
@@ -354,7 +354,7 @@ class ManualEntryPage(BasePage):
         total_entered = sum(yes_counts) + sum(somewhat_counts) + sum(no_counts)
         if total_entered == 0:
             messagebox.showwarning(
-                rtl_text(_("warning") if not is_rtl() else "هشدار"),
+                rtl_text(_("warning")),
                 rtl_text("Please enter at least one response count." if not is_rtl() else "لطفاً حداقل تعداد یک پاسخ را وارد کنید.")
             )
             return
@@ -374,9 +374,9 @@ class ManualEntryPage(BasePage):
         confirm_msg = (
             f"Are you sure you want to save? This will generate {N} form results and overwrite any existing data for this survey."
             if not is_rtl() else
-            f"آیا از ذخیره نتایج اطمینان دارید؟ این عملیات {to_persian_num(N)} فورم ارزیابی تولید کرده و معلومات قبلی این ارزیابی را حذف خواهد کرد."
+            f"آیا از ذخیره نتایج مطمئن هستید؟ این عملیات {N} پاسخ‌نامه تولید کرده و داده‌های قبلی این نظرسنجی را پاک می‌کند."
         )
-        if not messagebox.askyesno(rtl_text(_("save") if not is_rtl() else "تأیید ذخیره"), rtl_text(confirm_msg)):
+        if not messagebox.askyesno(rtl_text(_("save")), rtl_text(confirm_msg)):
             return
 
         # Disable save button to prevent double-clicks
@@ -434,14 +434,14 @@ class ManualEntryPage(BasePage):
             success_msg = (
                 f"Successfully saved manually entered data.\nGenerated {N} synthetic form results."
                 if not is_rtl() else
-                f"معلومات ثبت‌شده با موفقیت ذخیره گردید.\nتعداد {to_persian_num(N)} فورم ارزیابی به صورت خودکار ایجاد شد."
+                f"اطلاعات ثبت‌شده با موفقیت ذخیره شد.\nتعداد {N} پاسخ‌نامه به صورت خودکار تولید شد."
             )
-            messagebox.showinfo(rtl_text(_("scan_complete") if not is_rtl() else "ثبت موفقانه"), rtl_text(success_msg))
+            messagebox.showinfo(rtl_text(_("scan_complete")), rtl_text(success_msg))
 
             # Navigate back to dashboard and trigger results open
             self.go("dashboard", _open_report=self.survey_id)
 
         except Exception as exc:
             logger.exception("Manual data entry save failed")
-            messagebox.showerror(rtl_text(_("error") if not is_rtl() else "خطا"), rtl_text(f"Failed to save manual data:\n{exc}" if not is_rtl() else f"ذخیره معلومات دستی ناموفق بود:\n{exc}"))
+            messagebox.showerror(rtl_text(_("error")), rtl_text(f"Failed to save manual data:\n{exc}"))
             self.save_btn.configure(state="normal")
