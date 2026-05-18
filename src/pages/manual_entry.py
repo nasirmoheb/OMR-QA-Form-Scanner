@@ -16,6 +16,8 @@ from models import FormResult, Survey
 from persistence import PersistenceManager
 from analytics_engine import AnalyticsEngine
 from .base import BasePage, PageRouter
+from config import Config
+from report_generator import to_persian_num
 
 logger = logging.getLogger("tadris_qa_system")
 
@@ -35,6 +37,7 @@ class ManualEntryPage(BasePage):
         self.persistence = persistence
         self.survey_id = survey_id
         self.analytics = analytics or AnalyticsEngine()
+        self.config = Config.from_persistence(self.persistence)
 
         self.survey: Survey | None = self.persistence.get_survey(survey_id)
         self.question_texts: list[str] | None = self.persistence.get_setting("question_texts", None)
@@ -95,12 +98,12 @@ class ManualEntryPage(BasePage):
 
         # Title
         ctk.CTkLabel(
-            header, text=_("manual_data_entry"), font=T.h1(), text_color=T.TEXT_PRIMARY
+            header, text=(_("manual_data_entry") if not is_rtl() else "فورم ثبت دستی معلومات ارزیابی"), font=T.h1(), text_color=T.TEXT_PRIMARY
         ).pack(anchor=self._anchor())
 
         # Subtitle
         ctk.CTkLabel(
-            header, text=(_("survey_details") if not is_rtl() else "جزئیات نظرسنجی"),
+            header, text=(_("survey_details") if not is_rtl() else "جزئیات ارزیابی"),
             font=T.small(), text_color=T.TEXT_SECONDARY, justify=self._start()
         ).pack(anchor=self._anchor(), pady=(4, 0))
 
@@ -129,6 +132,19 @@ class ManualEntryPage(BasePage):
         tbl_hdr = T.transparent(self.form_scroll)
         tbl_hdr.pack(fill="x", pady=(0, 12))
 
+        # Get configured score weights
+        score_yes = self.config.SCORE_YES
+        score_somewhat = self.config.SCORE_SOMEWHAT
+        score_no = self.config.SCORE_NO
+
+        s_yes = to_persian_num(score_yes) if is_rtl() else str(score_yes)
+        s_sw = to_persian_num(score_somewhat) if is_rtl() else str(score_somewhat)
+        s_no = to_persian_num(score_no) if is_rtl() else str(score_no)
+
+        label_yes = f"{_('count_yes')} ({s_yes})"
+        label_sw = f"{_('count_somewhat')} ({s_sw})"
+        label_no = f"{_('count_no')} ({s_no})"
+
         # Column structure: Question Text | Yes | Somewhat | No
         # We pack the elements based on layout direction (RTL or LTR)
         hdr_lbl_q = ctk.CTkLabel(
@@ -137,19 +153,22 @@ class ManualEntryPage(BasePage):
         hdr_lbl_q.pack(side=self._start(), fill="x", expand=True, padx=(10, 10))
 
         hdr_lbl_no = ctk.CTkLabel(
-            tbl_hdr, text=_("count_no"), font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY, width=70
+            tbl_hdr, text=label_no, font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY, width=80
         )
-        hdr_lbl_no.pack(side=self._end(), padx=5)
+        hdr_lbl_no.pack(side=self._end(), padx=(5, 12) if not is_rtl() else (12, 5))
 
         hdr_lbl_sw = ctk.CTkLabel(
-            tbl_hdr, text=_("count_somewhat"), font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY, width=70
+            tbl_hdr, text=label_sw, font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY, width=80
         )
         hdr_lbl_sw.pack(side=self._end(), padx=5)
 
         hdr_lbl_yes = ctk.CTkLabel(
-            tbl_hdr, text=_("count_yes"), font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY, width=70
+            tbl_hdr, text=label_yes, font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY, width=80
         )
         hdr_lbl_yes.pack(side=self._end(), padx=5)
+
+        # Fetch existing results if present to prefill counts
+        results = self.persistence.get_form_results(self.survey_id)
 
         # Build entry row for each of the 14 questions
         for i in range(14):
@@ -174,6 +193,23 @@ class ManualEntryPage(BasePage):
             )
             lbl_q.pack(side=self._start(), fill="both", expand=True, padx=12, pady=8)
 
+            # Calculate counts if results exist
+            existing_yes = 0
+            existing_somewhat = 0
+            existing_no = 0
+
+            if results:
+                for fr in results:
+                    answers = fr.answers()
+                    if i < len(answers):
+                        ans = answers[i]
+                        if ans == "Yes":
+                            existing_yes += 1
+                        elif ans == "Somewhat":
+                            existing_somewhat += 1
+                        elif ans == "No":
+                            existing_no += 1
+
             # Entries for choice counts
             ent_no = ctk.CTkEntry(
                 row_frame, width=64, height=32, corner_radius=T.RADIUS_SM,
@@ -181,6 +217,8 @@ class ManualEntryPage(BasePage):
                 font=T.body(), justify="center", placeholder_text="0"
             )
             ent_no.pack(side=self._end(), padx=(5, 12) if not is_rtl() else (12, 5), pady=8)
+            if results:
+                ent_no.insert(0, str(existing_no))
             self.entries_no.append(ent_no)
 
             ent_sw = ctk.CTkEntry(
@@ -189,6 +227,8 @@ class ManualEntryPage(BasePage):
                 font=T.body(), justify="center", placeholder_text="0"
             )
             ent_sw.pack(side=self._end(), padx=5, pady=8)
+            if results:
+                ent_sw.insert(0, str(existing_somewhat))
             self.entries_somewhat.append(ent_sw)
 
             ent_yes = ctk.CTkEntry(
@@ -197,6 +237,8 @@ class ManualEntryPage(BasePage):
                 font=T.body(), justify="center", placeholder_text="0"
             )
             ent_yes.pack(side=self._end(), padx=5, pady=8)
+            if results:
+                ent_yes.insert(0, str(existing_yes))
             self.entries_yes.append(ent_yes)
 
             # Restrict inputs to numbers only
@@ -219,7 +261,7 @@ class ManualEntryPage(BasePage):
             meta_inner.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
 
             ctk.CTkLabel(
-                meta_inner, text=(_("survey_details") if not is_rtl() else "جزئیات نظرسنجی"),
+                meta_inner, text=(_("survey_details") if not is_rtl() else "مشخصات ارزیابی"),
                 font=T.font(12, "bold"), text_color=T.TEXT_SECONDARY
             ).pack(anchor=self._anchor(), pady=(0, 12))
 
@@ -233,6 +275,22 @@ class ManualEntryPage(BasePage):
                 meta_inner, text=f"{self.survey.professor}\n{self.survey.semester} • {self.survey.academic_year}",
                 font=T.small(), text_color=T.TEXT_SECONDARY, anchor=self._anchor(), justify=self._start()
             ).pack(anchor=self._anchor(), pady=(8, 0))
+
+            # Score Weights (Yes: 100, Somewhat: 50, No: 0)
+            score_title = "نمره‌دهی مقیاس" if is_rtl() else "Scoring Scale"
+            ctk.CTkLabel(
+                meta_inner, text=score_title,
+                font=T.font(11, "bold"), text_color=T.TEXT_SECONDARY
+            ).pack(anchor=self._anchor(), pady=(16, 4))
+
+            weights_text = (
+                f"بلی: {s_yes} • نسبتاً: {s_sw} • نخیر: {s_no}" if is_rtl() else
+                f"Yes: {s_yes} • Somewhat: {s_sw} • No: {s_no}"
+            )
+            ctk.CTkLabel(
+                meta_inner, text=weights_text, font=T.small(), text_color=T.TEXT_SECONDARY,
+                anchor=self._anchor(), justify=self._start()
+            ).pack(anchor=self._anchor())
 
         # Actions Card
         action_card = T.card(right_col)
@@ -287,8 +345,8 @@ class ManualEntryPage(BasePage):
                 no_counts.append(int(val_no) if val_no else 0)
         except ValueError:
             messagebox.showerror(
-                rtl_text(_("error")),
-                rtl_text(_("invalid_number") if "invalid_number" in _TRANSLATIONS.get(T.LANGUAGE, {}) else "Please enter valid numbers.")
+                rtl_text(_("error") if not is_rtl() else "خطا"),
+                rtl_text("Please enter valid numbers." if not is_rtl() else "لطفاً اعداد معتبر وارد کنید.")
             )
             return
 
@@ -296,7 +354,7 @@ class ManualEntryPage(BasePage):
         total_entered = sum(yes_counts) + sum(somewhat_counts) + sum(no_counts)
         if total_entered == 0:
             messagebox.showwarning(
-                rtl_text(_("warning")),
+                rtl_text(_("warning") if not is_rtl() else "هشدار"),
                 rtl_text("Please enter at least one response count." if not is_rtl() else "لطفاً حداقل تعداد یک پاسخ را وارد کنید.")
             )
             return
@@ -316,9 +374,9 @@ class ManualEntryPage(BasePage):
         confirm_msg = (
             f"Are you sure you want to save? This will generate {N} form results and overwrite any existing data for this survey."
             if not is_rtl() else
-            f"آیا از ذخیره نتایج مطمئن هستید؟ این عملیات {N} پاسخ‌نامه تولید کرده و داده‌های قبلی این نظرسنجی را پاک می‌کند."
+            f"آیا از ذخیره نتایج اطمینان دارید؟ این عملیات {to_persian_num(N)} فورم ارزیابی تولید کرده و معلومات قبلی این ارزیابی را حذف خواهد کرد."
         )
-        if not messagebox.askyesno(rtl_text(_("save")), rtl_text(confirm_msg)):
+        if not messagebox.askyesno(rtl_text(_("save") if not is_rtl() else "تأیید ذخیره"), rtl_text(confirm_msg)):
             return
 
         # Disable save button to prevent double-clicks
@@ -376,14 +434,14 @@ class ManualEntryPage(BasePage):
             success_msg = (
                 f"Successfully saved manually entered data.\nGenerated {N} synthetic form results."
                 if not is_rtl() else
-                f"اطلاعات ثبت‌شده با موفقیت ذخیره شد.\nتعداد {N} پاسخ‌نامه به صورت خودکار تولید شد."
+                f"معلومات ثبت‌شده با موفقیت ذخیره گردید.\nتعداد {to_persian_num(N)} فورم ارزیابی به صورت خودکار ایجاد شد."
             )
-            messagebox.showinfo(rtl_text(_("scan_complete")), rtl_text(success_msg))
+            messagebox.showinfo(rtl_text(_("scan_complete") if not is_rtl() else "ثبت موفقانه"), rtl_text(success_msg))
 
             # Navigate back to dashboard and trigger results open
             self.go("dashboard", _open_report=self.survey_id)
 
         except Exception as exc:
             logger.exception("Manual data entry save failed")
-            messagebox.showerror(rtl_text(_("error")), rtl_text(f"Failed to save manual data:\n{exc}"))
+            messagebox.showerror(rtl_text(_("error") if not is_rtl() else "خطا"), rtl_text(f"Failed to save manual data:\n{exc}" if not is_rtl() else f"ذخیره معلومات دستی ناموفق بود:\n{exc}"))
             self.save_btn.configure(state="normal")

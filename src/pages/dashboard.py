@@ -340,13 +340,17 @@ class DashboardPage(BasePage):
             cursor="hand2",
         )
 
-        # Main wrapper
+        # Main wrapper (vertical)
         wrap = T.transparent(outer)
         wrap.pack(fill="both", expand=True, padx=T.CARD_PADDING, pady=16)
 
+        # Row 1 (top): Icon and Center Info
+        info_row = T.transparent(wrap)
+        info_row.pack(fill="x", side="top")
+
         # Left section: Document icon
         icon_box = ctk.CTkFrame(
-            wrap, width=44, height=44, corner_radius=T.RADIUS_MD, fg_color=T.SURFACE_RAISED
+            info_row, width=44, height=44, corner_radius=T.RADIUS_MD, fg_color=T.SURFACE_RAISED
         )
         icon_box.pack(side=S, padx=(24, 0) if is_rtl() else (0, 24))
         icon_box.pack_propagate(False)
@@ -355,7 +359,7 @@ class DashboardPage(BasePage):
         ).place(relx=0.5, rely=0.5, anchor="center")
 
         # Center section: Subject + Status (top), Meta (bottom)
-        center = T.transparent(wrap)
+        center = T.transparent(info_row)
         center.pack(side=S, fill="both", expand=True)
 
         top_row = T.transparent(center)
@@ -405,8 +409,15 @@ class DashboardPage(BasePage):
         if survey.faculty:
             _meta_chip(meta_row, "book", survey.faculty)
 
-        # ── Action buttons (on the end side) ─────────────────────────────────
-        actions = T.transparent(wrap)
+        # ── Divider line between Info and Actions ───────────────────────────
+        divider = ctk.CTkFrame(wrap, height=1, fg_color=T.CARD_BORDER)
+        divider.pack(fill="x", pady=12)
+
+        # Row 2 (bottom): Action buttons
+        actions_row = T.transparent(wrap)
+        actions_row.pack(fill="x", side="top")
+
+        actions = T.transparent(actions_row)
         actions.pack(side=E)
 
         if status == "Draft":
@@ -418,7 +429,7 @@ class DashboardPage(BasePage):
         def _enter(_e):  outer.configure(fg_color=T.SURFACE_RAISED)
         def _leave(_e):  outer.configure(fg_color=T.SURFACE)
 
-        for w in (outer, wrap, center, top_row, meta_row):
+        for w in (outer, wrap, info_row, actions_row, center, top_row, meta_row):
             w.bind("<Enter>",   _enter)
             w.bind("<Leave>",   _leave)
             w.bind("<Button-1>", lambda _e, sid=survey.id: self._select(sid))
