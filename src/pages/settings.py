@@ -81,6 +81,7 @@ class SettingsFrame(ctk.CTkFrame):
         self._build_language_card(scroll)
         self._build_appearance_card(scroll)
         self._build_branding_card(scroll)
+        self._build_detection_card(scroll)
         self._build_reset_card(scroll)
 
     # ------------------------------------------------------------------
@@ -250,6 +251,57 @@ class SettingsFrame(ctk.CTkFrame):
         ).pack(anchor=get_anchor())
 
     # ------------------------------------------------------------------
+    # Detection card
+    # ------------------------------------------------------------------
+
+    def _build_detection_card(self, parent: Any) -> None:
+        card = self._card(parent, _("checkbox_detection"), _("detection_subtitle"), "scan")
+        body = T.transparent(card)
+        body.pack(fill="x", padx=T.CARD_PADDING, pady=T.CARD_PADDING)
+
+        # Current value label and slider row
+        val_row = T.transparent(body)
+        val_row.pack(fill="x", pady=(0, 8))
+
+        lbl_title = ctk.CTkLabel(
+            val_row, text=_("detection_threshold"), font=T.body(), text_color=T.TEXT_PRIMARY,
+            anchor=get_anchor()
+        )
+        lbl_title.pack(side=get_start())
+
+        # Dynamic threshold value display label
+        current_threshold = self._config.CHECKBOX_THRESHOLD
+        self.threshold_val_lbl = ctk.CTkLabel(
+            val_row, text=f"{current_threshold:.2f}", font=T.font(13, "bold"),
+            text_color=T.ACCENT[1] if isinstance(T.ACCENT, tuple) else T.ACCENT
+        )
+        self.threshold_val_lbl.pack(side=get_end())
+
+        # Slider for threshold: range 0.01 to 0.50
+        self.threshold_slider = ctk.CTkSlider(
+            body, from_=0.01, to=0.50, number_of_steps=49,
+            fg_color=T.INPUT_BG, progress_color=T.ACCENT, button_color=T.ACCENT,
+            button_hover_color=T.ACCENT_HOVER, height=18,
+            command=self._on_slider_change
+        )
+        self.threshold_slider.set(current_threshold)
+        self.threshold_slider.pack(fill="x", pady=(0, 12))
+
+        # Guide and warning hints
+        ctk.CTkLabel(
+            body, text=_("threshold_hint") + " • " + _("threshold_guide"),
+            font=T.small(), text_color=T.TEXT_SECONDARY, anchor=get_anchor()
+        ).pack(anchor=get_anchor(), pady=(0, 4))
+
+        ctk.CTkLabel(
+            body, text=_("threshold_warning"),
+            font=T.tiny(), text_color=T.TEXT_MUTED, justify=get_start(), anchor=get_anchor()
+        ).pack(anchor=get_anchor())
+
+    def _on_slider_change(self, value: float) -> None:
+        self.threshold_val_lbl.configure(text=f"{value:.2f}")
+
+    # ------------------------------------------------------------------
     # Reset card
     # ------------------------------------------------------------------
 
@@ -319,6 +371,9 @@ class SettingsFrame(ctk.CTkFrame):
         # Appearance
         ctk.set_appearance_mode(self.appear_var.get())
 
+        # Threshold
+        self._config.CHECKBOX_THRESHOLD = round(self.threshold_slider.get(), 2)
+
         # Persistence
         if self._persistence:
             self._persistence.set_setting("APPEARANCE_MODE", self.appear_var.get())
@@ -375,6 +430,10 @@ class SettingsFrame(ctk.CTkFrame):
                 fg_color=T.ACCENT_SUBTLE if active else T.SURFACE_RAISED,
                 border_color=T.ACCENT if active else T.CARD_BORDER,
             )
+
+        # Reset Threshold Slider and Label
+        self.threshold_slider.set(defaults.CHECKBOX_THRESHOLD)
+        self.threshold_val_lbl.configure(text=f"{defaults.CHECKBOX_THRESHOLD:.2f}")
 
         # Reset language to Dari (fa)
         I18n.set_language(defaults.LANGUAGE)

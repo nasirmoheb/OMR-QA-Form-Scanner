@@ -9,14 +9,21 @@ from typing import Any
 
 logger = logging.getLogger("tadris_qa_system")
 
+import os
+
 # RTL text processing libraries
-try:
-    from bidi.algorithm import get_display
-    import arabic_reshaper
-    _RTL_SUPPORT = True
-except ImportError:
+# Tkinter on Windows natively renders RTL text perfectly.
+# Using python-bidi and arabic-reshaper on Windows reverses the characters incorrectly.
+if os.name == 'nt':
     _RTL_SUPPORT = False
-    logger.warning("RTL support libraries not available. Install python-bidi and arabic-reshaper for proper RTL text rendering.")
+else:
+    try:
+        from bidi.algorithm import get_display
+        import arabic_reshaper
+        _RTL_SUPPORT = True
+    except ImportError:
+        _RTL_SUPPORT = False
+        logger.warning("RTL support libraries not available. Install python-bidi and arabic-reshaper for proper RTL text rendering.")
 
 # --------------------------------------------------------------------------- #
 #  Translation dictionaries
@@ -220,7 +227,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "checkbox_detection": "Checkbox Detection",
         "detection_subtitle": "Adjust how sensitive the OMR reader is to filled checkboxes",
         "detection_threshold": "Detection Threshold",
-        "threshold_hint": "Float 0.0–1.0. Lower = more sensitive.",
+        "threshold_hint": "Range 0.01–0.50. Lower = higher scan sensitivity to faint pen marks.",
         "threshold_guide": "Recommended range: 0.15 – 0.35",
         "threshold_warning": "• Too low (< 0.10): false positives on blank forms\n• Too high (> 0.40): misses lightly filled bubbles",
         "form_geometry_card": "Form Geometry",
@@ -472,12 +479,12 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "branding_subtitle": "در فورم‌های نظرسنجی و گزارش‌های PDF چاپ می‌شود",
         "university_name_placeholder": "مثلاً دانشگاه کابل",
         "institution_logo": "لوگوی موسسه",
-        "checkbox_detection": "تشخیص چک‌باکس",
-        "detection_subtitle": "حساسیت خواننده OMR به چک‌باکس‌های پر شده را تنظیم کنید",
-        "detection_threshold": "آستانه تشخیص",
-        "threshold_hint": "اعشاری 0.0–1.0. پایین‌تر = حساس‌تر.",
-        "threshold_guide": "محدوده توصیه شده: 0.15 – 0.35",
-        "threshold_warning": "• خیلی پایین (< 0.10): مثبت کاذب در فورم‌های خالی\n• خیلی بالا (> 0.40): حباب‌های کم پر شده را از دست می‌دهد",
+        "checkbox_detection": "حساسیت تشخیص خانه‌ها",
+        "detection_subtitle": "میزان حساسیت سیستم در تشخیص خانه‌های نشانی‌شده در پاسخنامه را تعیین کنید.",
+        "detection_threshold": "آستانه تشخیص خانه‌ها",
+        "threshold_hint": "محدوده بین ۰.۰۱ الی ۰.۵۰. (مقدار کمتر = حساسیت بیشتر سیستم به قلم کم‌رنگ)",
+        "threshold_guide": "محدوده پیشنهادی: ۰.۱۵ الی ۰.۳۵",
+        "threshold_warning": "• مقدار بسیار پایین (کمتر از ۰.۱۰): ممکن است خانه‌های سفید را به اشتباه پر شده تشخیص دهد.\n• مقدار بسیار بالا (بیشتر از ۰.۴۰): ممکن است نشانه‌های کم‌رنگ را نادیده بگیرد.",
         "form_geometry_card": "هندسه فورم",
         "form_geometry_subtitle": "ابعاد پیکسلی و طرح شبکه فورم اسکن شده",
         "form_width_label": "عرض فورم",
@@ -727,12 +734,12 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "branding_subtitle": "د سروۍ فورمونو او PDF راپورونو کې چاپ کیږي",
         "university_name_placeholder": "مثلاً د کابل پوهنتون",
         "institution_logo": "د موسسې لوگو",
-        "checkbox_detection": "د چک‌باکس کشف",
-        "detection_subtitle": "د OMR لوستونکي حساسیت د ډک شوو چک‌باکسونو لپاره تنظیم کړئ",
-        "detection_threshold": "د کشف حد",
-        "threshold_hint": "اعشاري 0.0–1.0. ټیټ = ډیر حساس.",
-        "threshold_guide": "وړاندیز شوی سلسله: 0.15 – 0.35",
-        "threshold_warning": "• خورا ټیټ (< 0.10): د خالي فورمونو کې غلط مثبت\n• خورا لوړ (> 0.40): لږ ډک حبابونه له لاسه ورکوي",
+        "checkbox_detection": "د نښه شویو کورنیو د تشخیص حساسیت",
+        "detection_subtitle": "په پاسخنامه کې د نښه شویو کورنیو (علامتونو) د تشخیص لپاره د سیسټم د حساسیت کچه وټاکئ.",
+        "detection_threshold": "د کورنیو د تشخیص حد",
+        "threshold_hint": "له ۰.۰۱ څخه تر ۰.۵۰ پورې حد. (کم ارزښت = د کم‌رنګه قلم نښو ته د سیسټم لوړ حساسیت)",
+        "threshold_guide": "وړاندیز شوی حد: ۰.۱۵ تر ۰.۳۵",
+        "threshold_warning": "• خورا ټیټ ارزښت (تر ۰.۱۰ لږ): ممکن خالي کورنۍ په غلطۍ سره ډکې تشخیص کړي.\n• خورا لوړ ارزښت (تر ۰.۴۰ ډیر): ممکن کم‌رنګه یا نیمه ډکې نښې له پامه وغورځوي.",
         "form_geometry_card": "د فورم هندسه",
         "form_geometry_subtitle": "د سکین شوي فورم د پیکسل ابعاد او د شبکې طرح",
         "form_width_label": "د فورم پلنوالی",
