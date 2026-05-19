@@ -678,7 +678,7 @@ class ResultsPage(BasePage):
             return
         try:
             self.analytics.export_pdf_report(
-                self.survey, self.form_results, path, self.question_texts
+                self.survey, self.form_results, path, self.question_texts, persistence=self.persistence
             )
             messagebox.showinfo(rtl_text(_("export_success")), rtl_text(_("export_success")))
         except Exception as exc:

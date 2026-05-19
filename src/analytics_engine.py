@@ -215,6 +215,7 @@ class AnalyticsEngine:
         form_results: list,  # list[FormResult]
         output_path: str | Path,
         question_texts: list[str] | None = None,
+        persistence: Any | None = None,
     ) -> str:
         """Generate a printable PDF report using reportlab.
 
@@ -223,6 +224,7 @@ class AnalyticsEngine:
             form_results: List of ``FormResult`` objects.
             output_path: Destination file path for the PDF.
             question_texts: Optional list of 14 question text strings.
+            persistence: Optional ``PersistenceManager`` for university branding fallback.
 
         Returns:
             The output path as a string.
@@ -260,6 +262,14 @@ class AnalyticsEngine:
         story.append(Paragraph("Survey Results Report", title_style))
         story.append(Spacer(1, 0.4 * cm))
 
+        # Resolve current university name using setting if available
+        current_uni = "پوهنتون بدخشان"
+        if persistence:
+            current_uni = persistence.get_setting("university_name", Config.DEFAULT_UNIVERSITY_NAME)
+        
+        survey_uni = (getattr(survey, 'university', '') or "").strip()
+        display_uni = survey_uni if (survey_uni and survey_uni != "پوهنتون بدخشان") else current_uni
+
         # --- Survey metadata card ---
         meta_lines = [
             f"<b>Subject:</b> {getattr(survey, 'subject', '')}",
@@ -267,7 +277,7 @@ class AnalyticsEngine:
             f"<b>Semester:</b> {getattr(survey, 'semester', '')}",
             f"<b>Academic Year:</b> {getattr(survey, 'academic_year', '')}",
             f"<b>Date:</b> {getattr(survey, 'date', '')}",
-            f"<b>University:</b> {getattr(survey, 'university', '')}",
+            f"<b>University:</b> {display_uni}",
         ]
         for line in meta_lines:
             story.append(Paragraph(line, styles["Normal"]))

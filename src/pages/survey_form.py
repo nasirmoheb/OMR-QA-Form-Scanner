@@ -233,6 +233,7 @@ class SurveyFormPage(BasePage):
         if not survey:
             return
         mapping = {
+            "university":    survey.university,
             "faculty":       survey.faculty,
             "department":    survey.department,
             "subject":       survey.subject,
@@ -254,6 +255,7 @@ class SurveyFormPage(BasePage):
 
         # Validate all required fields
         required_fields = {
+            "university": _("university"),
             "faculty": _("faculty"),
             "department": _("department"),
             "subject": _("subject"),
@@ -276,9 +278,8 @@ class SurveyFormPage(BasePage):
             )
             return
 
-        uni = self.persistence.get_setting("university_name", Config.DEFAULT_UNIVERSITY_NAME)
         survey = Survey(
-            university=uni,
+            university=get("university"),
             faculty=get("faculty"),
             department=get("department"),
             subject=get("subject"),

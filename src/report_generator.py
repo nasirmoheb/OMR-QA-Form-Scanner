@@ -22,17 +22,25 @@ def _image_to_base64(image_path):
 def generate_dari_qa_report(survey, form_results, output_html_path, advanced_data=None, persistence=None):
     """Generates the official Dari HTML QA report based on Jinja2 template."""
     from config import Config
-    from pathlib import Path
     total_students = len(form_results)
     
+    # Resolve current university name using setting if available
+    current_uni = "پوهنتون بدخشان"
+    if persistence:
+        current_uni = persistence.get_setting("university_name", Config.DEFAULT_UNIVERSITY_NAME)
+    
+    # If survey.university is empty or is the default, fallback to the current active setting
+    survey_uni = (getattr(survey, 'university', '') or "").strip()
+    display_uni = survey_uni if (survey_uni and survey_uni != "پوهنتون بدخشان") else current_uni
+
     metadata = {
-        "university": survey.university or "پوهنتون بدخشان",
+        "university": display_uni,
         "faculty": survey.faculty or "پوهنحی کمپیوتر ساینس",
         "teacher_name": survey.professor or "نامعلوم",
         "subject": survey.subject or "نامعلوم",
         "department": survey.department or "نامعلوم",
         "semester": f"{survey.semester} / {survey.academic_year}",
-        "date": to_persian_num(survey.date) if survey.date else "نامعلوم",
+        "date": to_persian_num(getattr(survey, 'date', None)) if getattr(survey, 'date', None) else "نامعلوم",
         "total_students": to_persian_num(total_students),
         "total_students_raw": total_students
     }

@@ -198,6 +198,9 @@ def generate_prefilled_form(
     resolved_logo: str | None = None
     coords = dict(_DEFAULT_COORDS)
 
+    # Import Config at the top of the function to ensure paths are resolved correctly
+    from config import Config
+
     if persistence is not None:
         stored_q = persistence.get_setting("question_texts")
         if isinstance(stored_q, list) and len(stored_q) == 14:
@@ -212,9 +215,13 @@ def generate_prefilled_form(
             if stored_logo and Path(stored_logo).exists():
                 resolved_logo = str(stored_logo)
 
-    # Import Config at the top of the function to ensure paths are resolved correctly
-    from config import Config
-    
+        # Dynamic fallback for university name:
+        # If survey.university is empty or is the default, fallback to the current active setting
+        current_uni = persistence.get_setting("university_name", Config.DEFAULT_UNIVERSITY_NAME)
+        survey_uni = (getattr(survey, "university", "") or "").strip()
+        if not survey_uni or survey_uni == "پوهنتون بدخشان":
+            survey.university = current_uni
+
     if logo_path is not None and Path(str(logo_path)).exists():
         resolved_logo = str(logo_path)
     elif resolved_logo is None and Config.DEFAULT_LOGO_PATH.exists():
@@ -373,7 +380,7 @@ def _draw_header(
     first_font = _FONT_BOLD_NAME
     first_size = 13
     ministry_text = _rtl("وزارت تحصیلات عالی")
-    uni_name = survey.university.strip() if survey.university else ""
+    uni_name = getattr(survey, "university", "").strip() if getattr(survey, "university", None) else ""
     if uni_name:
         # Combine: university name on the left side, ministry on the right side of centre
         separator = _rtl(" - ")
